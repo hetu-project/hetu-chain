@@ -25,18 +25,13 @@ For prerequisites and detailed build instructions
 please read the [Installation](https://docs.hetu.org/protocol/hetu-cli) instructions.
 Once the dependencies are installed, run:
 
-
 make install
 
 Or check out the latest [release](https://github.com/hetu-project/hetu/releases).
 
-## Quick Start
-
-To learn how the Hetu works from a high-level perspective,
-go to the [Protocol Overview](https://docs.hetu.org/protocol) section from the documentation.
-You can also check the instructions to [Run a Node](https://docs.hetu.org/protocol/hetu-cli#run-a-hetu-node).
-
 ## Deployment
+
+**Important: Before deploying, ensure that the Narwhal mempool is deployed. See [hetu-parallel-engine/hetu-consensus](https://github.com/hetu-project/hetu-parallel-engine/tree/main/hetu-consensus) for details.**
 
 ### Local Deployment
 
