@@ -14,7 +14,7 @@ for improved performance and scalability.
 
 ## Documentation
 
-Our documentation is hosted in a [separate repository](https://github.com/hetu-project/docs) and can be found at [docs.hetu.org](https://docs.hetu.org).
+Our documentation is hosted in a [separate repository](https://github.com/hetu-project/docs).
 Head over there and check it out.
 
 **Note**: Requires [Go 1.20+](https://golang.org/dl/)
@@ -25,7 +25,9 @@ For prerequisites and detailed build instructions
 please read the [Installation](https://docs.hetu.org/protocol/hetu-cli) instructions.
 Once the dependencies are installed, run:
 
+```bash
 make install
+```
 
 Or check out the latest [release](https://github.com/hetu-project/hetu/releases).
 
