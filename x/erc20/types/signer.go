@@ -4,7 +4,7 @@ import (
 	fmt "fmt"
 
 	"github.com/ethereum/go-ethereum/common"
-	erc20api "github.com/hetu-project/hetu-hub/v1/api/evmos/erc20/v1"
+	erc20api "github.com/hetu-project/hetu/v1/api/evmos/erc20/v1"
 	protov2 "google.golang.org/protobuf/proto"
 )
 

@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"time"
 
-	"github.com/hetu-project/hetu-hub/v1/x/epochs/types"
+	"github.com/hetu-project/hetu/v1/x/epochs/types"
 )
 
 func (suite *KeeperTestSuite) TestEpochLifeCycle() {

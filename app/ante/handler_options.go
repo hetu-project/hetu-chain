@@ -19,8 +19,8 @@ package ante
 import (
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
-	"github.com/cosmos/cosmos-sdk/codec"
 	txsigning "cosmossdk.io/x/tx/signing"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -28,14 +28,14 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	ibcante "github.com/cosmos/ibc-go/v8/modules/core/ante"
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
-	anteutils "github.com/hetu-project/hetu-hub/v1/app/ante/utils"
+	anteutils "github.com/hetu-project/hetu/v1/app/ante/utils"
 
-	cosmosante "github.com/hetu-project/hetu-hub/v1/app/ante/cosmos"
-	evmante "github.com/hetu-project/hetu-hub/v1/app/ante/evm"
-	evmtypes "github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	cosmosante "github.com/hetu-project/hetu/v1/app/ante/cosmos"
+	evmante "github.com/hetu-project/hetu/v1/app/ante/evm"
+	evmtypes "github.com/hetu-project/hetu/v1/x/evm/types"
 
 	sdkvesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	vestingtypes "github.com/hetu-project/hetu-hub/v1/x/vesting/types"
+	vestingtypes "github.com/hetu-project/hetu/v1/x/vesting/types"
 )
 
 // HandlerOptions defines the list of module keepers required to run the Evmos

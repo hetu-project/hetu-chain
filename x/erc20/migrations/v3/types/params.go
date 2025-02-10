@@ -20,7 +20,7 @@ import (
 	"fmt"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/hetu-project/hetu-hub/v1/x/erc20/types"
+	"github.com/hetu-project/hetu/v1/x/erc20/types"
 )
 
 var _ types.LegacyParams = &V3Params{}

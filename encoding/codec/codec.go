@@ -21,8 +21,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	cryptocodec "github.com/hetu-project/hetu-hub/v1/crypto/codec"
-	"github.com/hetu-project/hetu-hub/v1/types"
+	cryptocodec "github.com/hetu-project/hetu/v1/crypto/codec"
+	"github.com/hetu-project/hetu/v1/types"
 )
 
 // RegisterLegacyAminoCodec registers Interfaces from types, crypto, and SDK std.

@@ -16,13 +16,13 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/ibc-go/v8/testing/simapp"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/hetu-project/hetu-hub/v1/app"
-	ante "github.com/hetu-project/hetu-hub/v1/app/ante"
-	"github.com/hetu-project/hetu-hub/v1/encoding"
-	"github.com/hetu-project/hetu-hub/v1/ethereum/eip712"
-	"github.com/hetu-project/hetu-hub/v1/utils"
-	evmtypes "github.com/hetu-project/hetu-hub/v1/x/evm/types"
-	feemarkettypes "github.com/hetu-project/hetu-hub/v1/x/feemarket/types"
+	"github.com/hetu-project/hetu/v1/app"
+	ante "github.com/hetu-project/hetu/v1/app/ante"
+	"github.com/hetu-project/hetu/v1/encoding"
+	"github.com/hetu-project/hetu/v1/ethereum/eip712"
+	"github.com/hetu-project/hetu/v1/utils"
+	evmtypes "github.com/hetu-project/hetu/v1/x/evm/types"
+	feemarkettypes "github.com/hetu-project/hetu/v1/x/feemarket/types"
 )
 
 type AnteTestSuite struct {

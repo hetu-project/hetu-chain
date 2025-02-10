@@ -20,10 +20,10 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	evmostypes "github.com/hetu-project/hetu-hub/v1/types"
+	evmostypes "github.com/hetu-project/hetu/v1/types"
 
-	utils "github.com/hetu-project/hetu-hub/v1/utils"
-	"github.com/hetu-project/hetu-hub/v1/x/inflation/types"
+	utils "github.com/hetu-project/hetu/v1/utils"
+	"github.com/hetu-project/hetu/v1/x/inflation/types"
 )
 
 // 200M token at year 4 allocated to the team

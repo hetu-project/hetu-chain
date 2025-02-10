@@ -4,10 +4,10 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/hetu-project/hetu-hub/v1/app"
-	"github.com/hetu-project/hetu-hub/v1/testutil"
-	"github.com/hetu-project/hetu-hub/v1/x/epochs/types"
-	evm "github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	"github.com/hetu-project/hetu/v1/app"
+	"github.com/hetu-project/hetu/v1/testutil"
+	"github.com/hetu-project/hetu/v1/x/epochs/types"
+	evm "github.com/hetu-project/hetu/v1/x/evm/types"
 )
 
 // Test helpers

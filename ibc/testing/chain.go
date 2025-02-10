@@ -34,10 +34,10 @@ import (
 	ibcgotesting "github.com/cosmos/ibc-go/v8/testing"
 	"github.com/cosmos/ibc-go/v8/testing/mock"
 
-	"github.com/hetu-project/hetu-hub/v1/crypto/ethsecp256k1"
-	evmostypes "github.com/hetu-project/hetu-hub/v1/types"
-	"github.com/hetu-project/hetu-hub/v1/utils"
-	evmtypes "github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	"github.com/hetu-project/hetu/v1/crypto/ethsecp256k1"
+	evmostypes "github.com/hetu-project/hetu/v1/types"
+	"github.com/hetu-project/hetu/v1/utils"
+	evmtypes "github.com/hetu-project/hetu/v1/x/evm/types"
 )
 
 // ChainIDPrefix defines the default chain ID prefix for Evmos test chains
@@ -100,7 +100,7 @@ func NewTestChain(t *testing.T, coord *ibcgotesting.Coordinator, chainID string)
 
 	// create an account to send transactions from
 	chain := &ibcgotesting.TestChain{
-		TB:             t,
+		TB:            t,
 		Coordinator:   coord,
 		ChainID:       chainID,
 		App:           app,

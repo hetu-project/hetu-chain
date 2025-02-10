@@ -28,10 +28,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/ethereum/go-ethereum/common"
-	rpctypes "github.com/hetu-project/hetu-hub/v1/rpc/types"
+	rpctypes "github.com/hetu-project/hetu/v1/rpc/types"
 
-	evmostypes "github.com/hetu-project/hetu-hub/v1/types"
-	evmtypes "github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	evmostypes "github.com/hetu-project/hetu/v1/types"
+	evmtypes "github.com/hetu-project/hetu/v1/x/evm/types"
 )
 
 const (

@@ -37,8 +37,8 @@ import (
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 
 	"github.com/cometbft/cometbft/proto/tendermint/crypto"
-	"github.com/hetu-project/hetu-hub/v1/rpc/types"
-	evmtypes "github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	"github.com/hetu-project/hetu/v1/rpc/types"
+	evmtypes "github.com/hetu-project/hetu/v1/x/evm/types"
 )
 
 type txGasAndReward struct {

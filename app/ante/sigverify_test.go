@@ -16,9 +16,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	"github.com/hetu-project/hetu-hub/v1/app/ante"
-	"github.com/hetu-project/hetu-hub/v1/crypto/ethsecp256k1"
-	"github.com/hetu-project/hetu-hub/v1/encoding"
+	"github.com/hetu-project/hetu/v1/app/ante"
+	"github.com/hetu-project/hetu/v1/crypto/ethsecp256k1"
+	"github.com/hetu-project/hetu/v1/encoding"
 )
 
 func TestConsumeSignatureVerificationGas(t *testing.T) {

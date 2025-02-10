@@ -17,9 +17,9 @@ import (
 	"github.com/cometbft/cometbft/version"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/hetu-project/hetu-hub/v1/rpc/backend/mocks"
-	rpc "github.com/hetu-project/hetu-hub/v1/rpc/types"
-	evmtypes "github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	"github.com/hetu-project/hetu/v1/rpc/backend/mocks"
+	rpc "github.com/hetu-project/hetu/v1/rpc/types"
+	evmtypes "github.com/hetu-project/hetu/v1/x/evm/types"
 	mock "github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )

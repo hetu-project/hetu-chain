@@ -5,12 +5,12 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/hetu-project/hetu-hub/v1/encoding"
-	v3 "github.com/hetu-project/hetu-hub/v1/x/erc20/migrations/v3"
+	"github.com/hetu-project/hetu/v1/encoding"
+	v3 "github.com/hetu-project/hetu/v1/x/erc20/migrations/v3"
 
-	v3types "github.com/hetu-project/hetu-hub/v1/x/erc20/migrations/v3/types"
+	v3types "github.com/hetu-project/hetu/v1/x/erc20/migrations/v3/types"
 
-	"github.com/hetu-project/hetu-hub/v1/x/erc20/types"
+	"github.com/hetu-project/hetu/v1/x/erc20/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/testutil"

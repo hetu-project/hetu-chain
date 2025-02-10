@@ -38,8 +38,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/hetu-project/hetu-hub/v1/encoding"
-	"github.com/hetu-project/hetu-hub/v1/utils"
+	"github.com/hetu-project/hetu/v1/encoding"
+	"github.com/hetu-project/hetu/v1/utils"
 )
 
 // EthDefaultConsensusParams defines the default Tendermint consensus params used in

@@ -18,7 +18,7 @@ package types
 import (
 	"fmt"
 
-	"github.com/hetu-project/hetu-hub/v1/x/feemarket/types"
+	"github.com/hetu-project/hetu/v1/x/feemarket/types"
 
 	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
@@ -91,13 +91,13 @@ func NewParams(
 // DefaultParams returns default evm parameters
 func DefaultParams() Params {
 	return Params{
-		NoBaseFee:                DefaultNoBaseFee,
+		NoBaseFee: DefaultNoBaseFee,
 		// BaseFeeChangeDenominator: params.BaseFeeChangeDenominator,
 		// ElasticityMultiplier:     params.ElasticityMultiplier,
-		BaseFee:                  sdkmath.NewIntFromUint64(params.InitialBaseFee),
-		EnableHeight:             DefaultEnableHeight,
-		MinGasPrice:              DefaultMinGasPrice,
-		MinGasMultiplier:         DefaultMinGasMultiplier,
+		BaseFee:          sdkmath.NewIntFromUint64(params.InitialBaseFee),
+		EnableHeight:     DefaultEnableHeight,
+		MinGasPrice:      DefaultMinGasPrice,
+		MinGasMultiplier: DefaultMinGasMultiplier,
 	}
 }
 

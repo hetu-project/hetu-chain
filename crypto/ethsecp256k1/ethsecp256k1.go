@@ -28,7 +28,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/hetu-project/hetu-hub/v1/ethereum/eip712"
+	"github.com/hetu-project/hetu/v1/ethereum/eip712"
 )
 
 const (

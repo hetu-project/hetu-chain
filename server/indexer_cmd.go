@@ -25,7 +25,7 @@ import (
 	tmstore "github.com/cometbft/cometbft/store"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/hetu-project/hetu-hub/v1/indexer"
+	"github.com/hetu-project/hetu/v1/indexer"
 )
 
 func NewIndexTxCmd() *cobra.Command {

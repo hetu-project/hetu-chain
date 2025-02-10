@@ -7,10 +7,10 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/hetu-project/hetu-hub/v1/encoding"
-	inflationkeeper "github.com/hetu-project/hetu-hub/v1/x/inflation/keeper"
-	v2types "github.com/hetu-project/hetu-hub/v1/x/inflation/migrations/v2/types"
-	"github.com/hetu-project/hetu-hub/v1/x/inflation/types"
+	"github.com/hetu-project/hetu/v1/encoding"
+	inflationkeeper "github.com/hetu-project/hetu/v1/x/inflation/keeper"
+	v2types "github.com/hetu-project/hetu/v1/x/inflation/migrations/v2/types"
+	"github.com/hetu-project/hetu/v1/x/inflation/types"
 )
 
 type mockSubspace struct {

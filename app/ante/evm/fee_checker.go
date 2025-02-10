@@ -24,9 +24,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
-	anteutils "github.com/hetu-project/hetu-hub/v1/app/ante/utils"
-	evmostypes "github.com/hetu-project/hetu-hub/v1/types"
-	"github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	anteutils "github.com/hetu-project/hetu/v1/app/ante/utils"
+	evmostypes "github.com/hetu-project/hetu/v1/types"
+	"github.com/hetu-project/hetu/v1/x/evm/types"
 )
 
 // NewDynamicFeeChecker returns a `TxFeeChecker` that applies a dynamic fee to

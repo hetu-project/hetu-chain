@@ -19,7 +19,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/hetu-project/hetu-hub/v1/x/feemarket/types"
+	"github.com/hetu-project/hetu/v1/x/feemarket/types"
 
 	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"

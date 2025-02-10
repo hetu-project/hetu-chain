@@ -28,8 +28,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
-	"github.com/hetu-project/hetu-hub/v1/app"
-	"github.com/hetu-project/hetu-hub/v1/utils"
+	"github.com/hetu-project/hetu/v1/app"
+	"github.com/hetu-project/hetu/v1/utils"
 )
 
 var (
@@ -160,7 +160,7 @@ var _ sdk.Tx = &InvalidTx{}
 // NOTE: This is used for testing purposes, to serve the edge case of invalid data being passed to functions.
 type InvalidTx struct{}
 
-func (InvalidTx) GetMsgs() []sdk.Msg { return []sdk.Msg{nil} }
+func (InvalidTx) GetMsgs() []sdk.Msg                    { return []sdk.Msg{nil} }
 func (InvalidTx) GetMsgsV2() ([]protov2.Message, error) { return nil, nil }
 
 func (InvalidTx) ValidateBasic() error { return nil }

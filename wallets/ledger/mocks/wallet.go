@@ -4,7 +4,7 @@ package mocks
 
 import (
 	apitypes "github.com/ethereum/go-ethereum/signer/core/apitypes"
-	accounts "github.com/hetu-project/hetu-hub/v1/wallets/accounts"
+	accounts "github.com/hetu-project/hetu/v1/wallets/accounts"
 
 	big "math/big"
 

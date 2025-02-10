@@ -20,13 +20,13 @@ import (
 	"fmt"
 	"math"
 
-	sdkmath "cosmossdk.io/math"
 	errorsmod "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	anteutils "github.com/hetu-project/hetu-hub/v1/app/ante/utils"
+	anteutils "github.com/hetu-project/hetu/v1/app/ante/utils"
 )
 
 // DeductFeeDecorator deducts fees from the first signer of the tx.

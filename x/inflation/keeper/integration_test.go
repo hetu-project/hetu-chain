@@ -8,8 +8,8 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	epochstypes "github.com/hetu-project/hetu-hub/v1/x/epochs/types"
-	"github.com/hetu-project/hetu-hub/v1/x/inflation/types"
+	epochstypes "github.com/hetu-project/hetu/v1/x/epochs/types"
+	"github.com/hetu-project/hetu/v1/x/inflation/types"
 )
 
 var (

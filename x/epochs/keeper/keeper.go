@@ -24,7 +24,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/hetu-project/hetu-hub/v1/x/epochs/types"
+	"github.com/hetu-project/hetu/v1/x/epochs/types"
 )
 
 // Keeper of this module maintains collections of epochs and hooks.

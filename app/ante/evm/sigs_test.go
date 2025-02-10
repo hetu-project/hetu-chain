@@ -3,9 +3,9 @@ package evm_test
 import (
 	"math/big"
 
-	utiltx "github.com/hetu-project/hetu-hub/v1/testutil/tx"
-	"github.com/hetu-project/hetu-hub/v1/x/evm/statedb"
-	evmtypes "github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	utiltx "github.com/hetu-project/hetu/v1/testutil/tx"
+	"github.com/hetu-project/hetu/v1/x/evm/statedb"
+	evmtypes "github.com/hetu-project/hetu/v1/x/evm/types"
 )
 
 func (suite *AnteTestSuite) TestSignatures() {

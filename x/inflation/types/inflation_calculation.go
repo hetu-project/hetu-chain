@@ -19,7 +19,7 @@ package types
 import (
 	"cosmossdk.io/math"
 
-	evmostypes "github.com/hetu-project/hetu-hub/v1/types"
+	evmostypes "github.com/hetu-project/hetu/v1/types"
 )
 
 // CalculateEpochProvisions returns mint provision per epoch

@@ -27,7 +27,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 
-	"github.com/hetu-project/hetu-hub/v1/types"
+	"github.com/hetu-project/hetu/v1/types"
 )
 
 // InitConfig adds the chain-id, encoding and output flags to the persistent flag set.

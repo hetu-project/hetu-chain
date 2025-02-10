@@ -6,15 +6,15 @@ import (
 	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	testutiltx "github.com/hetu-project/hetu-hub/v1/testutil/tx"
+	testutiltx "github.com/hetu-project/hetu/v1/testutil/tx"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/hetu-project/hetu-hub/v1/crypto/ethsecp256k1"
-	"github.com/hetu-project/hetu-hub/v1/testutil"
-	"github.com/hetu-project/hetu-hub/v1/utils"
+	"github.com/hetu-project/hetu/v1/crypto/ethsecp256k1"
+	"github.com/hetu-project/hetu/v1/testutil"
+	"github.com/hetu-project/hetu/v1/utils"
 )
 
 var _ = Describe("when sending a Cosmos transaction", func() {

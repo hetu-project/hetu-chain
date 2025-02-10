@@ -26,7 +26,7 @@ import (
 	txTypes "github.com/cosmos/cosmos-sdk/types/tx"
 
 	apitypes "github.com/ethereum/go-ethereum/signer/core/apitypes"
-	hetutypes "github.com/hetu-project/hetu-hub/v1/types"
+	hetutypes "github.com/hetu-project/hetu/v1/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 )

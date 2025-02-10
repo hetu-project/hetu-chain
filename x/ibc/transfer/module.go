@@ -24,7 +24,7 @@ import (
 	ibctransfer "github.com/cosmos/ibc-go/v8/modules/apps/transfer"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
 	"github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-	"github.com/hetu-project/hetu-hub/v1/x/ibc/transfer/keeper"
+	"github.com/hetu-project/hetu/v1/x/ibc/transfer/keeper"
 )
 
 var (

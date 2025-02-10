@@ -9,11 +9,11 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	sdkvesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 
-	ethante "github.com/hetu-project/hetu-hub/v1/app/ante/evm"
-	"github.com/hetu-project/hetu-hub/v1/testutil"
-	testutiltx "github.com/hetu-project/hetu-hub/v1/testutil/tx"
-	evmtypes "github.com/hetu-project/hetu-hub/v1/x/evm/types"
-	vestingtypes "github.com/hetu-project/hetu-hub/v1/x/vesting/types"
+	ethante "github.com/hetu-project/hetu/v1/app/ante/evm"
+	"github.com/hetu-project/hetu/v1/testutil"
+	testutiltx "github.com/hetu-project/hetu/v1/testutil/tx"
+	evmtypes "github.com/hetu-project/hetu/v1/x/evm/types"
+	vestingtypes "github.com/hetu-project/hetu/v1/x/vesting/types"
 )
 
 // global variables used for testing the eth vesting ante handler

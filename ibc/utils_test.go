@@ -11,7 +11,7 @@ import (
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	ibctesting "github.com/cosmos/ibc-go/v8/testing"
-	teststypes "github.com/hetu-project/hetu-hub/v1/types/tests"
+	teststypes "github.com/hetu-project/hetu/v1/types/tests"
 )
 
 func init() {

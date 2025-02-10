@@ -5,8 +5,8 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	utils "github.com/hetu-project/hetu-hub/v1/utils"
-	ethutils "github.com/hetu-project/hetu-hub/v1/utils/eth"
+	utils "github.com/hetu-project/hetu/v1/utils"
+	ethutils "github.com/hetu-project/hetu/v1/utils/eth"
 )
 
 // GetChainID returns the chain id field from the AccessListTx

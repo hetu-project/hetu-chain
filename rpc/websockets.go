@@ -42,11 +42,11 @@ import (
 	rpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
 	tmtypes "github.com/cometbft/cometbft/types"
 
-	"github.com/hetu-project/hetu-hub/v1/rpc/ethereum/pubsub"
-	rpcfilters "github.com/hetu-project/hetu-hub/v1/rpc/namespaces/ethereum/eth/filters"
-	"github.com/hetu-project/hetu-hub/v1/rpc/types"
-	"github.com/hetu-project/hetu-hub/v1/server/config"
-	evmtypes "github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	"github.com/hetu-project/hetu/v1/rpc/ethereum/pubsub"
+	rpcfilters "github.com/hetu-project/hetu/v1/rpc/namespaces/ethereum/eth/filters"
+	"github.com/hetu-project/hetu/v1/rpc/types"
+	"github.com/hetu-project/hetu/v1/server/config"
+	evmtypes "github.com/hetu-project/hetu/v1/x/evm/types"
 )
 
 type WebsocketsServer interface {

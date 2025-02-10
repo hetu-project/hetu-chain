@@ -17,7 +17,7 @@ package miner
 
 import (
 	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/hetu-project/hetu-hub/v1/rpc/backend"
+	"github.com/hetu-project/hetu/v1/rpc/backend"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"

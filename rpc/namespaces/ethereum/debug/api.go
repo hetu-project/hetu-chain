@@ -29,7 +29,7 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 
-	evmtypes "github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	evmtypes "github.com/hetu-project/hetu/v1/x/evm/types"
 
 	stderrors "github.com/pkg/errors"
 
@@ -40,8 +40,8 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/consensus/ethash"
 	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/hetu-project/hetu-hub/v1/rpc/backend"
-	rpctypes "github.com/hetu-project/hetu-hub/v1/rpc/types"
+	"github.com/hetu-project/hetu/v1/rpc/backend"
+	rpctypes "github.com/hetu-project/hetu/v1/rpc/types"
 )
 
 // HandlerT keeps track of the cpu profiler and trace execution

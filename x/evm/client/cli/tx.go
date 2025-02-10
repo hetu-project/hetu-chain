@@ -27,8 +27,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	rpctypes "github.com/hetu-project/hetu-hub/v1/rpc/types"
-	"github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	rpctypes "github.com/hetu-project/hetu/v1/rpc/types"
+	"github.com/hetu-project/hetu/v1/x/evm/types"
 )
 
 // GetTxCmd returns the transaction commands for this module

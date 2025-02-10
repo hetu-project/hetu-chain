@@ -19,9 +19,9 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	"github.com/hetu-project/hetu/v1/x/evm/types"
 
-	v5types "github.com/hetu-project/hetu-hub/v1/x/evm/migrations/v5/types"
+	v5types "github.com/hetu-project/hetu/v1/x/evm/migrations/v5/types"
 )
 
 // MigrateStore migrates the x/evm module state from the consensus version 4 to

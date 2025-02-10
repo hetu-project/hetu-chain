@@ -3,7 +3,7 @@ package ethermint.types.v1;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/hetu-project/hetu-hub/v1/types";
+option go_package = "github.com/hetu-project/hetu/v1/types";
 
 // ExtensionOptionDynamicFeeTx is an extension option that specifies the maxPrioPrice for cosmos tx
 message ExtensionOptionDynamicFeeTx {

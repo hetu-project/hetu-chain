@@ -11,12 +11,12 @@ import (
 
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/hetu-project/hetu-hub/v1/crypto/ethsecp256k1"
-	"github.com/hetu-project/hetu-hub/v1/utils"
+	"github.com/hetu-project/hetu/v1/crypto/ethsecp256k1"
+	"github.com/hetu-project/hetu/v1/utils"
 
-	"github.com/hetu-project/hetu-hub/v1/app"
-	"github.com/hetu-project/hetu-hub/v1/testutil"
-	"github.com/hetu-project/hetu-hub/v1/x/erc20/types"
+	"github.com/hetu-project/hetu/v1/app"
+	"github.com/hetu-project/hetu/v1/testutil"
+	"github.com/hetu-project/hetu/v1/x/erc20/types"
 )
 
 var _ = Describe("Performing EVM transactions", Ordered, func() {

@@ -25,7 +25,7 @@ import (
 
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
-	erc20types "github.com/hetu-project/hetu-hub/v1/x/erc20/types"
+	erc20types "github.com/hetu-project/hetu/v1/x/erc20/types"
 )
 
 // AccountKeeper defines the expected interface needed to retrieve account info.

@@ -12,20 +12,20 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/hetu-project/hetu-hub/v1/app"
-	"github.com/hetu-project/hetu-hub/v1/crypto/ethsecp256k1"
-	"github.com/hetu-project/hetu-hub/v1/encoding"
-	"github.com/hetu-project/hetu-hub/v1/testutil"
-	utiltx "github.com/hetu-project/hetu-hub/v1/testutil/tx"
-	"github.com/hetu-project/hetu-hub/v1/utils"
-	"github.com/hetu-project/hetu-hub/v1/x/feemarket/types"
+	"github.com/hetu-project/hetu/v1/app"
+	"github.com/hetu-project/hetu/v1/crypto/ethsecp256k1"
+	"github.com/hetu-project/hetu/v1/encoding"
+	"github.com/hetu-project/hetu/v1/testutil"
+	utiltx "github.com/hetu-project/hetu/v1/testutil/tx"
+	"github.com/hetu-project/hetu/v1/utils"
+	"github.com/hetu-project/hetu/v1/x/feemarket/types"
 
 	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	evmtypes "github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	evmtypes "github.com/hetu-project/hetu/v1/x/evm/types"
 )
 
 var _ = Describe("Feemarket", func() {

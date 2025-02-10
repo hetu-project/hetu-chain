@@ -20,8 +20,8 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"github.com/hetu-project/hetu-hub/v1/utils"
-	inflationtypes "github.com/hetu-project/hetu-hub/v1/x/inflation/types"
+	"github.com/hetu-project/hetu/v1/utils"
+	inflationtypes "github.com/hetu-project/hetu/v1/x/inflation/types"
 )
 
 // FundAccount is a utility function that funds an account by minting and

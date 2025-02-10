@@ -9,11 +9,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 
-	"github.com/hetu-project/hetu-hub/v1/crypto/hd"
-	"github.com/hetu-project/hetu-hub/v1/encoding"
-	"github.com/hetu-project/hetu-hub/v1/tests/integration/ledger/mocks"
-	"github.com/hetu-project/hetu-hub/v1/testutil"
-	utiltx "github.com/hetu-project/hetu-hub/v1/testutil/tx"
+	"github.com/hetu-project/hetu/v1/crypto/hd"
+	"github.com/hetu-project/hetu/v1/encoding"
+	"github.com/hetu-project/hetu/v1/tests/integration/ledger/mocks"
+	"github.com/hetu-project/hetu/v1/testutil"
+	utiltx "github.com/hetu-project/hetu/v1/testutil/tx"
 
 	"github.com/spf13/cobra"
 

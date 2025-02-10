@@ -18,16 +18,16 @@ package v4_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	storetypes "cosmossdk.io/store/types"
+	"github.com/stretchr/testify/require"
 
-	"github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	"github.com/hetu-project/hetu/v1/x/evm/types"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/hetu-project/hetu-hub/v1/encoding"
-	v4 "github.com/hetu-project/hetu-hub/v1/x/evm/migrations/v4"
-	v4types "github.com/hetu-project/hetu-hub/v1/x/evm/migrations/v4/types"
+	"github.com/hetu-project/hetu/v1/encoding"
+	v4 "github.com/hetu-project/hetu/v1/x/evm/migrations/v4"
+	v4types "github.com/hetu-project/hetu/v1/x/evm/migrations/v4/types"
 )
 
 type mockSubspace struct {

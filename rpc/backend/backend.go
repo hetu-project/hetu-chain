@@ -31,15 +31,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	ethmath "github.com/ethereum/go-ethereum/common/math"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rpc"
-	ethmath "github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/signer/core/apitypes"
-	rpctypes "github.com/hetu-project/hetu-hub/v1/rpc/types"
-	"github.com/hetu-project/hetu-hub/v1/server/config"
-	evmostypes "github.com/hetu-project/hetu-hub/v1/types"
-	evmtypes "github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	rpctypes "github.com/hetu-project/hetu/v1/rpc/types"
+	"github.com/hetu-project/hetu/v1/server/config"
+	evmostypes "github.com/hetu-project/hetu/v1/types"
+	evmtypes "github.com/hetu-project/hetu/v1/x/evm/types"
 )
 
 // BackendI implements the Cosmos and EVM backend.

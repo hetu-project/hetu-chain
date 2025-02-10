@@ -23,7 +23,7 @@ import (
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	evm "github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	evm "github.com/hetu-project/hetu/v1/x/evm/types"
 )
 
 var ParamsKey = []byte("Params")

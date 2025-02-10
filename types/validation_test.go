@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/ethereum/go-ethereum/common"
-	utiltx "github.com/hetu-project/hetu-hub/v1/testutil/tx"
-	"github.com/hetu-project/hetu-hub/v1/types"
+	utiltx "github.com/hetu-project/hetu/v1/testutil/tx"
+	"github.com/hetu-project/hetu/v1/types"
 	"github.com/stretchr/testify/require"
 )
 

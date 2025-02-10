@@ -35,9 +35,9 @@ import (
 
 	ibcgotesting "github.com/cosmos/ibc-go/v8/testing"
 
-	evmosapp "github.com/hetu-project/hetu-hub/v1/app"
-	"github.com/hetu-project/hetu-hub/v1/types"
-	"github.com/hetu-project/hetu-hub/v1/utils"
+	evmosapp "github.com/hetu-project/hetu/v1/app"
+	"github.com/hetu-project/hetu/v1/types"
+	"github.com/hetu-project/hetu/v1/utils"
 )
 
 var DefaultTestingAppInit func() (ibcgotesting.TestingApp, map[string]json.RawMessage) = evmosapp.SetupTestingApp

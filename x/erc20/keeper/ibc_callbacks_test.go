@@ -6,8 +6,8 @@ import (
 	"math/big"
 
 	"cosmossdk.io/math"
-	"github.com/hetu-project/hetu-hub/v1/utils"
-	"github.com/hetu-project/hetu-hub/v1/x/erc20/keeper"
+	"github.com/hetu-project/hetu/v1/utils"
+	"github.com/hetu-project/hetu/v1/x/erc20/keeper"
 
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
@@ -16,8 +16,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/hetu-project/hetu-hub/v1/crypto/ethsecp256k1"
-	"github.com/hetu-project/hetu-hub/v1/testutil"
+	"github.com/hetu-project/hetu/v1/crypto/ethsecp256k1"
+	"github.com/hetu-project/hetu/v1/testutil"
 
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
@@ -25,10 +25,10 @@ import (
 	ibcgotesting "github.com/cosmos/ibc-go/v8/testing"
 	ibcmock "github.com/cosmos/ibc-go/v8/testing/mock"
 
-	"github.com/hetu-project/hetu-hub/v1/contracts"
-	"github.com/hetu-project/hetu-hub/v1/x/erc20/types"
-	inflationtypes "github.com/hetu-project/hetu-hub/v1/x/inflation/types"
-	vestingtypes "github.com/hetu-project/hetu-hub/v1/x/vesting/types"
+	"github.com/hetu-project/hetu/v1/contracts"
+	"github.com/hetu-project/hetu/v1/x/erc20/types"
+	inflationtypes "github.com/hetu-project/hetu/v1/x/inflation/types"
+	vestingtypes "github.com/hetu-project/hetu/v1/x/vesting/types"
 )
 
 var erc20Denom = "erc20/0xdac17f958d2ee523a2206206994597c13d831ec7"

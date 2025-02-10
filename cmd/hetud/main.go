@@ -23,8 +23,8 @@ import (
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/hetu-project/hetu-hub/v1/app"
-	cmdcfg "github.com/hetu-project/hetu-hub/v1/cmd/config"
+	"github.com/hetu-project/hetu/v1/app"
+	cmdcfg "github.com/hetu-project/hetu/v1/cmd/config"
 )
 
 func main() {

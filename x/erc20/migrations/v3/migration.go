@@ -19,8 +19,8 @@ package v3
 import (
 	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v3types "github.com/hetu-project/hetu-hub/v1/x/erc20/migrations/v3/types"
-	"github.com/hetu-project/hetu-hub/v1/x/erc20/types"
+	v3types "github.com/hetu-project/hetu/v1/x/erc20/migrations/v3/types"
+	"github.com/hetu-project/hetu/v1/x/erc20/types"
 )
 
 var isTrue = []byte{0x01}

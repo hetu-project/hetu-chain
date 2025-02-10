@@ -12,12 +12,12 @@ import (
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/hetu-project/hetu-hub/v1/app"
-	"github.com/hetu-project/hetu-hub/v1/contracts"
-	ibctesting "github.com/hetu-project/hetu-hub/v1/ibc/testing"
-	teststypes "github.com/hetu-project/hetu-hub/v1/types/tests"
-	"github.com/hetu-project/hetu-hub/v1/utils"
-	"github.com/hetu-project/hetu-hub/v1/x/erc20/types"
+	"github.com/hetu-project/hetu/v1/app"
+	"github.com/hetu-project/hetu/v1/contracts"
+	ibctesting "github.com/hetu-project/hetu/v1/ibc/testing"
+	teststypes "github.com/hetu-project/hetu/v1/types/tests"
+	"github.com/hetu-project/hetu/v1/utils"
+	"github.com/hetu-project/hetu/v1/x/erc20/types"
 	. "github.com/onsi/ginkgo/v2"
 )
 

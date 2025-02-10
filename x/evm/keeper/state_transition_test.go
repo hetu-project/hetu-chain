@@ -16,10 +16,10 @@ import (
 	"github.com/ethereum/go-ethereum/core"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/params"
-	utiltx "github.com/hetu-project/hetu-hub/v1/testutil/tx"
-	"github.com/hetu-project/hetu-hub/v1/x/evm/keeper"
-	"github.com/hetu-project/hetu-hub/v1/x/evm/statedb"
-	"github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	utiltx "github.com/hetu-project/hetu/v1/testutil/tx"
+	"github.com/hetu-project/hetu/v1/x/evm/keeper"
+	"github.com/hetu-project/hetu/v1/x/evm/statedb"
+	"github.com/hetu-project/hetu/v1/x/evm/types"
 )
 
 func (suite *KeeperTestSuite) TestGetHashFn() {

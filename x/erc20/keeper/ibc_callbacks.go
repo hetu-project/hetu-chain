@@ -29,8 +29,8 @@ import (
 	"github.com/cosmos/ibc-go/v8/modules/core/exported"
 	"github.com/ethereum/go-ethereum/common"
 
-	"github.com/hetu-project/hetu-hub/v1/ibc"
-	"github.com/hetu-project/hetu-hub/v1/x/erc20/types"
+	"github.com/hetu-project/hetu/v1/ibc"
+	"github.com/hetu-project/hetu/v1/x/erc20/types"
 )
 
 // OnRecvPacket performs the ICS20 middleware receive callback for automatically

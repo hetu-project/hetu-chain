@@ -9,10 +9,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	evm "github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	evm "github.com/hetu-project/hetu/v1/x/evm/types"
 
-	"github.com/hetu-project/hetu-hub/v1/app"
-	"github.com/hetu-project/hetu-hub/v1/x/inflation/types"
+	"github.com/hetu-project/hetu/v1/app"
+	"github.com/hetu-project/hetu/v1/x/inflation/types"
 )
 
 var denomMint = types.DefaultInflationDenom

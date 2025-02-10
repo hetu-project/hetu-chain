@@ -35,8 +35,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 
-	evmapi "github.com/hetu-project/hetu-hub/v1/api/ethermint/evm/v1"
-	"github.com/hetu-project/hetu-hub/v1/types"
+	evmapi "github.com/hetu-project/hetu/v1/api/ethermint/evm/v1"
+	"github.com/hetu-project/hetu/v1/types"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"

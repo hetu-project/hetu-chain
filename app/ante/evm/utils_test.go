@@ -10,12 +10,12 @@ import (
 	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 
+	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
-	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/hetu-project/hetu-hub/v1/ethereum/eip712"
+	"github.com/hetu-project/hetu/v1/ethereum/eip712"
 
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -36,16 +36,16 @@ import (
 	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	ibctypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	ibcclienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
-	"github.com/hetu-project/hetu-hub/v1/crypto/ethsecp256k1"
+	"github.com/hetu-project/hetu/v1/crypto/ethsecp256k1"
 
 	evtypes "cosmossdk.io/x/evidence/types"
-	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/feegrant"
+	txsigning "cosmossdk.io/x/tx/signing"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	utiltx "github.com/hetu-project/hetu-hub/v1/testutil/tx"
-	evmtypes "github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	utiltx "github.com/hetu-project/hetu/v1/testutil/tx"
+	evmtypes "github.com/hetu-project/hetu/v1/x/evm/types"
 )
 
 func (suite *AnteTestSuite) BuildTestEthTx(

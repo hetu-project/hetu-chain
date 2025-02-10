@@ -29,8 +29,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	rpctypes "github.com/hetu-project/hetu-hub/v1/rpc/types"
-	evmtypes "github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	rpctypes "github.com/hetu-project/hetu/v1/rpc/types"
+	evmtypes "github.com/hetu-project/hetu/v1/x/evm/types"
 	"github.com/pkg/errors"
 )
 

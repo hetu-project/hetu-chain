@@ -3,7 +3,7 @@ package cli
 import (
 	"testing"
 
-	"github.com/hetu-project/hetu-hub/v1/x/erc20/types"
+	"github.com/hetu-project/hetu/v1/x/erc20/types"
 	"github.com/stretchr/testify/require"
 )
 

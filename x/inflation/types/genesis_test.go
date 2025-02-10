@@ -3,7 +3,7 @@ package types
 import (
 	"testing"
 
-	epochstypes "github.com/hetu-project/hetu-hub/v1/x/epochs/types"
+	epochstypes "github.com/hetu-project/hetu/v1/x/epochs/types"
 	"github.com/stretchr/testify/suite"
 )
 

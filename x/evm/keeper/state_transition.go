@@ -24,9 +24,9 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	evmostypes "github.com/hetu-project/hetu-hub/v1/types"
-	"github.com/hetu-project/hetu-hub/v1/x/evm/statedb"
-	"github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	evmostypes "github.com/hetu-project/hetu/v1/types"
+	"github.com/hetu-project/hetu/v1/x/evm/statedb"
+	"github.com/hetu-project/hetu/v1/x/evm/types"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"

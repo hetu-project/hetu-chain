@@ -21,7 +21,7 @@ import (
 
 	rpcclient "github.com/cometbft/cometbft/rpc/client"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/hetu-project/hetu-hub/v1/types"
+	"github.com/hetu-project/hetu/v1/types"
 )
 
 // PublicAPI is the eth_ prefixed set of APIs in the Web3 JSON-RPC spec.

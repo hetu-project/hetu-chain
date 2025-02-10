@@ -17,7 +17,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	"github.com/hetu-project/hetu/v1/x/evm/types"
 )
 
 // GetParams returns the total set of evm parameters.

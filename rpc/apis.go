@@ -23,16 +23,16 @@ import (
 
 	"github.com/ethereum/go-ethereum/rpc"
 
-	"github.com/hetu-project/hetu-hub/v1/rpc/backend"
-	"github.com/hetu-project/hetu-hub/v1/rpc/namespaces/ethereum/debug"
-	"github.com/hetu-project/hetu-hub/v1/rpc/namespaces/ethereum/eth"
-	"github.com/hetu-project/hetu-hub/v1/rpc/namespaces/ethereum/eth/filters"
-	"github.com/hetu-project/hetu-hub/v1/rpc/namespaces/ethereum/miner"
-	"github.com/hetu-project/hetu-hub/v1/rpc/namespaces/ethereum/net"
-	"github.com/hetu-project/hetu-hub/v1/rpc/namespaces/ethereum/personal"
-	"github.com/hetu-project/hetu-hub/v1/rpc/namespaces/ethereum/txpool"
-	"github.com/hetu-project/hetu-hub/v1/rpc/namespaces/ethereum/web3"
-	"github.com/hetu-project/hetu-hub/v1/types"
+	"github.com/hetu-project/hetu/v1/rpc/backend"
+	"github.com/hetu-project/hetu/v1/rpc/namespaces/ethereum/debug"
+	"github.com/hetu-project/hetu/v1/rpc/namespaces/ethereum/eth"
+	"github.com/hetu-project/hetu/v1/rpc/namespaces/ethereum/eth/filters"
+	"github.com/hetu-project/hetu/v1/rpc/namespaces/ethereum/miner"
+	"github.com/hetu-project/hetu/v1/rpc/namespaces/ethereum/net"
+	"github.com/hetu-project/hetu/v1/rpc/namespaces/ethereum/personal"
+	"github.com/hetu-project/hetu/v1/rpc/namespaces/ethereum/txpool"
+	"github.com/hetu-project/hetu/v1/rpc/namespaces/ethereum/web3"
+	"github.com/hetu-project/hetu/v1/types"
 
 	rpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
 )

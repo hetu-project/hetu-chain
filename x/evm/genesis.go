@@ -24,9 +24,9 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 
-	evmostypes "github.com/hetu-project/hetu-hub/v1/types"
-	"github.com/hetu-project/hetu-hub/v1/x/evm/keeper"
-	"github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	evmostypes "github.com/hetu-project/hetu/v1/types"
+	"github.com/hetu-project/hetu/v1/x/evm/keeper"
+	"github.com/hetu-project/hetu/v1/x/evm/types"
 )
 
 // InitGenesis initializes genesis state based on exported genesis

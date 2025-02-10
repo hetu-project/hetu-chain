@@ -23,11 +23,11 @@ import (
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
 
 	txsigning "cosmossdk.io/x/tx/signing"
-	protov2 "google.golang.org/protobuf/proto"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	"github.com/ethereum/go-ethereum/common"
+	protov2 "google.golang.org/protobuf/proto"
 
-	erc20api "github.com/hetu-project/hetu-hub/v1/api/evmos/erc20/v1"
+	erc20api "github.com/hetu-project/hetu/v1/api/evmos/erc20/v1"
 )
 
 var (

@@ -1,4 +1,4 @@
-module github.com/hetu-project/hetu-hub/v1
+module github.com/hetu-project/hetu/v1
 
 go 1.23.3
 

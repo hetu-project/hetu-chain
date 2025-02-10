@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/hetu-project/hetu-hub/v1/rpc/types"
+	"github.com/hetu-project/hetu/v1/rpc/types"
 
 	"cosmossdk.io/log"
 
@@ -35,7 +35,7 @@ import (
 	"github.com/ethereum/go-ethereum/eth/filters"
 	"github.com/ethereum/go-ethereum/rpc"
 
-	evmtypes "github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	evmtypes "github.com/hetu-project/hetu/v1/x/evm/types"
 )
 
 // FilterAPI gathers

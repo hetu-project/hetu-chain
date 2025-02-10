@@ -47,10 +47,10 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	inflationtypes "github.com/hetu-project/hetu-hub/v1/x/inflation/types"
+	inflationtypes "github.com/hetu-project/hetu/v1/x/inflation/types"
 
-	"github.com/hetu-project/hetu-hub/v1/server"
-	evmtypes "github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	"github.com/hetu-project/hetu/v1/server"
+	evmtypes "github.com/hetu-project/hetu/v1/x/evm/types"
 )
 
 func startInProcess(cfg Config, val *Validator) error {

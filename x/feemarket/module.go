@@ -34,9 +34,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/hetu-project/hetu-hub/v1/x/feemarket/client/cli"
-	"github.com/hetu-project/hetu-hub/v1/x/feemarket/keeper"
-	"github.com/hetu-project/hetu-hub/v1/x/feemarket/types"
+	"github.com/hetu-project/hetu/v1/x/feemarket/client/cli"
+	"github.com/hetu-project/hetu/v1/x/feemarket/keeper"
+	"github.com/hetu-project/hetu/v1/x/feemarket/types"
 )
 
 var (

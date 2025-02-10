@@ -13,9 +13,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 
-	cryptocodec "github.com/hetu-project/hetu-hub/v1/crypto/codec"
-	enccodec "github.com/hetu-project/hetu-hub/v1/encoding/codec"
-	hetutypes "github.com/hetu-project/hetu-hub/v1/types"
+	cryptocodec "github.com/hetu-project/hetu/v1/crypto/codec"
+	enccodec "github.com/hetu-project/hetu/v1/encoding/codec"
+	hetutypes "github.com/hetu-project/hetu/v1/types"
 )
 
 var TestCodec amino.Codec

@@ -12,11 +12,11 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/hetu-project/hetu-hub/v1/indexer"
-	"github.com/hetu-project/hetu-hub/v1/rpc/backend/mocks"
-	rpctypes "github.com/hetu-project/hetu-hub/v1/rpc/types"
-	evmostypes "github.com/hetu-project/hetu-hub/v1/types"
-	evmtypes "github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	"github.com/hetu-project/hetu/v1/indexer"
+	"github.com/hetu-project/hetu/v1/rpc/backend/mocks"
+	rpctypes "github.com/hetu-project/hetu/v1/rpc/types"
+	evmostypes "github.com/hetu-project/hetu/v1/types"
+	evmtypes "github.com/hetu-project/hetu/v1/x/evm/types"
 	"google.golang.org/grpc/metadata"
 )
 

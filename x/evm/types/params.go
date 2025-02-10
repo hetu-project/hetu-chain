@@ -24,7 +24,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/hetu-project/hetu-hub/v1/utils"
+	"github.com/hetu-project/hetu/v1/utils"
 )
 
 var (

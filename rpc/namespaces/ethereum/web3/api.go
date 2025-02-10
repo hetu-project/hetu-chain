@@ -16,7 +16,7 @@
 package web3
 
 import (
-	"github.com/hetu-project/hetu-hub/v1/version"
+	"github.com/hetu-project/hetu/v1/version"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"

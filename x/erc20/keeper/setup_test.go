@@ -15,10 +15,10 @@ import (
 	ibcgotesting "github.com/cosmos/ibc-go/v8/testing"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/hetu-project/hetu-hub/v1/app"
-	ibctesting "github.com/hetu-project/hetu-hub/v1/ibc/testing"
-	"github.com/hetu-project/hetu-hub/v1/x/erc20/types"
-	evm "github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	"github.com/hetu-project/hetu/v1/app"
+	ibctesting "github.com/hetu-project/hetu/v1/ibc/testing"
+	"github.com/hetu-project/hetu/v1/x/erc20/types"
+	evm "github.com/hetu-project/hetu/v1/x/evm/types"
 	"github.com/stretchr/testify/suite"
 )
 

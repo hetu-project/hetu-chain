@@ -36,12 +36,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 
-	evmoskr "github.com/hetu-project/hetu-hub/v1/crypto/keyring"
-	"github.com/hetu-project/hetu-hub/v1/types"
-	evmtypes "github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	evmoskr "github.com/hetu-project/hetu/v1/crypto/keyring"
+	"github.com/hetu-project/hetu/v1/types"
+	evmtypes "github.com/hetu-project/hetu/v1/x/evm/types"
 
-	vestingcli "github.com/hetu-project/hetu-hub/v1/x/vesting/client/cli"
-	vestingtypes "github.com/hetu-project/hetu-hub/v1/x/vesting/types"
+	vestingcli "github.com/hetu-project/hetu/v1/x/vesting/client/cli"
+	vestingtypes "github.com/hetu-project/hetu/v1/x/vesting/types"
 )
 
 const (

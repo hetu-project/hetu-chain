@@ -39,9 +39,9 @@ import (
 	"github.com/ethereum/go-ethereum/core/vm"
 	ethparams "github.com/ethereum/go-ethereum/params"
 
-	evmostypes "github.com/hetu-project/hetu-hub/v1/types"
-	"github.com/hetu-project/hetu-hub/v1/x/evm/statedb"
-	"github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	evmostypes "github.com/hetu-project/hetu/v1/types"
+	"github.com/hetu-project/hetu/v1/x/evm/statedb"
+	"github.com/hetu-project/hetu/v1/x/evm/types"
 )
 
 var _ types.QueryServer = Keeper{}
@@ -119,7 +119,7 @@ func (k Keeper) ValidatorAccount(c context.Context, req *types.QueryValidatorAcc
 	ctx := sdk.UnwrapSDKContext(c)
 
 	validator, err := k.stakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
-	if err != nil  {
+	if err != nil {
 		return nil, fmt.Errorf("validator not found for %s", consAddr.String())
 	}
 

@@ -22,8 +22,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/hashicorp/go-metrics"
-	epochstypes "github.com/hetu-project/hetu-hub/v1/x/epochs/types"
-	"github.com/hetu-project/hetu-hub/v1/x/inflation/types"
+	epochstypes "github.com/hetu-project/hetu/v1/x/epochs/types"
+	"github.com/hetu-project/hetu/v1/x/inflation/types"
 )
 
 // BeforeEpochStart: noop, We don't need to do anything here

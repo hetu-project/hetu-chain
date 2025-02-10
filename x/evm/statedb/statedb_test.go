@@ -9,7 +9,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/hetu-project/hetu-hub/v1/x/evm/statedb"
+	"github.com/hetu-project/hetu/v1/x/evm/statedb"
 	"github.com/stretchr/testify/suite"
 )
 

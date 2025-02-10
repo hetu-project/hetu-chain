@@ -25,7 +25,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/hetu-project/hetu-hub/v1/x/epochs/types"
+	"github.com/hetu-project/hetu/v1/x/epochs/types"
 )
 
 var _ types.QueryServer = Keeper{}

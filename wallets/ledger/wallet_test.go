@@ -6,9 +6,9 @@ import (
 
 	gethaccounts "github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/hetu-project/hetu-hub/v1/ethereum/eip712"
-	"github.com/hetu-project/hetu-hub/v1/wallets/accounts"
-	"github.com/hetu-project/hetu-hub/v1/wallets/ledger/mocks"
+	"github.com/hetu-project/hetu/v1/ethereum/eip712"
+	"github.com/hetu-project/hetu/v1/wallets/accounts"
+	"github.com/hetu-project/hetu/v1/wallets/ledger/mocks"
 )
 
 func RegisterDerive(mockWallet *mocks.Wallet, addr common.Address, publicKey *ecdsa.PublicKey) {

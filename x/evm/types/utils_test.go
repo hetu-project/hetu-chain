@@ -14,9 +14,9 @@ import (
 
 	proto "github.com/gogo/protobuf/proto"
 
-	"github.com/hetu-project/hetu-hub/v1/encoding"
-	utiltx "github.com/hetu-project/hetu-hub/v1/testutil/tx"
-	evmtypes "github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	"github.com/hetu-project/hetu/v1/encoding"
+	utiltx "github.com/hetu-project/hetu/v1/testutil/tx"
+	evmtypes "github.com/hetu-project/hetu/v1/x/evm/types"
 
 	"github.com/stretchr/testify/require"
 )

@@ -20,7 +20,7 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/hetu-project/hetu-hub/v1/x/inflation/types"
+	"github.com/hetu-project/hetu/v1/x/inflation/types"
 )
 
 var _ types.QueryServer = Keeper{}

@@ -32,7 +32,7 @@ import (
 
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 
-	"github.com/hetu-project/hetu-hub/v1/types"
+	"github.com/hetu-project/hetu/v1/types"
 )
 
 // BlockNumber represents decoding hex string to block values

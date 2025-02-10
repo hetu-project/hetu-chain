@@ -9,9 +9,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	"github.com/stretchr/testify/require"
 
-	"github.com/hetu-project/hetu-hub/v1/app"
-	hetud "github.com/hetu-project/hetu-hub/v1/cmd/hetud"
-	"github.com/hetu-project/hetu-hub/v1/utils"
+	"github.com/hetu-project/hetu/v1/app"
+	hetud "github.com/hetu-project/hetu/v1/cmd/hetud"
+	"github.com/hetu-project/hetu/v1/utils"
 )
 
 func TestInitCmd(t *testing.T) {

@@ -29,8 +29,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/hetu-project/hetu-hub/v1/ethereum/eip712"
-	evmos "github.com/hetu-project/hetu-hub/v1/types"
+	"github.com/hetu-project/hetu/v1/ethereum/eip712"
+	evmos "github.com/hetu-project/hetu/v1/types"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )

@@ -28,9 +28,9 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
-	rpctypes "github.com/hetu-project/hetu-hub/v1/rpc/types"
-	"github.com/hetu-project/hetu-hub/v1/types"
-	evmtypes "github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	rpctypes "github.com/hetu-project/hetu/v1/rpc/types"
+	"github.com/hetu-project/hetu/v1/types"
+	evmtypes "github.com/hetu-project/hetu/v1/x/evm/types"
 	"github.com/pkg/errors"
 )
 

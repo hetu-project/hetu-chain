@@ -15,12 +15,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/hetu-project/hetu-hub/v1/cmd/config"
-	"github.com/hetu-project/hetu-hub/v1/encoding"
-	"github.com/hetu-project/hetu-hub/v1/ethereum/eip712"
-	utiltx "github.com/hetu-project/hetu-hub/v1/testutil/tx"
-	"github.com/hetu-project/hetu-hub/v1/types"
-	"github.com/hetu-project/hetu-hub/v1/utils"
+	"github.com/hetu-project/hetu/v1/cmd/config"
+	"github.com/hetu-project/hetu/v1/encoding"
+	"github.com/hetu-project/hetu/v1/ethereum/eip712"
+	utiltx "github.com/hetu-project/hetu/v1/testutil/tx"
+	"github.com/hetu-project/hetu/v1/types"
+	"github.com/hetu-project/hetu/v1/utils"
 	"github.com/stretchr/testify/require"
 )
 

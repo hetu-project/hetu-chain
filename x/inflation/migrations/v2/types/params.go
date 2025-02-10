@@ -24,8 +24,8 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	evm "github.com/hetu-project/hetu-hub/v1/x/evm/types"
-	"github.com/hetu-project/hetu-hub/v1/x/inflation/types"
+	evm "github.com/hetu-project/hetu/v1/x/evm/types"
+	"github.com/hetu-project/hetu/v1/x/inflation/types"
 )
 
 var _ types.LegacyParams = &V2Params{}

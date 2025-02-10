@@ -2,14 +2,14 @@ package ledger_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	gethaccounts "github.com/ethereum/go-ethereum/accounts"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	gethaccounts "github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/hetu-project/hetu-hub/v1/encoding"
-	"github.com/hetu-project/hetu-hub/v1/ethereum/eip712"
-	"github.com/hetu-project/hetu-hub/v1/wallets/accounts"
-	"github.com/hetu-project/hetu-hub/v1/wallets/ledger"
+	"github.com/hetu-project/hetu/v1/encoding"
+	"github.com/hetu-project/hetu/v1/ethereum/eip712"
+	"github.com/hetu-project/hetu/v1/wallets/accounts"
+	"github.com/hetu-project/hetu/v1/wallets/ledger"
 )
 
 // Test Mnemonic:

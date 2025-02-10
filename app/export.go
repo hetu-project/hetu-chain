@@ -22,15 +22,15 @@ import (
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
+	storetypes "cosmossdk.io/store/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	storetypes "cosmossdk.io/store/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/ibc-go/v8/testing/simapp"
 
-	"github.com/hetu-project/hetu-hub/v1/encoding"
+	"github.com/hetu-project/hetu/v1/encoding"
 )
 
 // NewDefaultGenesisState generates the default state for the application.

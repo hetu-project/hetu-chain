@@ -6,11 +6,11 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/hetu-project/hetu-hub/v1/crypto/ethsecp256k1"
-	evmostypes "github.com/hetu-project/hetu-hub/v1/types"
-	"github.com/hetu-project/hetu-hub/v1/x/evm"
-	"github.com/hetu-project/hetu-hub/v1/x/evm/statedb"
-	"github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	"github.com/hetu-project/hetu/v1/crypto/ethsecp256k1"
+	evmostypes "github.com/hetu-project/hetu/v1/types"
+	"github.com/hetu-project/hetu/v1/x/evm"
+	"github.com/hetu-project/hetu/v1/x/evm/statedb"
+	"github.com/hetu-project/hetu/v1/x/evm/types"
 )
 
 func (suite *EvmTestSuite) TestInitGenesis() {

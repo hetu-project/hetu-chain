@@ -22,7 +22,7 @@ import (
 	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/hetu-project/hetu-hub/v1/crypto/ethsecp256k1"
+	"github.com/hetu-project/hetu/v1/crypto/ethsecp256k1"
 
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"

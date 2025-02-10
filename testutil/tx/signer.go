@@ -26,7 +26,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 
-	"github.com/hetu-project/hetu-hub/v1/crypto/ethsecp256k1"
+	"github.com/hetu-project/hetu/v1/crypto/ethsecp256k1"
 )
 
 // NewAddrKey generates an Ethereum address and its corresponding private key.

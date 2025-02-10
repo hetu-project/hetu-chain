@@ -27,7 +27,7 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ibctesting "github.com/cosmos/ibc-go/v8/testing"
-	"github.com/hetu-project/hetu-hub/v1/app"
+	"github.com/hetu-project/hetu/v1/app"
 	"github.com/stretchr/testify/require"
 )
 
@@ -138,7 +138,7 @@ func SetupClients(coord *ibctesting.Coordinator, path *Path) {
 
 func SendMsgs(chain *ibctesting.TestChain, feeAmt int64, msgs ...sdk.Msg) (*sdk.Result, error) {
 	var bondDenom string
-	var err       error
+	var err error
 	// ensure the chain has the latest time
 	chain.Coordinator.UpdateTimeForChain(chain)
 

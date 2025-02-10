@@ -8,14 +8,14 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-	ethante "github.com/hetu-project/hetu-hub/v1/app/ante/evm"
-	"github.com/hetu-project/hetu-hub/v1/server/config"
-	"github.com/hetu-project/hetu-hub/v1/testutil"
-	testutiltx "github.com/hetu-project/hetu-hub/v1/testutil/tx"
-	"github.com/hetu-project/hetu-hub/v1/types"
-	"github.com/hetu-project/hetu-hub/v1/utils"
-	"github.com/hetu-project/hetu-hub/v1/x/evm/statedb"
-	evmtypes "github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	ethante "github.com/hetu-project/hetu/v1/app/ante/evm"
+	"github.com/hetu-project/hetu/v1/server/config"
+	"github.com/hetu-project/hetu/v1/testutil"
+	testutiltx "github.com/hetu-project/hetu/v1/testutil/tx"
+	"github.com/hetu-project/hetu/v1/types"
+	"github.com/hetu-project/hetu/v1/utils"
+	"github.com/hetu-project/hetu/v1/x/evm/statedb"
+	evmtypes "github.com/hetu-project/hetu/v1/x/evm/types"
 
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 )

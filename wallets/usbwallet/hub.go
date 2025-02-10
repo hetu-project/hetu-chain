@@ -27,7 +27,7 @@ import (
 	"runtime"
 
 	gethaccounts "github.com/ethereum/go-ethereum/accounts"
-	"github.com/hetu-project/hetu-hub/v1/wallets/accounts"
+	"github.com/hetu-project/hetu/v1/wallets/accounts"
 	usb "github.com/zondax/hid"
 )
 

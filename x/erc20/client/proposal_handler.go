@@ -19,7 +19,7 @@ package client
 import (
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 
-	"github.com/hetu-project/hetu-hub/v1/x/erc20/client/cli"
+	"github.com/hetu-project/hetu/v1/x/erc20/client/cli"
 )
 
 var (

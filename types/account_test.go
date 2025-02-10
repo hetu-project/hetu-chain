@@ -12,10 +12,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	cryptocodec "github.com/hetu-project/hetu-hub/v1/crypto/codec"
-	"github.com/hetu-project/hetu-hub/v1/crypto/ethsecp256k1"
-	encodingcodec "github.com/hetu-project/hetu-hub/v1/encoding/codec"
-	"github.com/hetu-project/hetu-hub/v1/types"
+	cryptocodec "github.com/hetu-project/hetu/v1/crypto/codec"
+	"github.com/hetu-project/hetu/v1/crypto/ethsecp256k1"
+	encodingcodec "github.com/hetu-project/hetu/v1/encoding/codec"
+	"github.com/hetu-project/hetu/v1/types"
 )
 
 func init() {

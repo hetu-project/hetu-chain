@@ -6,9 +6,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/hetu-project/hetu-hub/v1/contracts"
-	"github.com/hetu-project/hetu-hub/v1/x/erc20/types"
-	evm "github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	"github.com/hetu-project/hetu/v1/contracts"
+	"github.com/hetu-project/hetu/v1/x/erc20/types"
+	evm "github.com/hetu-project/hetu/v1/x/evm/types"
 )
 
 func (suite *KeeperTestSuite) MintERC20Token(contractAddr, from, to common.Address, amount *big.Int) *evm.MsgEthereumTx {

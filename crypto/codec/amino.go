@@ -21,7 +21,7 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 
-	"github.com/hetu-project/hetu-hub/v1/crypto/ethsecp256k1"
+	"github.com/hetu-project/hetu/v1/crypto/ethsecp256k1"
 )
 
 // RegisterCrypto registers all crypto dependency types with the provided Amino

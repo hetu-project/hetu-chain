@@ -18,14 +18,14 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/hetu-project/hetu-hub/v1/crypto/hd"
-	"github.com/hetu-project/hetu-hub/v1/encoding"
-	"github.com/hetu-project/hetu-hub/v1/indexer"
-	"github.com/hetu-project/hetu-hub/v1/rpc/backend/mocks"
-	rpctypes "github.com/hetu-project/hetu-hub/v1/rpc/types"
-	utiltx "github.com/hetu-project/hetu-hub/v1/testutil/tx"
-	"github.com/hetu-project/hetu-hub/v1/utils"
-	evmtypes "github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	"github.com/hetu-project/hetu/v1/crypto/hd"
+	"github.com/hetu-project/hetu/v1/encoding"
+	"github.com/hetu-project/hetu/v1/indexer"
+	"github.com/hetu-project/hetu/v1/rpc/backend/mocks"
+	rpctypes "github.com/hetu-project/hetu/v1/rpc/types"
+	utiltx "github.com/hetu-project/hetu/v1/testutil/tx"
+	"github.com/hetu-project/hetu/v1/utils"
+	evmtypes "github.com/hetu-project/hetu/v1/x/evm/types"
 )
 
 type BackendTestSuite struct {

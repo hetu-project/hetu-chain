@@ -23,8 +23,8 @@ import (
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
-	rpctypes "github.com/hetu-project/hetu-hub/v1/rpc/types"
-	evmtypes "github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	rpctypes "github.com/hetu-project/hetu/v1/rpc/types"
+	evmtypes "github.com/hetu-project/hetu/v1/x/evm/types"
 	"github.com/pkg/errors"
 )
 

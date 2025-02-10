@@ -25,10 +25,10 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	evmtypes "github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	evmtypes "github.com/hetu-project/hetu/v1/x/evm/types"
 
-	"github.com/hetu-project/hetu-hub/v1/contracts"
-	"github.com/hetu-project/hetu-hub/v1/x/erc20/types"
+	"github.com/hetu-project/hetu/v1/contracts"
+	"github.com/hetu-project/hetu/v1/x/erc20/types"
 )
 
 var _ evmtypes.EvmHooks = Hooks{}

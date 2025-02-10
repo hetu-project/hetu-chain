@@ -22,8 +22,8 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
-	evmtypes "github.com/hetu-project/hetu-hub/v1/x/evm/types"
-	vestingtypes "github.com/hetu-project/hetu-hub/v1/x/vesting/types"
+	evmtypes "github.com/hetu-project/hetu/v1/x/evm/types"
+	vestingtypes "github.com/hetu-project/hetu/v1/x/vesting/types"
 )
 
 // EthVestingTransactionDecorator validates if clawback vesting accounts are

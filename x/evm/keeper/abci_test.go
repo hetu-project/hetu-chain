@@ -2,7 +2,7 @@ package keeper_test
 
 import (
 	"github.com/cometbft/cometbft/abci/types"
-	evmtypes "github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	evmtypes "github.com/hetu-project/hetu/v1/x/evm/types"
 )
 
 func (suite *KeeperTestSuite) TestEndBlock() {

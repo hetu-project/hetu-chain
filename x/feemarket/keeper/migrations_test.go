@@ -2,8 +2,8 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	feemarketkeeper "github.com/hetu-project/hetu-hub/v1/x/feemarket/keeper"
-	"github.com/hetu-project/hetu-hub/v1/x/feemarket/types"
+	feemarketkeeper "github.com/hetu-project/hetu/v1/x/feemarket/keeper"
+	"github.com/hetu-project/hetu/v1/x/feemarket/types"
 )
 
 type mockSubspace struct {

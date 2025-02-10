@@ -23,7 +23,7 @@ import (
 	"fmt"
 	"sort"
 
-	cryptohd "github.com/hetu-project/hetu-hub/v1/crypto/hd"
+	cryptohd "github.com/hetu-project/hetu/v1/crypto/hd"
 
 	bip39 "github.com/cosmos/go-bip39"
 	"github.com/spf13/cobra"

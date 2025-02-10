@@ -25,7 +25,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 
-	"github.com/hetu-project/hetu-hub/v1/types"
+	"github.com/hetu-project/hetu/v1/types"
 )
 
 func newAccessListTx(tx *ethtypes.Transaction) (*AccessListTx, error) {

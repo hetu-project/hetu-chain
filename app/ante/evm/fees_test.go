@@ -8,10 +8,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	evmante "github.com/hetu-project/hetu-hub/v1/app/ante/evm"
-	"github.com/hetu-project/hetu-hub/v1/testutil"
-	testutiltx "github.com/hetu-project/hetu-hub/v1/testutil/tx"
-	evmtypes "github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	evmante "github.com/hetu-project/hetu/v1/app/ante/evm"
+	"github.com/hetu-project/hetu/v1/testutil"
+	testutiltx "github.com/hetu-project/hetu/v1/testutil/tx"
+	evmtypes "github.com/hetu-project/hetu/v1/x/evm/types"
 )
 
 var execTypes = []struct {

@@ -9,7 +9,7 @@ import (
 	protov2 "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	evmapi "github.com/hetu-project/hetu-hub/v1/api/ethermint/evm/v1"
+	evmapi "github.com/hetu-project/hetu/v1/api/ethermint/evm/v1"
 )
 
 var (

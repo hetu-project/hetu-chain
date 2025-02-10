@@ -61,18 +61,18 @@ import (
 
 	rosettaCmd "github.com/cosmos/rosetta/cmd"
 
-	evmosclient "github.com/hetu-project/hetu-hub/v1/client"
-	"github.com/hetu-project/hetu-hub/v1/client/debug"
-	"github.com/hetu-project/hetu-hub/v1/encoding"
-	"github.com/hetu-project/hetu-hub/v1/ethereum/eip712"
-	evmosserver "github.com/hetu-project/hetu-hub/v1/server"
-	servercfg "github.com/hetu-project/hetu-hub/v1/server/config"
-	srvflags "github.com/hetu-project/hetu-hub/v1/server/flags"
+	evmosclient "github.com/hetu-project/hetu/v1/client"
+	"github.com/hetu-project/hetu/v1/client/debug"
+	"github.com/hetu-project/hetu/v1/encoding"
+	"github.com/hetu-project/hetu/v1/ethereum/eip712"
+	evmosserver "github.com/hetu-project/hetu/v1/server"
+	servercfg "github.com/hetu-project/hetu/v1/server/config"
+	srvflags "github.com/hetu-project/hetu/v1/server/flags"
 
-	"github.com/hetu-project/hetu-hub/v1/app"
-	cmdcfg "github.com/hetu-project/hetu-hub/v1/cmd/config"
-	evmoskr "github.com/hetu-project/hetu-hub/v1/crypto/keyring"
-	"github.com/hetu-project/hetu-hub/v1/utils"
+	"github.com/hetu-project/hetu/v1/app"
+	cmdcfg "github.com/hetu-project/hetu/v1/cmd/config"
+	evmoskr "github.com/hetu-project/hetu/v1/crypto/keyring"
+	"github.com/hetu-project/hetu/v1/utils"
 )
 
 const (

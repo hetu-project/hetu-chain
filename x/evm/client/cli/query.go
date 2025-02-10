@@ -16,13 +16,13 @@
 package cli
 
 import (
-	rpctypes "github.com/hetu-project/hetu-hub/v1/rpc/types"
+	rpctypes "github.com/hetu-project/hetu/v1/rpc/types"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 
-	"github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	"github.com/hetu-project/hetu/v1/x/evm/types"
 )
 
 // GetQueryCmd returns the parent command for all x/bank CLi query commands.

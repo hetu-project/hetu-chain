@@ -5,10 +5,10 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	cosmosante "github.com/hetu-project/hetu-hub/v1/app/ante/cosmos"
-	"github.com/hetu-project/hetu-hub/v1/testutil"
-	testutiltx "github.com/hetu-project/hetu-hub/v1/testutil/tx"
-	"github.com/hetu-project/hetu-hub/v1/utils"
+	cosmosante "github.com/hetu-project/hetu/v1/app/ante/cosmos"
+	"github.com/hetu-project/hetu/v1/testutil"
+	testutiltx "github.com/hetu-project/hetu/v1/testutil/tx"
+	"github.com/hetu-project/hetu/v1/utils"
 )
 
 var execTypes = []struct {

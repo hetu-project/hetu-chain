@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/hetu-project/hetu-hub/v1/x/evm/statedb"
+	"github.com/hetu-project/hetu/v1/x/evm/statedb"
 )
 
 var (

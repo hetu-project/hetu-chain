@@ -27,9 +27,9 @@ import (
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	enccodec "github.com/hetu-project/hetu-hub/v1/encoding/codec"
-	erc20types "github.com/hetu-project/hetu-hub/v1/x/erc20/types"
-	evmtypes "github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	enccodec "github.com/hetu-project/hetu/v1/encoding/codec"
+	erc20types "github.com/hetu-project/hetu/v1/x/erc20/types"
+	evmtypes "github.com/hetu-project/hetu/v1/x/evm/types"
 )
 
 // MakeConfig creates an EncodingConfig for testing

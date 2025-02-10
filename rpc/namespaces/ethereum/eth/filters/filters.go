@@ -21,8 +21,8 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/hetu-project/hetu-hub/v1/rpc/backend"
-	"github.com/hetu-project/hetu-hub/v1/rpc/types"
+	"github.com/hetu-project/hetu/v1/rpc/backend"
+	"github.com/hetu-project/hetu/v1/rpc/types"
 
 	"cosmossdk.io/log"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"

@@ -22,7 +22,7 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
-	evmante "github.com/hetu-project/hetu-hub/v1/app/ante/evm"
+	evmante "github.com/hetu-project/hetu/v1/app/ante/evm"
 )
 
 // MinGasPriceDecorator will check if the transaction's fee is at least as large

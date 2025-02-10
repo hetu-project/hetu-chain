@@ -19,8 +19,8 @@ package testutil
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/hetu-project/hetu-hub/v1/app/ante/evm"
-	"github.com/hetu-project/hetu-hub/v1/x/evm/statedb"
+	"github.com/hetu-project/hetu/v1/app/ante/evm"
+	"github.com/hetu-project/hetu/v1/x/evm/statedb"
 )
 
 // NewStateDB returns a new StateDB for testing purposes.

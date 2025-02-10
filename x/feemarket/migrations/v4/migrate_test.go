@@ -21,9 +21,9 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/hetu-project/hetu-hub/v1/encoding"
-	v4 "github.com/hetu-project/hetu-hub/v1/x/feemarket/migrations/v4"
-	"github.com/hetu-project/hetu-hub/v1/x/feemarket/types"
+	"github.com/hetu-project/hetu/v1/encoding"
+	v4 "github.com/hetu-project/hetu/v1/x/feemarket/migrations/v4"
+	"github.com/hetu-project/hetu/v1/x/feemarket/types"
 	"github.com/stretchr/testify/require"
 )
 

@@ -20,7 +20,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 
-	"github.com/hetu-project/hetu-hub/v1/rpc/types"
+	"github.com/hetu-project/hetu/v1/rpc/types"
 )
 
 // PublicAPI offers and API for the transaction pool. It only operates on data that is non-confidential.

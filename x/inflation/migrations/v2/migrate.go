@@ -20,8 +20,8 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v2types "github.com/hetu-project/hetu-hub/v1/x/inflation/migrations/v2/types"
-	"github.com/hetu-project/hetu-hub/v1/x/inflation/types"
+	v2types "github.com/hetu-project/hetu/v1/x/inflation/migrations/v2/types"
+	"github.com/hetu-project/hetu/v1/x/inflation/types"
 )
 
 // MigrateStore migrates the x/inflation module state from the consensus version 1 to

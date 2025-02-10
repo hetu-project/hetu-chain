@@ -34,9 +34,9 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	"github.com/hetu-project/hetu-hub/v1/x/erc20/client/cli"
-	"github.com/hetu-project/hetu-hub/v1/x/erc20/keeper"
-	"github.com/hetu-project/hetu-hub/v1/x/erc20/types"
+	"github.com/hetu-project/hetu/v1/x/erc20/client/cli"
+	"github.com/hetu-project/hetu/v1/x/erc20/keeper"
+	"github.com/hetu-project/hetu/v1/x/erc20/types"
 )
 
 // type check to ensure the interface is properly implemented

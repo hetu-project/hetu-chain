@@ -26,10 +26,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	ethlog "github.com/ethereum/go-ethereum/log"
 	ethrpc "github.com/ethereum/go-ethereum/rpc"
-	"github.com/hetu-project/hetu-hub/v1/rpc"
+	"github.com/hetu-project/hetu/v1/rpc"
 
-	svrcfg "github.com/hetu-project/hetu-hub/v1/server/config"
-	evmostypes "github.com/hetu-project/hetu-hub/v1/types"
+	svrcfg "github.com/hetu-project/hetu/v1/server/config"
+	evmostypes "github.com/hetu-project/hetu/v1/types"
 )
 
 // StartJSONRPC starts the JSON-RPC server

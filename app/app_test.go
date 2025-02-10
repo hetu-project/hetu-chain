@@ -21,8 +21,8 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 
-	"github.com/hetu-project/hetu-hub/v1/encoding"
-	"github.com/hetu-project/hetu-hub/v1/utils"
+	"github.com/hetu-project/hetu/v1/encoding"
+	"github.com/hetu-project/hetu/v1/utils"
 )
 
 func TestEvmosExport(t *testing.T) {
@@ -45,14 +45,14 @@ func TestEvmosExport(t *testing.T) {
 
 	db := dbm.NewMemDB()
 	app := NewEvmos(
-		log.NewLogger(os.Stdout), 
-		db, 
-		nil, 
-		true, 
-		map[int64]bool{}, 
-		DefaultNodeHome, 0, 
-		encoding.MakeConfig(), 
-		simtestutil.NewAppOptionsWithFlagHome(DefaultNodeHome), 
+		log.NewLogger(os.Stdout),
+		db,
+		nil,
+		true,
+		map[int64]bool{},
+		DefaultNodeHome, 0,
+		encoding.MakeConfig(),
+		simtestutil.NewAppOptionsWithFlagHome(DefaultNodeHome),
 		baseapp.SetChainID(utils.MainnetChainID+"-1"))
 
 	genesisState := NewDefaultGenesisState()

@@ -20,8 +20,8 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/hetu-project/hetu-hub/v1/x/feemarket/keeper"
-	"github.com/hetu-project/hetu-hub/v1/x/feemarket/types"
+	"github.com/hetu-project/hetu/v1/x/feemarket/keeper"
+	"github.com/hetu-project/hetu/v1/x/feemarket/types"
 )
 
 // InitGenesis initializes genesis state based on exported genesis

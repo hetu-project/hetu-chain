@@ -16,11 +16,11 @@ import (
 	"github.com/cometbft/cometbft/abci/types"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 
-	"github.com/hetu-project/hetu-hub/v1/rpc/backend/mocks"
-	rpc "github.com/hetu-project/hetu-hub/v1/rpc/types"
-	utiltx "github.com/hetu-project/hetu-hub/v1/testutil/tx"
-	evmtypes "github.com/hetu-project/hetu-hub/v1/x/evm/types"
-	feemarkettypes "github.com/hetu-project/hetu-hub/v1/x/feemarket/types"
+	"github.com/hetu-project/hetu/v1/rpc/backend/mocks"
+	rpc "github.com/hetu-project/hetu/v1/rpc/types"
+	utiltx "github.com/hetu-project/hetu/v1/testutil/tx"
+	evmtypes "github.com/hetu-project/hetu/v1/x/evm/types"
+	feemarkettypes "github.com/hetu-project/hetu/v1/x/feemarket/types"
 )
 
 func (suite *BackendTestSuite) TestBaseFee() {

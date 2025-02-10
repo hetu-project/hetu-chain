@@ -24,7 +24,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
 
-	"github.com/hetu-project/hetu-hub/v1/x/vesting/types"
+	"github.com/hetu-project/hetu/v1/x/vesting/types"
 )
 
 // GetQueryCmd returns the parent command for all vesting CLI query commands.

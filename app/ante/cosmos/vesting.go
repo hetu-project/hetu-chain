@@ -20,11 +20,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/authz"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	evmtypes "github.com/hetu-project/hetu-hub/v1/x/evm/types"
-	vestingtypes "github.com/hetu-project/hetu-hub/v1/x/vesting/types"
+	evmtypes "github.com/hetu-project/hetu/v1/x/evm/types"
+	vestingtypes "github.com/hetu-project/hetu/v1/x/vesting/types"
 )
 
 // TODO: remove once Cosmos SDK is upgraded to v0.46

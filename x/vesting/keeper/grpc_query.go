@@ -23,7 +23,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/hetu-project/hetu-hub/v1/x/vesting/types"
+	"github.com/hetu-project/hetu/v1/x/vesting/types"
 )
 
 var _ types.QueryServer = Keeper{}

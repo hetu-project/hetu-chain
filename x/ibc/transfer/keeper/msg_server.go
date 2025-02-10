@@ -20,15 +20,15 @@ import (
 	"context"
 	"strings"
 
-	"github.com/hashicorp/go-metrics"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/hashicorp/go-metrics"
 
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-	erc20types "github.com/hetu-project/hetu-hub/v1/x/erc20/types"
+	erc20types "github.com/hetu-project/hetu/v1/x/erc20/types"
 )
 
 var _ types.MsgServer = Keeper{}

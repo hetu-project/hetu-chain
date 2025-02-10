@@ -27,11 +27,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
 
-	anteutils "github.com/hetu-project/hetu-hub/v1/app/ante/utils"
-	"github.com/hetu-project/hetu-hub/v1/types"
-	"github.com/hetu-project/hetu-hub/v1/x/evm/keeper"
-	"github.com/hetu-project/hetu-hub/v1/x/evm/statedb"
-	evmtypes "github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	anteutils "github.com/hetu-project/hetu/v1/app/ante/utils"
+	"github.com/hetu-project/hetu/v1/types"
+	"github.com/hetu-project/hetu/v1/x/evm/keeper"
+	"github.com/hetu-project/hetu/v1/x/evm/statedb"
+	evmtypes "github.com/hetu-project/hetu/v1/x/evm/types"
 
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"

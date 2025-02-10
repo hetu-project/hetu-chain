@@ -17,11 +17,11 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/hetu-project/hetu-hub/v1/crypto/ethsecp256k1"
-	utiltx "github.com/hetu-project/hetu-hub/v1/testutil/tx"
+	"github.com/hetu-project/hetu/v1/crypto/ethsecp256k1"
+	utiltx "github.com/hetu-project/hetu/v1/testutil/tx"
 
-	"github.com/hetu-project/hetu-hub/v1/encoding"
-	"github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	"github.com/hetu-project/hetu/v1/encoding"
+	"github.com/hetu-project/hetu/v1/x/evm/types"
 )
 
 const invalidAddress = "0x0000"

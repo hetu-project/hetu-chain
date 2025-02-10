@@ -16,10 +16,10 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	cosmosante "github.com/hetu-project/hetu-hub/v1/app/ante/cosmos"
-	testutil "github.com/hetu-project/hetu-hub/v1/testutil"
-	utiltx "github.com/hetu-project/hetu-hub/v1/testutil/tx"
-	evmtypes "github.com/hetu-project/hetu-hub/v1/x/evm/types"
+	cosmosante "github.com/hetu-project/hetu/v1/app/ante/cosmos"
+	testutil "github.com/hetu-project/hetu/v1/testutil"
+	utiltx "github.com/hetu-project/hetu/v1/testutil/tx"
+	evmtypes "github.com/hetu-project/hetu/v1/x/evm/types"
 )
 
 func TestAuthzLimiterDecorator(t *testing.T) {
