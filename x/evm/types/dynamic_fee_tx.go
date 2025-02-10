@@ -269,10 +269,10 @@ func (tx DynamicFeeTx) Validate() error {
 		)
 	}
 
-	if !(chainID.Cmp(big.NewInt(9001)) == 0 || chainID.Cmp(big.NewInt(9000)) == 0 || chainID.Cmp(big.NewInt(9002)) == 0) {
+	if !(chainID.Cmp(big.NewInt(560001)) == 0 || chainID.Cmp(big.NewInt(560000)) == 0 || chainID.Cmp(big.NewInt(560002)) == 0) {
 		return errorsmod.Wrapf(
 			errortypes.ErrInvalidChainID,
-			"chain ID must be 9000 or 9001 or 9002 on Evmos, got %s", chainID,
+			"chain ID must be 560000 or 560001 or 560002 on Evmos, got %s", chainID,
 		)
 	}
 

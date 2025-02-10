@@ -472,7 +472,7 @@ localnet-build:
 
 # Start a 4-node testnet locally
 localnet-start: localnet-stop localnet-build
-	@if ! [ -f build/node0/$(HETU_BINARY)/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/hetu:Z hetu/node "./hetud testnet init-files --v 4 -o /hetu --keyring-backend=test --starting-ip-address 192.167.0.2 --chain-id hetu_9000-1"; fi
+	@if ! [ -f build/node0/$(HETU_BINARY)/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/hetu:Z hetu/node "./hetud testnet init-files --v 4 -o /hetu --keyring-backend=test --starting-ip-address 192.167.0.2 --chain-id hetu_560000-1"; fi
 	docker-compose up -d
 
 # Stop testnet

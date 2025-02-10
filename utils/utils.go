@@ -35,12 +35,12 @@ import (
 
 const (
 	// MainnetChainID defines the Hetud EIP155 chain ID for mainnet
-	MainnetChainID = "hetu_9001"
+	MainnetChainID = "hetu_560001"
 	// TestnetChainID defines the Hetud EIP155 chain ID for testnet
-	TestnetChainID = "hetu_9000"
+	TestnetChainID = "hetu_56000"
 	// TestingChainID defines the Evmos EIP155 chain ID for testing purposes
 	// like the local node.
-	TestingChainID = "evmos_9002"
+	TestingChainID = "hetu_560002"
 	// BaseDenom defines the Hetud mainnet denomination
 	BaseDenom = "ahetu"
 )

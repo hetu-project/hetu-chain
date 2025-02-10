@@ -17,7 +17,7 @@ RPC_PORT="854"
 IP_ADDR="0.0.0.0"
 
 KEY="dev0"
-CHAINID="hetu_9000-1"
+CHAINID="hetu_560000-1"
 MONIKER="mymoniker"
 
 ## default port prefixes for hetud

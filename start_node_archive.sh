@@ -15,5 +15,5 @@ HOME_PREFIX="$HOME/.hetud${NODE_NUMBER}"
 # Start the node
 hetud start \
     --home "${HOME_PREFIX}" \
-    --chain-id hetu_9000-1 \
+    --chain-id hetu_560000-1 \
     --log_level info

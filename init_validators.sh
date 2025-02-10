@@ -25,7 +25,7 @@ echo "All validator IPs: ${VALIDATOR_IPS[@]}"
 echo "Number of validators: $NUM_VALIDATORS"
 
 # Configuration
-CHAIN_ID="hetu_9000-1"
+CHAIN_ID="hetu_560000-1"
 KEYRING="test"
 KEYALGO="eth_secp256k1"
 DENOM="ahetu"

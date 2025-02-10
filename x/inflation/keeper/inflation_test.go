@@ -119,7 +119,7 @@ func (suite *KeeperTestSuite) TestGetCirculatingSupplyAndInflationRate() {
 			suite.SetupTest() // reset
 
 			// Team allocation is only set on mainnet
-			suite.ctx = suite.ctx.WithChainID("evmos_9001-1")
+			suite.ctx = suite.ctx.WithChainID("hetu_560001-1")
 			tc.malleate()
 
 			// Mint coins to increase supply
@@ -171,7 +171,7 @@ func (suite *KeeperTestSuite) TestBondedRatio() {
 
 			// Team allocation is only set on mainnet
 			if tc.isMainnet {
-				suite.ctx = suite.ctx.WithChainID("evmos_9001-1")
+				suite.ctx = suite.ctx.WithChainID("hetu_560001-1")
 			} else {
 				suite.ctx = suite.ctx.WithChainID("evmos_9999-666")
 			}

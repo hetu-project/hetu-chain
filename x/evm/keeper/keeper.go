@@ -133,8 +133,8 @@ func (k *Keeper) WithChainID(ctx sdk.Context) {
 		panic("chain id already set")
 	}
 
-	if !(chainID.Cmp(big.NewInt(9001)) == 0 || chainID.Cmp(big.NewInt(9000)) == 0 || chainID.Cmp(big.NewInt(9002)) == 0) {
-		panic("EVM only supports Evmos chain identifiers (9000 or 9001 or 9002)")
+	if !(chainID.Cmp(big.NewInt(560001)) == 0 || chainID.Cmp(big.NewInt(560000)) == 0 || chainID.Cmp(big.NewInt(560002)) == 0) {
+		panic("EVM only supports Evmos chain identifiers (560000 or 560001 or 560002)")
 	}
 
 	k.eip155ChainID = chainID

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 KEY="dev0"
-CHAINID="hetu_9000-1"
+CHAINID="hetu_560000-1"
 MONIKER="mymoniker"
 DATA_DIR=$(mktemp -d -t hetu-datadir.XXXXX)
 
