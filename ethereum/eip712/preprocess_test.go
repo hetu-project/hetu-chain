@@ -31,7 +31,7 @@ var (
 		encoding.MakeConfig().TxConfig,
 	)
 )
-var feePayerAddress = "hhub17xpfvakm2amg962yls6f84z3kell8c5l9zem6z"
+var feePayerAddress = "hetu17xpfvakm2amg962yls6f84z3kell8c5l9zem6z"
 
 type TestCaseStruct struct {
 	txBuilder              client.TxBuilder
@@ -209,7 +209,7 @@ func createPopulatedTestCase(t *testing.T) TestCaseStruct {
 
 	msgSend := banktypes.MsgSend{
 		FromAddress: feePayerAddress,
-		ToAddress:   "hhub12luku6uxehhak02py4rcz65zu0swh7wjun6msa",
+		ToAddress:   "hetu12luku6uxehhak02py4rcz65zu0swh7wjun6msa",
 		Amount: sdk.NewCoins(
 			sdk.NewCoin(
 				utils.BaseDenom,

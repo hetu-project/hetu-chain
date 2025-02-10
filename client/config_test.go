@@ -30,8 +30,8 @@ func TestInitConfigNonNotExistError(t *testing.T) {
 }
 
 func TestDecodeBen32AndReplace(t *testing.T) {
-	originalAddress := "evmos15cvq3ljql6utxseh0zau9m8ve2j8erz89m5wkz"
-	newPrefix := "hhub"
+	originalAddress := "hhub15cvq3ljql6utxseh0zau9m8ve2j8erz8jplma4"
+	newPrefix := "hetu"
 
 	hrp, decoded, err := bech32.Decode(originalAddress, 64)
 	if err != nil {
@@ -39,8 +39,8 @@ func TestDecodeBen32AndReplace(t *testing.T) {
 		return
 	}
 
-	if strings.HasPrefix(hrp, "evmos") {
-		hrp = newPrefix + hrp[len("evmos"):]
+	if strings.HasPrefix(hrp, "hhub") {
+		hrp = newPrefix + hrp[len("hhub"):]
 
 		newAddress, err := bech32.Encode(hrp, decoded)
 		if err != nil {
@@ -50,6 +50,6 @@ func TestDecodeBen32AndReplace(t *testing.T) {
 
 		fmt.Println("After:", newAddress)
 	} else {
-		fmt.Println("Not 'evmos' begin, no needs")
+		fmt.Println("Not 'hhub' begin, no needs")
 	}
 }

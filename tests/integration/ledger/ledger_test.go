@@ -175,7 +175,7 @@ var _ = Describe("Ledger CLI and keyring functionality: ", func() {
 						s.app.BankKeeper,
 						s.accAddr,
 						sdk.NewCoins(
-							sdk.NewCoin("ahhub", math.NewInt(100000000000000)),
+							sdk.NewCoin("ahetu", math.NewInt(100000000000000)),
 						),
 					)
 					s.Require().NoError(err)
@@ -200,7 +200,7 @@ var _ = Describe("Ledger CLI and keyring functionality: ", func() {
 					cmd.SetArgs([]string{
 						ledgerKey,
 						receiverAccAddr.String(),
-						sdk.NewCoin("ahhub", math.NewInt(1000)).String(),
+						sdk.NewCoin("ahetu", math.NewInt(1000)).String(),
 						s.FormatFlag(flags.FlagUseLedger),
 						s.FormatFlag(flags.FlagSkipConfirmation),
 					})
@@ -218,7 +218,7 @@ var _ = Describe("Ledger CLI and keyring functionality: ", func() {
 					cmd.SetArgs([]string{
 						ledgerKey,
 						receiverAccAddr.String(),
-						sdk.NewCoin("ahhub", math.NewInt(1000)).String(),
+						sdk.NewCoin("ahetu", math.NewInt(1000)).String(),
 						s.FormatFlag(flags.FlagUseLedger),
 						s.FormatFlag(flags.FlagSkipConfirmation),
 					})

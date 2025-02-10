@@ -34,23 +34,23 @@ import (
 )
 
 const (
-	// MainnetChainID defines the Hhubd EIP155 chain ID for mainnet
-	MainnetChainID = "hhub_9001"
-	// TestnetChainID defines the Hhubd EIP155 chain ID for testnet
-	TestnetChainID = "hhub_9000"
+	// MainnetChainID defines the Hetud EIP155 chain ID for mainnet
+	MainnetChainID = "hetu_9001"
+	// TestnetChainID defines the Hetud EIP155 chain ID for testnet
+	TestnetChainID = "hetu_9000"
 	// TestingChainID defines the Evmos EIP155 chain ID for testing purposes
 	// like the local node.
 	TestingChainID = "evmos_9002"
-	// BaseDenom defines the Hhubd mainnet denomination
-	BaseDenom = "ahhub"
+	// BaseDenom defines the Hetud mainnet denomination
+	BaseDenom = "ahetu"
 )
 
-// IsMainnet returns true if the chain-id has the Hhubd mainnet EIP155 chain prefix.
+// IsMainnet returns true if the chain-id has the Hetud mainnet EIP155 chain prefix.
 func IsMainnet(chainID string) bool {
 	return strings.HasPrefix(chainID, MainnetChainID)
 }
 
-// IsTestnet returns true if the chain-id has the Hhubd testnet EIP155 chain prefix.
+// IsTestnet returns true if the chain-id has the Hetud testnet EIP155 chain prefix.
 func IsTestnet(chainID string) bool {
 	return strings.HasPrefix(chainID, TestnetChainID)
 }
@@ -107,7 +107,7 @@ func GetEvmosAddressFromBech32(address string) (sdk.AccAddress, error) {
 }
 
 func TempDir(defaultHome string) string {
-	dir, err := os.MkdirTemp("", "hhub")
+	dir, err := os.MkdirTemp("", "hetu")
 	if err != nil {
 		dir = defaultHome
 	}

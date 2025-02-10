@@ -17,10 +17,10 @@ RPC_PORT="854"
 IP_ADDR="0.0.0.0"
 
 KEY="dev0"
-CHAINID="hhub_9000-1"
+CHAINID="hetu_9000-1"
 MONIKER="mymoniker"
 
-## default port prefixes for hhubd
+## default port prefixes for hetud
 NODE_P2P_PORT="2660"
 NODE_PORT="2663"
 NODE_RPC_PORT="2666"
@@ -38,86 +38,88 @@ usage() {
 
 while getopts "h?t:q:z:s:m:r:" args; do
     case $args in
-        h|\?)
-            usage;
-        exit;;
-        t ) TEST=${OPTARG};;
-        q ) QTD=${OPTARG};;
-        z ) TEST_QTD=${OPTARG};;
-        s ) SLEEP_TIMEOUT=${OPTARG};;
-        m ) MODE=${OPTARG};;
-        r ) REMOVE_DATA_DIR=${OPTARG};;
+    h | \?)
+        usage
+        exit
+        ;;
+    t) TEST=${OPTARG} ;;
+    q) QTD=${OPTARG} ;;
+    z) TEST_QTD=${OPTARG} ;;
+    s) SLEEP_TIMEOUT=${OPTARG} ;;
+    m) MODE=${OPTARG} ;;
+    r) REMOVE_DATA_DIR=${OPTARG} ;;
     esac
 done
 
 set -euxo pipefail
 
-DATA_DIR=$(mktemp -d -t hhub-datadir.XXXXX)
+DATA_DIR=$(mktemp -d -t hetu-datadir.XXXXX)
 
 if [[ ! "$DATA_DIR" ]]; then
     echo "Could not create $DATA_DIR"
     exit 1
 fi
 
-# Compile hhub
-echo "compiling hhub"
+# Compile hetu
+echo "compiling hetu"
 make build
 
 # PID array declaration
 arr=()
 
 init_func() {
-    "$PWD"/build/hhubd keys add $KEY"$i" --keyring-backend test --home "$DATA_DIR$i" --no-backup --algo "eth_secp256k1"
-    "$PWD"/build/hhubd init $MONIKER --chain-id $CHAINID --home "$DATA_DIR$i"
-    "$PWD"/build/hhubd add-genesis-account \
-    "$("$PWD"/build/hhubd keys show "$KEY$i" --keyring-backend test -a --home "$DATA_DIR$i")" 1000000000000000000ahhub,1000000000000000000stake \
-    --keyring-backend test --home "$DATA_DIR$i"
-    "$PWD"/build/hhubd gentx "$KEY$i" 1000000000000000000stake --chain-id $CHAINID --keyring-backend test --home "$DATA_DIR$i"
-    "$PWD"/build/hhubd collect-gentxs --home "$DATA_DIR$i"
-    "$PWD"/build/hhubd validate-genesis --home "$DATA_DIR$i"
+    "$PWD"/build/hetud keys add $KEY"$i" --keyring-backend test --home "$DATA_DIR$i" --no-backup --algo "eth_secp256k1"
+    "$PWD"/build/hetud init $MONIKER --chain-id $CHAINID --home "$DATA_DIR$i"
+    "$PWD"/build/hetud add-genesis-account \
+        "$("$PWD"/build/hetud keys show "$KEY$i" --keyring-backend test -a --home "$DATA_DIR$i")" 1000000000000000000ahetu,1000000000000000000stake \
+        --keyring-backend test --home "$DATA_DIR$i"
+    "$PWD"/build/hetud gentx "$KEY$i" 1000000000000000000stake --chain-id $CHAINID --keyring-backend test --home "$DATA_DIR$i"
+    "$PWD"/build/hetud collect-gentxs --home "$DATA_DIR$i"
+    "$PWD"/build/hetud validate-genesis --home "$DATA_DIR$i"
 
     if [[ $MODE == "pending" ]]; then
-      ls $DATA_DIR$i
-      if [[ "$OSTYPE" == "darwin"* ]]; then
-        sed -i '' 's/create_empty_blocks_interval = "0s"/create_empty_blocks_interval = "30s"/g' $DATA_DIR$i/config/config.toml
-        sed -i '' 's/timeout_propose = "3s"/timeout_propose = "30s"/g' $DATA_DIR$i/config/config.toml
-        sed -i '' 's/timeout_propose_delta = "500ms"/timeout_propose_delta = "2s"/g' $DATA_DIR$i/config/config.toml
-        sed -i '' 's/timeout_prevote = "1s"/timeout_prevote = "120s"/g' $DATA_DIR$i/config/config.toml
-        sed -i '' 's/timeout_prevote_delta = "500ms"/timeout_prevote_delta = "2s"/g' $DATA_DIR$i/config/config.toml
-        sed -i '' 's/timeout_precommit = "1s"/timeout_precommit = "10s"/g' $DATA_DIR$i/config/config.toml
-        sed -i '' 's/timeout_precommit_delta = "500ms"/timeout_precommit_delta = "2s"/g' $DATA_DIR$i/config/config.toml
-        sed -i '' 's/timeout_commit = "5s"/timeout_commit = "150s"/g' $DATA_DIR$i/config/config.toml
-        sed -i '' 's/timeout_broadcast_tx_commit = "10s"/timeout_broadcast_tx_commit = "150s"/g' $DATA_DIR$i/config/config.toml
-      else
-        sed -i 's/create_empty_blocks_interval = "0s"/create_empty_blocks_interval = "30s"/g' $DATA_DIR$i/config/config.toml
-        sed -i 's/timeout_propose = "3s"/timeout_propose = "30s"/g' $DATA_DIR$i/config/config.toml
-        sed -i 's/timeout_propose_delta = "500ms"/timeout_propose_delta = "2s"/g' $DATA_DIR$i/config/config.toml
-        sed -i 's/timeout_prevote = "1s"/timeout_prevote = "120s"/g' $DATA_DIR$i/config/config.toml
-        sed -i 's/timeout_prevote_delta = "500ms"/timeout_prevote_delta = "2s"/g' $DATA_DIR$i/config/config.toml
-        sed -i 's/timeout_precommit = "1s"/timeout_precommit = "10s"/g' $DATA_DIR$i/config/config.toml
-        sed -i 's/timeout_precommit_delta = "500ms"/timeout_precommit_delta = "2s"/g' $DATA_DIR$i/config/config.toml
-        sed -i 's/timeout_commit = "5s"/timeout_commit = "150s"/g' $DATA_DIR$i/config/config.toml
-        sed -i 's/timeout_broadcast_tx_commit = "10s"/timeout_broadcast_tx_commit = "150s"/g' $DATA_DIR$i/config/config.toml
-      fi
+        ls $DATA_DIR$i
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            sed -i '' 's/create_empty_blocks_interval = "0s"/create_empty_blocks_interval = "30s"/g' $DATA_DIR$i/config/config.toml
+            sed -i '' 's/timeout_propose = "3s"/timeout_propose = "30s"/g' $DATA_DIR$i/config/config.toml
+            sed -i '' 's/timeout_propose_delta = "500ms"/timeout_propose_delta = "2s"/g' $DATA_DIR$i/config/config.toml
+            sed -i '' 's/timeout_prevote = "1s"/timeout_prevote = "120s"/g' $DATA_DIR$i/config/config.toml
+            sed -i '' 's/timeout_prevote_delta = "500ms"/timeout_prevote_delta = "2s"/g' $DATA_DIR$i/config/config.toml
+            sed -i '' 's/timeout_precommit = "1s"/timeout_precommit = "10s"/g' $DATA_DIR$i/config/config.toml
+            sed -i '' 's/timeout_precommit_delta = "500ms"/timeout_precommit_delta = "2s"/g' $DATA_DIR$i/config/config.toml
+            sed -i '' 's/timeout_commit = "5s"/timeout_commit = "150s"/g' $DATA_DIR$i/config/config.toml
+            sed -i '' 's/timeout_broadcast_tx_commit = "10s"/timeout_broadcast_tx_commit = "150s"/g' $DATA_DIR$i/config/config.toml
+        else
+            sed -i 's/create_empty_blocks_interval = "0s"/create_empty_blocks_interval = "30s"/g' $DATA_DIR$i/config/config.toml
+            sed -i 's/timeout_propose = "3s"/timeout_propose = "30s"/g' $DATA_DIR$i/config/config.toml
+            sed -i 's/timeout_propose_delta = "500ms"/timeout_propose_delta = "2s"/g' $DATA_DIR$i/config/config.toml
+            sed -i 's/timeout_prevote = "1s"/timeout_prevote = "120s"/g' $DATA_DIR$i/config/config.toml
+            sed -i 's/timeout_prevote_delta = "500ms"/timeout_prevote_delta = "2s"/g' $DATA_DIR$i/config/config.toml
+            sed -i 's/timeout_precommit = "1s"/timeout_precommit = "10s"/g' $DATA_DIR$i/config/config.toml
+            sed -i 's/timeout_precommit_delta = "500ms"/timeout_precommit_delta = "2s"/g' $DATA_DIR$i/config/config.toml
+            sed -i 's/timeout_commit = "5s"/timeout_commit = "150s"/g' $DATA_DIR$i/config/config.toml
+            sed -i 's/timeout_broadcast_tx_commit = "10s"/timeout_broadcast_tx_commit = "150s"/g' $DATA_DIR$i/config/config.toml
+        fi
     fi
 }
 
 start_func() {
-    echo "starting hhub node $i in background ..."
-    "$PWD"/build/hhubd start --pruning=nothing --rpc.unsafe \
-    --p2p.laddr tcp://$IP_ADDR:$NODE_P2P_PORT"$i" --address tcp://$IP_ADDR:$NODE_PORT"$i" --rpc.laddr tcp://$IP_ADDR:$NODE_RPC_PORT"$i" \
-    --json-rpc.address=$IP_ADDR:$RPC_PORT"$i" \
-    --keyring-backend test --home "$DATA_DIR$i" \
-    >"$DATA_DIR"/node"$i".log 2>&1 & disown
+    echo "starting hetu node $i in background ..."
+    "$PWD"/build/hetud start --pruning=nothing --rpc.unsafe \
+        --p2p.laddr tcp://$IP_ADDR:$NODE_P2P_PORT"$i" --address tcp://$IP_ADDR:$NODE_PORT"$i" --rpc.laddr tcp://$IP_ADDR:$NODE_RPC_PORT"$i" \
+        --json-rpc.address=$IP_ADDR:$RPC_PORT"$i" \
+        --keyring-backend test --home "$DATA_DIR$i" \
+        >"$DATA_DIR"/node"$i".log 2>&1 &
+    disown
 
-    HHUB_PID=$!
-    echo "started hhub node, pid=$HHUB_PID"
+    HETU_PID=$!
+    echo "started hetu node, pid=$HETU_PID"
     # add PID to array
-    arr+=("$HHUB_PID")
+    arr+=("$HETU_PID")
 
     if [[ $MODE == "pending" ]]; then
-      echo "waiting for the first block..."
-      sleep 300
+        echo "waiting for the first block..."
+        sleep 300
     fi
 }
 
@@ -138,16 +140,16 @@ echo "done sleeping"
 
 set +e
 
-if [[ -z $TEST || $TEST == "rpc" ||  $TEST == "pending" ]]; then
+if [[ -z $TEST || $TEST == "rpc" || $TEST == "pending" ]]; then
 
     time_out=300s
     if [[ $TEST == "pending" ]]; then
-      time_out=60m0s
+        time_out=60m0s
     fi
 
     for i in $(seq 1 "$TEST_QTD"); do
         HOST_RPC=http://$IP_ADDR:$RPC_PORT"$i"
-        echo "going to test hhub node $HOST_RPC ..."
+        echo "going to test hetu node $HOST_RPC ..."
         MODE=$MODE HOST=$HOST_RPC go test ./tests/... -timeout=$time_out -v -short
 
         RPC_FAIL=$?
@@ -156,15 +158,14 @@ if [[ -z $TEST || $TEST == "rpc" ||  $TEST == "pending" ]]; then
 fi
 
 stop_func() {
-    HHUB_PID=$i
-    echo "shutting down node, pid=$HHUB_PID ..."
+    HETU_PID=$i
+    echo "shutting down node, pid=$HETU_PID ..."
 
-    # Shutdown hhub node
-    kill -9 "$HHUB_PID"
-    wait "$HHUB_PID"
+    # Shutdown hetu node
+    kill -9 "$HETU_PID"
+    wait "$HETU_PID"
 
-    if [ $REMOVE_DATA_DIR == "true" ]
-    then
+    if [ $REMOVE_DATA_DIR == "true" ]; then
         rm -rf $DATA_DIR*
     fi
 }

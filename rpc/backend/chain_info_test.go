@@ -6,8 +6,8 @@ import (
 
 	"cosmossdk.io/math"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	ethrpc "github.com/ethereum/go-ethereum/rpc"
 	ethmath "github.com/ethereum/go-ethereum/common/math"
+	ethrpc "github.com/ethereum/go-ethereum/rpc"
 
 	"google.golang.org/grpc/metadata"
 

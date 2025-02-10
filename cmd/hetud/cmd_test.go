@@ -10,25 +10,25 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/hetu-project/hetu-hub/v1/app"
-	hhubd "github.com/hetu-project/hetu-hub/v1/cmd/hhubd"
+	hetud "github.com/hetu-project/hetu-hub/v1/cmd/hetud"
 	"github.com/hetu-project/hetu-hub/v1/utils"
 )
 
 func TestInitCmd(t *testing.T) {
-	rootCmd, _ := hhubd.NewRootCmd()
+	rootCmd, _ := hetud.NewRootCmd()
 	rootCmd.SetArgs([]string{
 		"init",      // Test the init cmd
-		"hhub-test", // Moniker
+		"hetu-test", // Moniker
 		fmt.Sprintf("--%s=%s", cli.FlagOverwrite, "true"), // Overwrite genesis.json, in case it already exists
 		fmt.Sprintf("--%s=%s", flags.FlagChainID, utils.TestnetChainID+"-1"),
 	})
 
-	err := svrcmd.Execute(rootCmd, "hhubd", app.DefaultNodeHome)
+	err := svrcmd.Execute(rootCmd, "hetud", app.DefaultNodeHome)
 	require.NoError(t, err)
 }
 
 func TestAddKeyLedgerCmd(t *testing.T) {
-	rootCmd, _ := hhubd.NewRootCmd()
+	rootCmd, _ := hetud.NewRootCmd()
 	rootCmd.SetArgs([]string{
 		"keys",
 		"add",
@@ -36,6 +36,6 @@ func TestAddKeyLedgerCmd(t *testing.T) {
 		fmt.Sprintf("--%s", flags.FlagUseLedger),
 	})
 
-	err := svrcmd.Execute(rootCmd, "HHUBD", app.DefaultNodeHome)
+	err := svrcmd.Execute(rootCmd, "HETUD", app.DefaultNodeHome)
 	require.Error(t, err)
 }

@@ -220,7 +220,7 @@ func delegate(clawbackAccount *types.ClawbackVestingAccount, amount sdkmath.Int)
 	addr, err := sdk.AccAddressFromBech32(clawbackAccount.Address)
 	s.Require().NoError(err)
 
-	val, err := sdk.ValAddressFromBech32("hhubvaloper1z3t55m0l9h0eupuz3dp5t5cypyv674jjfcsegw")
+	val, err := sdk.ValAddressFromBech32("hetuvaloper1z3t55m0l9h0eupuz3dp5t5cypyv674jjfcsegw")
 	s.Require().NoError(err)
 	delegateMsg := stakingtypes.NewMsgDelegate(addr.String(), val.String(), sdk.NewCoin(utils.BaseDenom, amount))
 

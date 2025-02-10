@@ -35,7 +35,7 @@ var (
 
 	UevmosDenomtrace = transfertypes.DenomTrace{
 		Path:      "transfer/channel-0",
-		BaseDenom: "ahhub",
+		BaseDenom: "ahetu",
 	}
 	UevmosIbcdenom = UevmosDenomtrace.IBCDenom()
 
@@ -47,7 +47,7 @@ var (
 
 	AevmosDenomtrace = transfertypes.DenomTrace{
 		Path:      "transfer/channel-0",
-		BaseDenom: "ahhub",
+		BaseDenom: "ahetu",
 	}
 	AevmosIbcdenom = AevmosDenomtrace.IBCDenom()
 )

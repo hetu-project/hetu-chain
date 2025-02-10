@@ -34,7 +34,7 @@ func (suite *KeeperTestSuite) TestBalances() {
 			"invalid address",
 			func() {
 				req = &types.QueryBalancesRequest{
-					Address: "hhub1",
+					Address: "hetu1",
 				}
 			},
 			false,

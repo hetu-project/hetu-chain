@@ -45,7 +45,7 @@ To deploy locally, use the `local_node.sh` script. This script will set up a loc
 
 ### Remote Deployment
 
-For remote deployment, ensure that `hhubd` is available in the `PATH` on each machine. It is also recommended to set up SSH keys on the remote machines for secure and passwordless access.
+For remote deployment, ensure that `hetud` is available in the `PATH` on each machine. It is also recommended to set up SSH keys on the remote machines for secure and passwordless access.
 
 1. `init_validators.sh`: This script initializes the validators required for the Hetu Chain. You need to provide the remote IPs for the 4 validators in the network as parameters.
 

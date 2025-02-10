@@ -56,7 +56,7 @@ func MigrateGenesisCmd() *cobra.Command {
 		Short: "Migrate genesis to a specified target version",
 		Long:  "Migrate the source genesis into the target version and print to STDOUT.",
 		Example: fmt.Sprintf(
-			"%s migrate v3 /path/to/genesis.json --chain-id=hhub_9001-2 --genesis-time=2022-04-01T17:00:00Z",
+			"%s migrate v3 /path/to/genesis.json --chain-id=hetu_9001-2 --genesis-time=2022-04-01T17:00:00Z",
 			version.AppName,
 		),
 		Args: cobra.ExactArgs(2),
@@ -90,7 +90,7 @@ func MigrateGenesisCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("failed to when running migration function: %w", err)
 			}
-			
+
 			appState, err := json.Marshal(newGenState)
 			if err != nil {
 				return fmt.Errorf("failed to JSON marshal migrated genesis state: %w", err)

@@ -147,36 +147,36 @@ var _ = Describe("Convert receiving IBC to Erc20", Ordered, func() {
 			ibcAtomBalanceAfter := s.app.BankKeeper.GetBalance(s.EvmosChain.GetContext(), receiverAcc, teststypes.UatomIbcdenom)
 			s.Require().Equal(amount, ibcAtomBalanceAfter.Amount.Int64())
 		})
-		It("should transfer and not convert ahhub", func() {
-			// Register 'ahhub' coin in ERC-20 keeper to validate it is not converting the coins when receiving 'ahhub' thru IBC
+		It("should transfer and not convert ahetu", func() {
+			// Register 'ahetu' coin in ERC-20 keeper to validate it is not converting the coins when receiving 'ahetu' thru IBC
 			pair, err := s.app.Erc20Keeper.RegisterCoin(s.EvmosChain.GetContext(), evmosMeta)
 			s.Require().NoError(err)
 
-			ahhubInitialBalance := s.app.BankKeeper.GetBalance(s.EvmosChain.GetContext(), receiverAcc, utils.BaseDenom)
+			ahetuInitialBalance := s.app.BankKeeper.GetBalance(s.EvmosChain.GetContext(), receiverAcc, utils.BaseDenom)
 
-			// 1. Send ahhub from Evmos to Osmosis
+			// 1. Send ahetu from Evmos to Osmosis
 			s.SendAndReceiveMessage(s.pathOsmosisEvmos, s.EvmosChain, utils.BaseDenom, amount, receiver, sender, 1, "")
 
-			ahhubAfterBalance := s.app.BankKeeper.GetBalance(s.EvmosChain.GetContext(), receiverAcc, utils.BaseDenom)
-			s.Require().Equal(ahhubInitialBalance.Amount.Sub(math.NewInt(amount)).Sub(sendAndReceiveMsgFee), ahhubAfterBalance.Amount)
+			ahetuAfterBalance := s.app.BankKeeper.GetBalance(s.EvmosChain.GetContext(), receiverAcc, utils.BaseDenom)
+			s.Require().Equal(ahetuInitialBalance.Amount.Sub(math.NewInt(amount)).Sub(sendAndReceiveMsgFee), ahetuAfterBalance.Amount)
 
-			// check ibc ahhub coins balance on Osmosis
-			ahhubIBCBalanceBefore := s.IBCOsmosisChain.GetSimApp().BankKeeper.GetBalance(s.IBCOsmosisChain.GetContext(), senderAcc, teststypes.AevmosIbcdenom)
-			s.Require().Equal(amount, ahhubIBCBalanceBefore.Amount.Int64())
+			// check ibc ahetu coins balance on Osmosis
+			ahetuIBCBalanceBefore := s.IBCOsmosisChain.GetSimApp().BankKeeper.GetBalance(s.IBCOsmosisChain.GetContext(), senderAcc, teststypes.AevmosIbcdenom)
+			s.Require().Equal(amount, ahetuIBCBalanceBefore.Amount.Int64())
 
-			// 2. Send ahhub IBC coins from Osmosis to Evmos
+			// 2. Send ahetu IBC coins from Osmosis to Evmos
 			ibcCoinMeta := fmt.Sprintf("%s/%s", teststypes.AevmosDenomtrace.Path, teststypes.AevmosDenomtrace.BaseDenom)
 			s.SendBackCoins(s.pathOsmosisEvmos, s.IBCOsmosisChain, teststypes.AevmosIbcdenom, amount, sender, receiver, 1, ibcCoinMeta)
 
-			// check ibc ahhub coins balance on Osmosis - should be zero
-			ahhubIBCSenderFinalBalance := s.IBCOsmosisChain.GetSimApp().BankKeeper.GetBalance(s.IBCOsmosisChain.GetContext(), senderAcc, teststypes.AevmosIbcdenom)
-			s.Require().Equal(int64(0), ahhubIBCSenderFinalBalance.Amount.Int64())
+			// check ibc ahetu coins balance on Osmosis - should be zero
+			ahetuIBCSenderFinalBalance := s.IBCOsmosisChain.GetSimApp().BankKeeper.GetBalance(s.IBCOsmosisChain.GetContext(), senderAcc, teststypes.AevmosIbcdenom)
+			s.Require().Equal(int64(0), ahetuIBCSenderFinalBalance.Amount.Int64())
 
-			// check ahhub balance after transfer - should be equal to initial balance
-			ahhubFinalBalance := s.app.BankKeeper.GetBalance(s.EvmosChain.GetContext(), receiverAcc, utils.BaseDenom)
+			// check ahetu balance after transfer - should be equal to initial balance
+			ahetuFinalBalance := s.app.BankKeeper.GetBalance(s.EvmosChain.GetContext(), receiverAcc, utils.BaseDenom)
 
 			totalFees := sendBackCoinsFee.Add(sendAndReceiveMsgFee)
-			s.Require().Equal(ahhubInitialBalance.Amount.Sub(totalFees), ahhubFinalBalance.Amount)
+			s.Require().Equal(ahetuInitialBalance.Amount.Sub(totalFees), ahetuFinalBalance.Amount)
 
 			// check IBC Coin balance - should be zero
 			ibcCoinsBalance := s.app.BankKeeper.GetBalance(s.EvmosChain.GetContext(), receiverAcc, teststypes.AevmosIbcdenom)

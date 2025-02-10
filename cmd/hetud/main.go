@@ -33,7 +33,7 @@ func main() {
 
 	rootCmd, _ := NewRootCmd()
 
-	if err := svrcmd.Execute(rootCmd, "hhubd", app.DefaultNodeHome); err != nil {
+	if err := svrcmd.Execute(rootCmd, "hetud", app.DefaultNodeHome); err != nil {
 		fmt.Fprintln(rootCmd.OutOrStderr(), err)
 		os.Exit(1)
 	}

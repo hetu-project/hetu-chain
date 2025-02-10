@@ -58,11 +58,11 @@ import (
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	simutils "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/ibc-go/v8/testing/simapp"
@@ -71,9 +71,9 @@ import (
 
 	"github.com/hetu-project/hetu-hub/v1/encoding"
 	"github.com/hetu-project/hetu-hub/v1/server/config"
-	"github.com/hetu-project/hetu-hub/v1/utils"
 	testutilconfig "github.com/hetu-project/hetu-hub/v1/testutil/config"
 	evmostypes "github.com/hetu-project/hetu-hub/v1/types"
+	"github.com/hetu-project/hetu-hub/v1/utils"
 	evmtypes "github.com/hetu-project/hetu-hub/v1/x/evm/types"
 )
 
@@ -122,7 +122,7 @@ type Config struct {
 // testing requirements.
 func DefaultConfig() Config {
 	encCfg := testutilconfig.MakeConfigForTest(nil)
-	chianID := fmt.Sprintf("hhub_%d-1", tmrand.Int63n(9999999999999)+1)
+	chianID := fmt.Sprintf("hetu_%d-1", tmrand.Int63n(9999999999999)+1)
 	app := app.NewEvmos(
 		log.NewNopLogger(),
 		dbm.NewMemDB(),
@@ -144,7 +144,7 @@ func DefaultConfig() Config {
 		TimeoutCommit:     3 * time.Second,
 		ChainID:           chianID,
 		NumValidators:     4,
-		BondDenom:         "ahhub",
+		BondDenom:         "ahetu",
 		MinGasPrices:      fmt.Sprintf("0.000006%s", evmostypes.AttoEvmos),
 		AccountTokens:     sdk.TokensFromConsensusPower(1000000000000000000, evmostypes.PowerReduction),
 		StakingTokens:     sdk.TokensFromConsensusPower(500000000000000000, evmostypes.PowerReduction),
@@ -500,7 +500,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			return nil, err
 		}
 
-		customAppTemplate, _ := config.AppConfig("ahhub")
+		customAppTemplate, _ := config.AppConfig("ahetu")
 		srvconfig.SetConfigTemplate(customAppTemplate)
 		srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config/app.toml"), appCfg)
 

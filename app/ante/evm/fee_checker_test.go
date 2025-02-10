@@ -98,7 +98,7 @@ func TestSDKTxFeeChecker(t *testing.T) {
 				txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(evmtypes.DefaultEVMDenom, math.NewInt(10))))
 				return txBuilder.GetTx()
 			},
-			"10ahhub",
+			"10ahetu",
 			0,
 			true,
 		},
@@ -140,7 +140,7 @@ func TestSDKTxFeeChecker(t *testing.T) {
 				txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(evmtypes.DefaultEVMDenom, math.NewInt(10))))
 				return txBuilder.GetTx()
 			},
-			"10ahhub",
+			"10ahetu",
 			0,
 			true,
 		},
@@ -156,7 +156,7 @@ func TestSDKTxFeeChecker(t *testing.T) {
 				txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(evmtypes.DefaultEVMDenom, math.NewInt(10).Mul(evmtypes.DefaultPriorityReduction).Add(math.NewInt(10)))))
 				return txBuilder.GetTx()
 			},
-			"10000010ahhub",
+			"10000010ahetu",
 			10,
 			true,
 		},
@@ -176,7 +176,7 @@ func TestSDKTxFeeChecker(t *testing.T) {
 				txBuilder.SetExtensionOptions(option)
 				return txBuilder.GetTx()
 			},
-			"10ahhub",
+			"10ahetu",
 			0,
 			true,
 		},
@@ -198,7 +198,7 @@ func TestSDKTxFeeChecker(t *testing.T) {
 				txBuilder.SetExtensionOptions(option)
 				return txBuilder.GetTx()
 			},
-			"5000010ahhub",
+			"5000010ahetu",
 			5,
 			true,
 		},

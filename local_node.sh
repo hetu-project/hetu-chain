@@ -3,7 +3,7 @@
 KEYS[0]="dev0"
 KEYS[1]="dev1"
 KEYS[2]="dev2"
-CHAINID="hhub_9000-1"
+CHAINID="hetu_9002-1"
 MONIKER="localtestnet"
 # Remember to change to other types of keyring like 'file' in-case exposing to outside world,
 # otherwise your balance will be wiped quickly
@@ -11,8 +11,8 @@ MONIKER="localtestnet"
 KEYRING="test"
 KEYALGO="eth_secp256k1"
 LOGLEVEL="info"
-# Set dedicated home directory for the hhubd instance
-HOMEDIR="$HOME/.tmp-hhubd"
+# Set dedicated home directory for the hetud instance
+HOMEDIR="$HOME/.tmp-hetud"
 # to trace evm
 #TRACE="--trace"
 TRACE=""
@@ -50,23 +50,23 @@ if [[ $overwrite == "y" || $overwrite == "Y" ]]; then
 	rm -rf "$HOMEDIR"
 
 	# Set client config
-	hhubd config set client chain-id "$CHAINID" --home "$HOMEDIR"
-	hhubd config set client keyring-backend "$KEYRING" --home "$HOMEDIR"
+	hetud config set client chain-id "$CHAINID" --home "$HOMEDIR"
+	hetud config set client keyring-backend "$KEYRING" --home "$HOMEDIR"
 
 	# If keys exist they should be deleted
 	for KEY in "${KEYS[@]}"; do
-		hhubd keys add "$KEY" --keyring-backend $KEYRING --algo $KEYALGO --home "$HOMEDIR"
+		hetud keys add "$KEY" --keyring-backend $KEYRING --algo $KEYALGO --home "$HOMEDIR"
 	done
 
-	# Set moniker and chain-id for Hhub (Moniker can be anything, chain-id must be an integer)
-	hhubd init $MONIKER -o --chain-id $CHAINID --home "$HOMEDIR"
+	# Set moniker and chain-id for Hetu (Moniker can be anything, chain-id must be an integer)
+	hetud init $MONIKER -o --chain-id $CHAINID --home "$HOMEDIR"
 
-	# Change parameter token denominations to ahhub
-	jq '.app_state["staking"]["params"]["bond_denom"]="ahhub"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
-	jq '.app_state["crisis"]["constant_fee"]["denom"]="ahhub"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
-	jq '.app_state["gov"]["deposit_params"]["min_deposit"][0]["denom"]="ahhub"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
-	jq '.app_state["evm"]["params"]["evm_denom"]="ahhub"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
-	jq '.app_state["inflation"]["params"]["mint_denom"]="ahhub"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+	# Change parameter token denominations to ahetu
+	jq '.app_state["staking"]["params"]["bond_denom"]="ahetu"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+	jq '.app_state["crisis"]["constant_fee"]["denom"]="ahetu"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+	jq '.app_state["gov"]["deposit_params"]["min_deposit"][0]["denom"]="ahetu"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+	jq '.app_state["evm"]["params"]["evm_denom"]="ahetu"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+	jq '.app_state["inflation"]["params"]["mint_denom"]="ahetu"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
 
 	# Set gas limit in genesis
 	jq '.consensus_params["block"]["max_gas"]="10000000"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
@@ -78,7 +78,7 @@ if [[ $overwrite == "y" || $overwrite == "Y" ]]; then
 	# Set claims records for validator account
 	amount_to_claim=10000
 	claims_key=${KEYS[0]}
-	node_address=$(hhubd keys show "$claims_key" --keyring-backend $KEYRING --home "$HOMEDIR" | grep "address" | cut -c12-)
+	node_address=$(hetud keys show "$claims_key" --keyring-backend $KEYRING --home "$HOMEDIR" | grep "address" | cut -c12-)
 	jq -r --arg node_address "$node_address" --arg amount_to_claim "$amount_to_claim" '.app_state["claims"]["claims_records"]=[{"initial_claimable_amount":$amount_to_claim, "actions_completed":[false, false, false, false],"address":$node_address}]' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
 
 	# Set claims decay
@@ -86,8 +86,8 @@ if [[ $overwrite == "y" || $overwrite == "Y" ]]; then
 	jq '.app_state["claims"]["params"]["duration_until_decay"]="100000s"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
 
 	# Claim module account:
-	# 0xA61808Fe40fEb8B3433778BBC2ecECCAA47c8c47 || hhub15cvq3ljql6utxseh0zau9m8ve2j8erz8jplma4
-	jq -r --arg amount_to_claim "$amount_to_claim" '.app_state["bank"]["balances"] += [{"address":"hhub15cvq3ljql6utxseh0zau9m8ve2j8erz8jplma4","coins":[{"denom":"ahhub", "amount":$amount_to_claim}]}]' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+	# 0xA61808Fe40fEb8B3433778BBC2ecECCAA47c8c47 || hetu15cvq3ljql6utxseh0zau9m8ve2j8erz89c94rj
+	jq -r --arg amount_to_claim "$amount_to_claim" '.app_state["bank"]["balances"] += [{"address":"hetu15cvq3ljql6utxseh0zau9m8ve2j8erz89c94rj","coins":[{"denom":"ahetu", "amount":$amount_to_claim}]}]' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
 
 	if [[ $1 == "pending" ]]; then
 		if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -134,7 +134,7 @@ if [[ $overwrite == "y" || $overwrite == "Y" ]]; then
 
 	# Allocate genesis accounts (cosmos formatted addresses)
 	for KEY in "${KEYS[@]}"; do
-		hhubd add-genesis-account "$KEY" 100000000000000000000000000ahhub --keyring-backend $KEYRING --home "$HOMEDIR"
+		hetud add-genesis-account "$KEY" 100000000000000000000000000ahetu --keyring-backend $KEYRING --home "$HOMEDIR"
 	done
 
 	# bc is required to add these big numbers
@@ -143,21 +143,21 @@ if [[ $overwrite == "y" || $overwrite == "Y" ]]; then
 
 	# Sign genesis transaction
 	echo "gentx: Sign genesis transaction"
-	hhubd gentx "${KEYS[0]}" 1000000000000000000000ahhub --keyring-backend $KEYRING --chain-id $CHAINID --home "$HOMEDIR"
+	hetud gentx "${KEYS[0]}" 1000000000000000000000ahetu --keyring-backend $KEYRING --chain-id $CHAINID --home "$HOMEDIR"
 	## In case you want to create multiple validators at genesis
-	## 1. Back to `hhubd keys add` step, init more keys
-	## 2. Back to `hhubd add-genesis-account` step, add balance for those
-	## 3. Clone this ~/.hhubd home directory into some others, let's say `~/.clonedHhubd`
+	## 1. Back to `hetud keys add` step, init more keys
+	## 2. Back to `hetud add-genesis-account` step, add balance for those
+	## 3. Clone this ~/.hetud home directory into some others, let's say `~/.clonedHetud`
 	## 4. Run `gentx` in each of those folders
-	## 5. Copy the `gentx-*` folders under `~/.clonedHhubd/config/gentx/` folders into the original `~/.hhubd/config/gentx`
+	## 5. Copy the `gentx-*` folders under `~/.clonedHetud/config/gentx/` folders into the original `~/.hetud/config/gentx`
 
 	# Collect genesis tx
 	echo "collect-gentxs: genesis transaction"
-	hhubd collect-gentxs --home "$HOMEDIR"
+	hetud collect-gentxs --home "$HOMEDIR"
 
 	# Run this to ensure everything worked and that the genesis file is setup correctly
 	echo "validate-genesis: genesis transaction"
-	hhubd validate-genesis --home "$HOMEDIR"
+	hetud validate-genesis --home "$HOMEDIR"
 
 	if [[ $1 == "pending" ]]; then
 		echo "pending mode is on, please wait for the first block committed."
@@ -166,4 +166,4 @@ fi
 
 # Start the node (remove the --pruning=nothing flag if historical queries are not needed)
 echo "start: localnode"
-hhubd start --metrics "$TRACE" --log_level $LOGLEVEL --minimum-gas-prices=0.0001ahhub --json-rpc.api eth,txpool,personal,net,debug,web3 --api.enable --home "$HOMEDIR"
+hetud start --metrics "$TRACE" --log_level $LOGLEVEL --minimum-gas-prices=0.0001ahetu --json-rpc.api eth,txpool,personal,net,debug,web3 --api.enable --home "$HOMEDIR"

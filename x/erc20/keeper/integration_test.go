@@ -112,7 +112,7 @@ var _ = Describe("ERC20:", Ordered, func() {
 			// 	s.Require().NoError(err)
 
 			// 	coins := sdk.NewCoins(
-			// 		sdk.NewCoin("ahhub", fundsAmt),
+			// 		sdk.NewCoin("ahetu", fundsAmt),
 			// 		sdk.NewCoin(stakingtypes.DefaultParams().BondDenom, fundsAmt),
 			// 	)
 			// 	err = testutil.FundAccount(s.ctx, s.app.BankKeeper, accAddr, coins)
@@ -128,7 +128,7 @@ var _ = Describe("ERC20:", Ordered, func() {
 				// 	proposal, found := s.app.GovKeeper.GetProposal(s.ctx, id)
 				// 	s.Require().True(found)
 
-				// 	_, err = testutil.Delegate(s.ctx, s.app, privKey, sdk.NewCoin("ahhub", math.NewInt(500000000000000000)), s.validator)
+				// 	_, err = testutil.Delegate(s.ctx, s.app, privKey, sdk.NewCoin("ahetu", math.NewInt(500000000000000000)), s.validator)
 				// 	s.Require().NoError(err)
 
 				// 	_, err = testutil.Vote(s.ctx, s.app, privKey, id, govv1beta1.OptionYes)
@@ -154,7 +154,7 @@ var _ = Describe("ERC20:", Ordered, func() {
 				// 	proposal, found := s.app.GovKeeper.GetProposal(s.ctx, id)
 				// 	s.Require().True(found)
 
-				// 	_, err = testutil.Delegate(s.ctx, s.app, privKey, sdk.NewCoin("ahhub", math.NewInt(500000000000000000)), s.validator)
+				// 	_, err = testutil.Delegate(s.ctx, s.app, privKey, sdk.NewCoin("ahetu", math.NewInt(500000000000000000)), s.validator)
 				// 	s.Require().NoError(err)
 
 				// 	_, err = testutil.Vote(s.ctx, s.app, privKey, id, govv1beta1.OptionYes)

@@ -1,4 +1,4 @@
 all:
-	docker build --no-cache --tag hhub/node ../.. -f hhub/Dockerfile
+	docker build --no-cache --tag hetu/node ../.. -f hetu/Dockerfile
 
 .PHONY: all

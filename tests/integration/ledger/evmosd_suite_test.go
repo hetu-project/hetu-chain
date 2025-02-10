@@ -88,7 +88,7 @@ func (suite *LedgerTestSuite) SetupEvmosApp() {
 	suite.app = app.Setup(false, feemarkettypes.DefaultGenesisState())
 	suite.ctx = suite.app.BaseApp.NewContextLegacy(false, tmproto.Header{
 		Height:          1,
-		ChainID:         "hhub_9001-1",
+		ChainID:         "hetu_9001-1",
 		Time:            time.Now().UTC(),
 		ProposerAddress: consAddress.Bytes(),
 

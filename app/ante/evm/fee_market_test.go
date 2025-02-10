@@ -35,8 +35,8 @@ func (suite *AnteTestSuite) TestGasWantedDecorator() {
 			func() sdk.Tx {
 				denom := evmtypes.DefaultEVMDenom
 				testMsg := banktypes.MsgSend{
-					FromAddress: "hhub1x8fhpj9nmhqk8z9kpgjt95ck2xwyue0pucafnk",
-					ToAddress:   "hhub1dx67l23hz9l0k9hcher8xz04uj7wf3yuaq5l0y",
+					FromAddress: "hetu1x8fhpj9nmhqk8z9kpgjt95ck2xwyue0pucafnk",
+					ToAddress:   "hetu1dx67l23hz9l0k9hcher8xz04uj7wf3yuaq5l0y",
 					Amount:      sdk.Coins{sdk.Coin{Amount: sdkmath.NewInt(10), Denom: denom}},
 				}
 				txBuilder := suite.CreateTestCosmosTxBuilder(sdkmath.NewInt(10), utils.BaseDenom, &testMsg)
@@ -94,8 +94,8 @@ func (suite *AnteTestSuite) TestGasWantedDecorator() {
 			func() sdk.Tx {
 				denom := evmtypes.DefaultEVMDenom
 				testMsg := banktypes.MsgSend{
-					FromAddress: "hhub1x8fhpj9nmhqk8z9kpgjt95ck2xwyue0pucafnk",
-					ToAddress:   "hhub1dx67l23hz9l0k9hcher8xz04uj7wf3yuaq5l0y",
+					FromAddress: "hetu1x8fhpj9nmhqk8z9kpgjt95ck2xwyue0pucafnk",
+					ToAddress:   "hetu1dx67l23hz9l0k9hcher8xz04uj7wf3yuaq5l0y",
 					Amount:      sdk.Coins{sdk.Coin{Amount: sdkmath.NewInt(10), Denom: denom}},
 				}
 				txBuilder := suite.CreateTestCosmosTxBuilder(sdkmath.NewInt(10), utils.BaseDenom, &testMsg)

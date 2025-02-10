@@ -2,57 +2,57 @@ version: '3'
 
 services:
   node0:
-    container_name: hhubnode0
-    image: "hhub/node"
+    container_name: hetunode0
+    image: "hetu/node"
     ports:
       - "26656-26657:26656-26657"
       - "8545-8546:8545-8546"
     volumes:
-      - ./build/node0/hhubd:/hhub:Z
+      - ./build/node0/hetud:/hetu:Z
     command:
-      - /hhubd start --home /hhub --json-rpc.address "0.0.0.0:8545" --json-rpc.ws-address "0.0.0.0:8546"
+      - /hetud start --home /hetu --json-rpc.address "0.0.0.0:8545" --json-rpc.ws-address "0.0.0.0:8546"
     networks:
       localnet:
         ipv4_address: 192.167.0.2
 
   node1:
-    container_name: hhubnode1
-    image: "hhub/node"
+    container_name: hetunode1
+    image: "hetu/node"
     ports:
       - "26659-26660:26656-26657"
       - "8547-8548:8545-8546"
     volumes:
-      - ./build/node1/hhubd:/hhub:Z
+      - ./build/node1/hetud:/hetu:Z
     command:
-      - /hhubd start --home /hhub --json-rpc.address "0.0.0.0:8545" --json-rpc.ws-address "0.0.0.0:8546"
+      - /hetud start --home /hetu --json-rpc.address "0.0.0.0:8545" --json-rpc.ws-address "0.0.0.0:8546"
     networks:
       localnet:
         ipv4_address: 192.167.0.3
 
   node2:
-    container_name: hhubnode2
-    image: "hhub/node"
+    container_name: hetunode2
+    image: "hetu/node"
     ports:
       - "26661-26662:26656-26657"
       - "8549-8550:8545-8546"
     volumes:
-      - ./build/node2/hhubd:/hhub:Z
+      - ./build/node2/hetud:/hetu:Z
     command:
-      - /hhubd start --home /hhub --json-rpc.address "0.0.0.0:8545" --json-rpc.ws-address "0.0.0.0:8546"
+      - /hetud start --home /hetu --json-rpc.address "0.0.0.0:8545" --json-rpc.ws-address "0.0.0.0:8546"
     networks:
       localnet:
         ipv4_address: 192.167.0.4
 
   node3:
-    container_name: hhubnode3
-    image: "hhub/node"
+    container_name: hetunode3
+    image: "hetu/node"
     ports:
       - "26663-26664:26656-26657"
       - "8551-8552:8545-8546"
     volumes:
-      - ./build/node3/hhubd:/hhub:Z
+      - ./build/node3/hetud:/hetu:Z
     command:
-      - /hhubd start --home /hhub --json-rpc.address "0.0.0.0:8545" --json-rpc.ws-address "0.0.0.0:8546"
+      - /hetud start --home /hetu --json-rpc.address "0.0.0.0:8545" --json-rpc.ws-address "0.0.0.0:8546"
     networks:
       localnet:
         ipv4_address: 192.167.0.5

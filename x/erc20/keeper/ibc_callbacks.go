@@ -19,10 +19,10 @@ package keeper
 import (
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
-	"github.com/hashicorp/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/hashicorp/go-metrics"
 
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
@@ -36,7 +36,7 @@ import (
 // OnRecvPacket performs the ICS20 middleware receive callback for automatically
 // converting an IBC Coin to their ERC20 representation.
 // For the conversion to succeed, the IBC denomination must have previously been
-// registered via governance. Note that the native staking denomination (e.g. "ahhub"),
+// registered via governance. Note that the native staking denomination (e.g. "ahetu"),
 // is excluded from the conversion.
 //
 // CONTRACT: This middleware MUST be executed transfer after the ICS20 OnRecvPacket
@@ -67,7 +67,7 @@ func (k Keeper) OnRecvPacket(
 		return ack
 	}
 
-	// Get addresses in `hhub1` and the original bech32 format
+	// Get addresses in `hetu1` and the original bech32 format
 	sender, recipient, _, _, err := ibc.GetTransferSenderRecipient(packet)
 	if err != nil {
 		return channeltypes.NewErrorAcknowledgement(err)

@@ -21,7 +21,7 @@ import (
 )
 
 var (
-	// MainnetMinGasPrices defines 20B ahhub (or atevmos) as the minimum gas price value on the fee market module.
+	// MainnetMinGasPrices defines 20B ahetu (or atevmos) as the minimum gas price value on the fee market module.
 	// See https://commonwealth.im/evmos/discussion/5073-global-min-gas-price-value-for-cosmos-sdk-and-evm-transaction-choosing-a-value for reference
 	MainnetMinGasPrices = math.LegacyNewDec(20_000_000_000)
 	// MainnetMinGasMultiplier defines the min gas multiplier value on the fee market module.

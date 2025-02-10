@@ -61,8 +61,8 @@ import (
 	"cosmossdk.io/x/upgrade"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	runtimeservices "github.com/cosmos/cosmos-sdk/runtime/services"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -186,7 +186,7 @@ func init() {
 		panic(err)
 	}
 
-	DefaultNodeHome = filepath.Join(userHomeDir, ".hhubd")
+	DefaultNodeHome = filepath.Join(userHomeDir, ".hetud")
 
 	// manually update the power reduction by replacing micro (u) -> atto (a) evmos
 	sdk.DefaultPowerReduction = evmostypes.PowerReduction
@@ -198,7 +198,7 @@ func init() {
 }
 
 // Name defines the application binary name
-const Name = "hhubd"
+const Name = "hetud"
 
 var (
 	// DefaultNodeHome default home directories for the application daemon
@@ -369,7 +369,7 @@ func NewEvmos(
 		app.SetPrepareProposal(handler.PrepareProposalHandler())
 		app.SetProcessProposal(handler.ProcessProposalHandler())
 	})
-	
+
 	// enable optimistic execution
 	baseAppOptions = append(baseAppOptions, baseapp.SetOptimisticExecution())
 

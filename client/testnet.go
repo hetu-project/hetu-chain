@@ -39,9 +39,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdkserver "github.com/cosmos/cosmos-sdk/server"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -144,7 +144,7 @@ or a similar setup where each node has a manually configurable IP address.
 Note, strict routability for addresses is turned off in the config file.
 
 Example:
-	hhubd testnet init-files --v 4 --output-dir ./.testnets --starting-ip-address 192.168.10.2
+	hetud testnet init-files --v 4 --output-dir ./.testnets --starting-ip-address 192.168.10.2
 	`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -190,7 +190,7 @@ and generate "v" directories, populated with necessary validator configuration f
 (private validator, genesis, config, etc.).
 
 Example:
-	hhubd testnet --v 4 --output-dir ./.testnets
+	hetud testnet --v 4 --output-dir ./.testnets
 	`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			args := startArgs{}
@@ -496,9 +496,9 @@ func collectGenFiles(
 		}
 
 		nodeAppState, err := genutil.GenAppStateFromConfig(
-			clientCtx.Codec, clientCtx.TxConfig, 
-			nodeConfig, initCfg, 
-			genDoc, genBalIterator, 
+			clientCtx.Codec, clientCtx.TxConfig,
+			nodeConfig, initCfg,
+			genDoc, genBalIterator,
 			genutiltypes.DefaultMessageValidator, valAddrCodec,
 		)
 		if err != nil {

@@ -76,10 +76,10 @@ import (
 )
 
 const (
-	EnvPrefix = "HHUB"
+	EnvPrefix = "HETU"
 )
 
-// NewRootCmd creates a new root command for hhubd. It is called once in the
+// NewRootCmd creates a new root command for hetud. It is called once in the
 // main function.
 func NewRootCmd() (*cobra.Command, sdktestutil.TestEncodingConfig) {
 	tempApp := app.NewEvmos(
@@ -115,7 +115,7 @@ func NewRootCmd() (*cobra.Command, sdktestutil.TestEncodingConfig) {
 
 	rootCmd := &cobra.Command{
 		Use:   app.Name,
-		Short: "Hhub Daemon",
+		Short: "Hetu Daemon",
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
 			// set the default command outputs
 			cmd.SetOut(cmd.OutOrStdout())
@@ -201,7 +201,7 @@ func NewRootCmd() (*cobra.Command, sdktestutil.TestEncodingConfig) {
 	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)
 	}
-	
+
 	return rootCmd, encodingConfig
 }
 

@@ -35,7 +35,7 @@ var _ = Describe("when sending a Cosmos transaction", func() {
 
 			msg = &banktypes.MsgSend{
 				FromAddress: addr.String(),
-				ToAddress:   "hhub1dx67l23hz9l0k9hcher8xz04uj7wf3yuaq5l0y",
+				ToAddress:   "hetu1dx67l23hz9l0k9hcher8xz04uj7wf3yuaq5l0y",
 				Amount:      sdk.Coins{sdk.Coin{Amount: sdkmath.NewInt(1e14), Denom: utils.BaseDenom}},
 			}
 
@@ -70,7 +70,7 @@ var _ = Describe("when sending a Cosmos transaction", func() {
 
 			msg = &banktypes.MsgSend{
 				FromAddress: addr.String(),
-				ToAddress:   "hhub1dx67l23hz9l0k9hcher8xz04uj7wf3yuaq5l0y",
+				ToAddress:   "hetu1dx67l23hz9l0k9hcher8xz04uj7wf3yuaq5l0y",
 				Amount:      sdk.Coins{sdk.Coin{Amount: sdkmath.NewInt(1e14), Denom: utils.BaseDenom}},
 			}
 
@@ -107,7 +107,7 @@ var _ = Describe("when sending a Cosmos transaction", func() {
 
 			msg = &banktypes.MsgSend{
 				FromAddress: addr.String(),
-				ToAddress:   "hhub1dx67l23hz9l0k9hcher8xz04uj7wf3yuaq5l0y",
+				ToAddress:   "hetu1dx67l23hz9l0k9hcher8xz04uj7wf3yuaq5l0y",
 				Amount:      sdk.Coins{sdk.Coin{Amount: sdkmath.NewInt(1), Denom: utils.BaseDenom}},
 			}
 

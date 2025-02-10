@@ -26,7 +26,7 @@ func EnableObservability() error {
 	// }
 
 	// pe, err := prometheus.NewExporter(prometheus.Options{
-	// 	Namespace: "hhubd",
+	// 	Namespace: "hetud",
 	// })
 	// if err != nil {
 	// 	return fmt.Errorf("cmd/config: failed to create the OpenCensus Prometheus exporter: %w", err)
