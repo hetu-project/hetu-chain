@@ -83,7 +83,7 @@ func LoadUpgradeParams(upgradesFolder string) (Params, error) {
 		})
 	}
 
-	// When a target version is specified, it is used and the tharsishq DockerHub repo used.
+	// When a target version is specified, it is used and the hetuorg DockerHub repo used.
 	// If no target version is specified, the last upgrade in the app/upgrades folder is used
 	// and a name for the local image is assigned.
 	targetV := os.Getenv("TARGET_VERSION")

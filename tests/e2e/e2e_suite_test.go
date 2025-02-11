@@ -54,8 +54,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	var err error
 
 	// new chain no upgrade plan for now
-	// s.upgradeParams, err = upgrade.LoadUpgradeParams(upgradePath)
-	// s.Require().NoError(err, "can't load upgrade params")
+	s.upgradeParams, err = upgrade.LoadUpgradeParams(upgradePath)
+	s.Require().NoError(err, "can't load upgrade params")
 
 	s.upgradeManager, err = upgrade.NewManager(defaultManagerNetwork)
 	s.Require().NoError(err, "upgrade manager creation error")

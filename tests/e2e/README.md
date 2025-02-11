@@ -126,7 +126,7 @@ responsible for setting node container parameters before run.
 
 If `INITIAL_VERSION` is provided as an argument,
 node container(s) with the corresponding version(s)
-will be pulled from [DockerHub](https://hub.docker.com/r/tharsishq/evmos/tags).
+will be pulled from [DockerHub](https://hub.docker.com/r/hetuorg/hetu/tags).
 If it is not specified,
 the test suite retrieves the second-to-last upgrade version
 from the local codebase (in the `evmos/app/upgrades` folder)
