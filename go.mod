@@ -21,12 +21,12 @@ require (
 	github.com/cosmos/btcutil v1.0.5
 	github.com/cosmos/cosmos-db v1.1.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
-	github.com/cosmos/cosmos-sdk v0.50.11
+	github.com/cosmos/cosmos-sdk v0.50.9-hetu
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/cosmos/ibc-apps/modules/rate-limiting/v8 v8.0.0
 	github.com/cosmos/ibc-go/modules/capability v1.0.1
-	github.com/cosmos/ibc-go/v8 v8.5.1
+	github.com/cosmos/ibc-go/v8 v8.4.0
 	github.com/cosmos/rosetta v0.50.3-1
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/ethereum/go-ethereum v1.10.26
@@ -269,7 +269,7 @@ replace (
 	// use cosmos keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	github.com/cometbft/cometbft => github.com/hetu-project/hetu-parallel-engine/hetu-cometbft v0.0.0-20250127071645-b3f53d769924
-	github.com/cosmos/cosmos-sdk => github.com/hetu-project/cosmos-sdk v0.50.9-hetu
+	github.com/cosmos/cosmos-sdk => github.com/hetu-project/cosmos-sdk v0.50.9-hetu.3
 
 	// use geth fork
 	github.com/ethereum/go-ethereum => github.com/hetu-project/go-ethereum v1.10.26-hetu

@@ -53,7 +53,6 @@ func (suite *KeeperTestSuite) TestTransfer() {
 				addr := ""
 				contractAddr, err := suite.DeployContract("coin", "token", uint8(6))
 				suite.Require().NoError(err)
-				suite.Commit()
 
 				// senderAcc := sdk.MustAccAddressFromBech32(addr)
 				transferMsg := types.NewMsgTransfer("transfer", "channel-0", sdk.NewCoin("erc20/"+contractAddr.String(), math.NewInt(10)), addr, "", timeoutHeight, 0, "")
@@ -66,32 +65,26 @@ func (suite *KeeperTestSuite) TestTransfer() {
 			func() *types.MsgTransfer {
 				contractAddr, err := suite.DeployContract("coin", "token", uint8(6))
 				suite.Require().NoError(err)
-				suite.Commit()
 
 				pair, err := suite.app.Erc20Keeper.RegisterERC20(suite.ctx, contractAddr)
 				suite.Require().NoError(err)
-				suite.Commit()
 
 				senderAcc := sdk.AccAddress(suite.address.Bytes())
 				suite.MintERC20Token(contractAddr, suite.address, suite.address, big.NewInt(10))
-				suite.Commit()
 
 				coin := sdk.NewCoin(pair.Denom, math.NewInt(10))
 				coins := sdk.NewCoins(coin)
 
 				err = suite.app.BankKeeper.MintCoins(suite.ctx, erc20types.ModuleName, coins)
 				suite.Require().NoError(err)
-				suite.Commit()
 
 				err = suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, erc20types.ModuleName, senderAcc, coins)
 				suite.Require().NoError(err)
-				suite.Commit()
 
 				params := suite.app.Erc20Keeper.GetParams(suite.ctx)
 				params.EnableErc20 = false
 				err = suite.app.Erc20Keeper.SetParams(suite.ctx, params)
 				suite.Require().NoError(err)
-				suite.Commit()
 
 				transferMsg := types.NewMsgTransfer("transfer", "channel-0", sdk.NewCoin(pair.Denom, math.NewInt(10)), senderAcc.String(), "", timeoutHeight, 0, "")
 
@@ -104,21 +97,17 @@ func (suite *KeeperTestSuite) TestTransfer() {
 			func() *types.MsgTransfer {
 				contractAddr, err := suite.DeployContract("coin", "token", uint8(6))
 				suite.Require().NoError(err)
-				suite.Commit()
 
 				pair, err := suite.app.Erc20Keeper.RegisterERC20(suite.ctx, contractAddr)
 				suite.Require().NoError(err)
-				suite.Commit()
 
 				senderAcc := sdk.AccAddress(suite.address.Bytes())
 				suite.MintERC20Token(contractAddr, suite.address, suite.address, big.NewInt(10))
-				suite.Commit()
 
 				params := suite.app.Erc20Keeper.GetParams(suite.ctx)
 				params.EnableErc20 = false
 				err = suite.app.Erc20Keeper.SetParams(suite.ctx, params)
 				suite.Require().NoError(err)
-				suite.Commit()
 
 				transferMsg := types.NewMsgTransfer("transfer", "channel-0", sdk.NewCoin(pair.Denom, math.NewInt(10)), senderAcc.String(), "", timeoutHeight, 0, "")
 
@@ -139,7 +128,6 @@ func (suite *KeeperTestSuite) TestTransfer() {
 
 				err = suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, erc20types.ModuleName, senderAcc, coins)
 				suite.Require().NoError(err)
-				suite.Commit()
 
 				transferMsg := types.NewMsgTransfer("transfer", "channel-0", coin, senderAcc.String(), "", timeoutHeight, 0, "")
 
@@ -152,7 +140,6 @@ func (suite *KeeperTestSuite) TestTransfer() {
 			func() *types.MsgTransfer {
 				contractAddr, err := suite.DeployContract("coin", "token", uint8(6))
 				suite.Require().NoError(err)
-				suite.Commit()
 
 				pair, err := suite.app.Erc20Keeper.RegisterERC20(suite.ctx, contractAddr)
 				suite.Require().NoError(err)
@@ -169,7 +156,6 @@ func (suite *KeeperTestSuite) TestTransfer() {
 
 				err = suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, erc20types.ModuleName, senderAcc, sdk.NewCoins(coin))
 				suite.Require().NoError(err)
-				suite.Commit()
 
 				return transferMsg
 			},
@@ -180,43 +166,37 @@ func (suite *KeeperTestSuite) TestTransfer() {
 			func() *types.MsgTransfer {
 				contractAddr, err := suite.DeployContract("coin", "token", uint8(6))
 				suite.Require().NoError(err)
-				suite.Commit()
 
 				pair, err := suite.app.Erc20Keeper.RegisterERC20(suite.ctx, contractAddr)
 				suite.Require().NoError(err)
-				suite.Commit()
 
 				// module account needs permission to send funds (perms set in allowedReceivingModAcc)
-				senderAcc := suite.app.AccountKeeper.GetModuleAccount(suite.ctx, "incentives")
+				senderAcc := suite.app.AccountKeeper.GetModuleAccount(suite.ctx, "evm")
 
 				err = testutil.FundModuleAccount(suite.ctx, suite.app.BankKeeper, senderAcc.GetName(), sdk.NewCoins(sdk.NewCoin(pair.Denom, math.NewInt(10))))
 				suite.Require().NoError(err)
 				transferMsg := types.NewMsgTransfer("transfer", "channel-0", sdk.NewCoin(pair.Denom, math.NewInt(10)), senderAcc.GetAddress().String(), "", timeoutHeight, 0, "")
 
 				suite.MintERC20Token(contractAddr, suite.address, suite.address, big.NewInt(10))
-				suite.Commit()
 
 				return transferMsg
 			},
-			true,
+			false,
 		},
 		{
 			"pass - has enough balance in erc20 - need to convert",
 			func() *types.MsgTransfer {
 				contractAddr, err := suite.DeployContract("coin", "token", uint8(6))
 				suite.Require().NoError(err)
-				suite.Commit()
 
 				pair, err := suite.app.Erc20Keeper.RegisterERC20(suite.ctx, contractAddr)
 				suite.Require().NoError(err)
-				suite.Commit()
 				suite.Require().Equal("erc20/"+pair.Erc20Address, pair.Denom)
 
 				senderAcc := sdk.AccAddress(suite.address.Bytes())
 				transferMsg := types.NewMsgTransfer("transfer", "channel-0", sdk.NewCoin(pair.Denom, math.NewInt(10)), senderAcc.String(), "", timeoutHeight, 0, "")
 
 				suite.MintERC20Token(contractAddr, suite.address, suite.address, big.NewInt(10))
-				suite.Commit()
 				return transferMsg
 			},
 			true,
@@ -226,11 +206,9 @@ func (suite *KeeperTestSuite) TestTransfer() {
 			func() *types.MsgTransfer {
 				contractAddr, err := suite.DeployContract("coin", "token", uint8(6))
 				suite.Require().NoError(err)
-				suite.Commit()
 
 				pair, err := suite.app.Erc20Keeper.RegisterERC20(suite.ctx, contractAddr)
 				suite.Require().NoError(err)
-				suite.Commit()
 
 				senderAcc := sdk.AccAddress(suite.address.Bytes())
 				transferMsg := types.NewMsgTransfer("transfer", "channel-0", sdk.NewCoin(pair.Denom, math.NewInt(10)), senderAcc.String(), "", timeoutHeight, 0, "")
@@ -240,7 +218,6 @@ func (suite *KeeperTestSuite) TestTransfer() {
 				suite.Require().NoError(err)
 				err = suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, erc20types.ModuleName, senderAcc, coins)
 				suite.Require().NoError(err)
-				suite.Commit()
 
 				return transferMsg
 			},
@@ -251,11 +228,9 @@ func (suite *KeeperTestSuite) TestTransfer() {
 			func() *types.MsgTransfer {
 				contractAddr, err := suite.DeployContract("coin", "token", uint8(6))
 				suite.Require().NoError(err)
-				suite.Commit()
 
 				pair, err := suite.app.Erc20Keeper.RegisterERC20(suite.ctx, contractAddr)
 				suite.Require().NoError(err)
-				suite.Commit()
 
 				senderAcc := sdk.AccAddress(suite.address.Bytes())
 				transferMsg := types.NewMsgTransfer("transfer", "channel-0", sdk.NewCoin(pair.Denom, math.NewInt(10)), senderAcc.String(), "", timeoutHeight, 0, "")

@@ -41,7 +41,7 @@ hetud init "$MONIKER" --chain-id "$CHAINID"
 jq '.app_state.staking.params.bond_denom="ahetu"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
 jq '.app_state.crisis.constant_fee.denom="ahetu"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
 jq '.app_state.gov.deposit_params.min_deposit[0].denom="ahetu"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
-jq '.app_state.evm.params.evm_denom="ahetu"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+jq '.app_state.evm.params.evm_denom="gas"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
 jq '.app_state.inflation.params.mint_denom="ahetu"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
 
 # set gov proposing && voting period
@@ -66,13 +66,13 @@ jq '.app_state.claims.params.duration_until_decay="100000s"' "$GENESIS" >"$TMP_G
 
 # Claim module account:
 # 0xA61808Fe40fEb8B3433778BBC2ecECCAA47c8c47 || hetu15cvq3ljql6utxseh0zau9m8ve2j8erz89c94rj
-jq -r --arg amount_to_claim "$amount_to_claim" '.app_state.bank.balances += [{"address":"hetu15cvq3ljql6utxseh0zau9m8ve2j8erz89c94rj","coins":[{"denom":"ahetu", "amount":$amount_to_claim}]}]' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+jq -r --arg amount_to_claim "$amount_to_claim" '.app_state.bank.balances += [{"address":"hetu15cvq3ljql6utxseh0zau9m8ve2j8erz89c94rj","coins":[{"denom":"ahetu", "amount":$amount_to_claim}, {"denom":"gas", "amount":$amount_to_claim}]}]' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
 
 # disable produce empty block
 sed -i 's/create_empty_blocks = true/create_empty_blocks = false/g' "$CONFIG_TOML"
 
 # Allocate genesis accounts (cosmos formatted addresses)
-hetud add-genesis-account $KEY 100000000000000000000000000ahetu --keyring-backend $KEYRING
+hetud add-genesis-account $KEY 100000000000000000000000000ahetu,100000000000000000000000000gas --keyring-backend $KEYRING
 
 # Update total supply with claim values
 # Bc is required to add this big numbers
@@ -107,4 +107,4 @@ hetud collect-gentxs
 hetud validate-genesis
 
 # Start the node (remove the --pruning=nothing flag if historical queries are not needed)
-hetud start "$TRACE" --log_level $LOGLEVEL --minimum-gas-prices=0.0001ahetu --json-rpc.api eth,txpool,personal,net,debug,web3
+hetud start "$TRACE" --log_level $LOGLEVEL --minimum-gas-prices=0.0001gas --json-rpc.api eth,txpool,personal,net,debug,web3

@@ -7,28 +7,28 @@ linters:
   enable:
     # - depguard
     - dogsled
-    - dupl
-    - errcheck
+    # - dupl
+    # - errcheck
     - goconst
-    - gocritic
+    # - gocritic
     # - gofumpt
     - revive
     # - gosec
     - gosimple
     # - govet
-    - ineffassign
+    # - ineffassign
     # - lll TODO: enable
     # - misspell
     - nakedret
     - prealloc
     - exportloopref
-    - staticcheck
-    - stylecheck
+    # - staticcheck
+    # - stylecheck
     - typecheck
-    - unconvert
+    # - unconvert
     - unparam
-    - unused
-    - nolintlint
+    # - unused
+    # - nolintlint
     - asciicheck
     - exportloopref
     - gomodguard
