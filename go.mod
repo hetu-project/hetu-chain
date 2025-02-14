@@ -268,7 +268,7 @@ replace (
 	cosmossdk.io/store => github.com/hetu-project/cosmos-sdk/store v0.0.0-20240718141609-414cbd051fbe
 	// use cosmos keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
-	github.com/cometbft/cometbft => github.com/hetu-project/hetu-parallel-engine/hetu-cometbft v0.0.0-20250127071645-b3f53d769924
+	github.com/cometbft/cometbft => github.com/hetu-project/hetu-parallel-engine/hetu-cometbft v0.0.0-20250214085430-cbcce0a00bb2
 	github.com/cosmos/cosmos-sdk => github.com/hetu-project/cosmos-sdk v0.50.9-hetu
 
 	// use geth fork

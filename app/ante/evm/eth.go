@@ -372,18 +372,18 @@ func (issd EthIncrementSenderSequenceDecorator) AnteHandle(ctx sdk.Context, tx s
 				"account %s is nil", common.BytesToAddress(msgEthTx.GetFrom().Bytes()),
 			)
 		}
-		nonce := acc.GetSequence()
+		// nonce := acc.GetSequence()
 
-		// we merged the nonce verification to nonce increment, so when tx includes multiple messages
-		// with same sender, they'll be accepted.
-		if txData.GetNonce() != nonce {
-			return ctx, errorsmod.Wrapf(
-				errortypes.ErrInvalidSequence,
-				"invalid nonce; got %d, expected %d", txData.GetNonce(), nonce,
-			)
-		}
+		// // we merged the nonce verification to nonce increment, so when tx includes multiple messages
+		// // with same sender, they'll be accepted.
+		// if txData.GetNonce() != nonce {
+		// 	return ctx, errorsmod.Wrapf(
+		// 		errortypes.ErrInvalidSequence,
+		// 		"invalid nonce; got %d, expected %d", txData.GetNonce(), nonce,
+		// 	)
+		// }
 
-		if err := acc.SetSequence(nonce + 1); err != nil {
+		if err := acc.SetSequence(txData.GetNonce() + 1); err != nil {
 			return ctx, errorsmod.Wrapf(err, "failed to set sequence to %d", acc.GetSequence()+1)
 		}
 
