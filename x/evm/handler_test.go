@@ -2,6 +2,7 @@ package evm_test
 
 import (
 	"errors"
+	"math"
 	"math/big"
 	"testing"
 	"time"
@@ -143,6 +144,7 @@ func (suite *EvmTestSuite) DoSetupTest(t require.TestingT) {
 		ConsensusHash:      tmhash.Sum([]byte("consensus")),
 		LastResultsHash:    tmhash.Sum([]byte("last_result")),
 	})
+	suite.ctx = suite.ctx.WithBlockGasMeter(storetypes.NewGasMeter(math.MaxUint64))
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, suite.app.EvmKeeper)

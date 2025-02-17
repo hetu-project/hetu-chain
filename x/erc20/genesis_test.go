@@ -1,11 +1,12 @@
 package erc20_test
 
 import (
+	"math"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/suite"
-
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cometbft/cometbft/crypto/tmhash"
@@ -62,6 +63,7 @@ func (suite *GenesisTestSuite) SetupTest() {
 		ConsensusHash:      tmhash.Sum([]byte("consensus")),
 		LastResultsHash:    tmhash.Sum([]byte("last_result")),
 	})
+	suite.ctx = suite.ctx.WithBlockGasMeter(storetypes.NewGasMeter(math.MaxUint64))
 
 	suite.genesis = *types.DefaultGenesisState()
 }

@@ -37,7 +37,7 @@ const (
 	// MainnetChainID defines the Hetud EIP155 chain ID for mainnet
 	MainnetChainID = "hetu_560001"
 	// TestnetChainID defines the Hetud EIP155 chain ID for testnet
-	TestnetChainID = "hetu_56000"
+	TestnetChainID = "hetu_560000"
 	// TestingChainID defines the Evmos EIP155 chain ID for testing purposes
 	// like the local node.
 	TestingChainID = "hetu_560002"

@@ -130,7 +130,8 @@ func CheckTx(
 	gasPrice *sdkmath.Int,
 	msgs ...sdk.Msg,
 ) (abci.ResponseCheckTx, error) {
-	txConfig := encoding.MakeConfig().TxConfig
+	// txConfig := encoding.MakeConfig().TxConfig
+	txConfig := appEvmos.TxConfig()
 
 	tx, err := tx.PrepareCosmosTx(
 		ctx,

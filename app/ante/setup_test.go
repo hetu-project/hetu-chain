@@ -1,12 +1,14 @@
 package ante_test
 
 import (
+	"math"
 	"testing"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/hetu-project/hetu/v1/app"
@@ -43,6 +45,7 @@ func (suite *AnteTestSuite) SetupTest() {
 	header := testutil.NewHeader(
 		1, time.Now().UTC(), utils.MainnetChainID+"-1", consAddress, nil, nil)
 	suite.ctx = suite.app.BaseApp.NewContextLegacy(isCheckTx, header)
+	suite.ctx = suite.ctx.WithBlockGasMeter(storetypes.NewGasMeter(math.MaxUint64))
 
 	suite.denom = utils.BaseDenom
 	evmParams := suite.app.EvmKeeper.GetParams(suite.ctx)

@@ -1,9 +1,11 @@
 package epochs_test
 
 import (
+	"math"
 	"testing"
 	"time"
 
+	storetypes "cosmossdk.io/store/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
@@ -21,6 +23,7 @@ func TestEpochsExportGenesis(t *testing.T) {
 
 	app := simapp.Setup(false, feemarketGenesis)
 	ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
+	ctx = ctx.WithBlockGasMeter(storetypes.NewGasMeter(math.MaxUint64))
 
 	chainStartTime := ctx.BlockTime()
 	chainStartHeight := ctx.BlockHeight()
@@ -52,6 +55,7 @@ func TestEpochsInitGenesis(t *testing.T) {
 
 	app := simapp.Setup(false, feemarketGenesis)
 	ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
+	ctx = ctx.WithBlockGasMeter(storetypes.NewGasMeter(math.MaxUint64))
 
 	// On init genesis, default epochs information is set
 	// To check init genesis again, should make it fresh status

@@ -185,6 +185,7 @@ func setupChain(localMinGasPricesStr string) {
 		encoding.MakeConfig(),
 		simtestutil.NewAppOptionsWithFlagHome(app.DefaultNodeHome),
 		baseapp.SetMinGasPrices(localMinGasPricesStr),
+		baseapp.SetChainID(utils.TestnetChainID+"-1"),
 	)
 
 	genesisState := app.NewTestGenesisState(newapp.AppCodec())

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -77,6 +78,7 @@ func (suite *KeeperTestSuite) DoSetupTest(t require.TestingT) {
 		1, time.Now().UTC(), "hetu_560001-1", consAddress, nil, nil,
 	)
 	suite.ctx = suite.app.BaseApp.NewContextLegacy(false, header)
+	suite.ctx = suite.ctx.WithBlockGasMeter(storetypes.NewGasMeter(math.MaxUint64))
 
 	// query clients
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
