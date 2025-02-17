@@ -16,7 +16,7 @@ import (
 
 func init() {
 	cfg := sdk.GetConfig()
-	cfg.SetBech32PrefixForAccount("evmos", "evmospub")
+	cfg.SetBech32PrefixForAccount("hetu", "hetupub")
 }
 
 func TestGetTransferSenderRecipient(t *testing.T) {
@@ -57,7 +57,7 @@ func TestGetTransferSenderRecipient(t *testing.T) {
 				Data: transfertypes.ModuleCdc.MustMarshalJSON(
 					&transfertypes.FungibleTokenPacketData{
 						Sender:   "cosmos1",
-						Receiver: "hetu1x2w87cvt5mqjncav4lxy8yfreynn273xyw6ylm",
+						Receiver: "hetu1x2w87cvt5mqjncav4lxy8yfreynn273xnhq2pu",
 						Amount:   "123456",
 					},
 				),
@@ -85,13 +85,13 @@ func TestGetTransferSenderRecipient(t *testing.T) {
 				Data: transfertypes.ModuleCdc.MustMarshalJSON(
 					&transfertypes.FungibleTokenPacketData{
 						Sender:   "cosmos1qql8ag4cluz6r4dz28p3w00dnc9w8ueulg2gmc",
-						Receiver: "hetu1x2w87cvt5mqjncav4lxy8yfreynn273xyw6ylm",
+						Receiver: "hetu1x2w87cvt5mqjncav4lxy8yfreynn273xnhq2pu",
 						Amount:   "123456",
 					},
 				),
 			},
-			"hetu1qql8ag4cluz6r4dz28p3w00dnc9w8ueu2nsn28",
-			"hetu1x2w87cvt5mqjncav4lxy8yfreynn273xyw6ylm",
+			"hetu1qql8ag4cluz6r4dz28p3w00dnc9w8ueua22a5q",
+			"hetu1x2w87cvt5mqjncav4lxy8yfreynn273xnhq2pu",
 			false,
 		},
 		{
@@ -99,14 +99,14 @@ func TestGetTransferSenderRecipient(t *testing.T) {
 			channeltypes.Packet{
 				Data: transfertypes.ModuleCdc.MustMarshalJSON(
 					&transfertypes.FungibleTokenPacketData{
-						Sender:   "hetu1x2w87cvt5mqjncav4lxy8yfreynn273xyw6ylm",
+						Sender:   "hetu1x2w87cvt5mqjncav4lxy8yfreynn273xnhq2pu",
 						Receiver: "cosmos1qql8ag4cluz6r4dz28p3w00dnc9w8ueulg2gmc",
 						Amount:   "123456",
 					},
 				),
 			},
-			"hetu1x2w87cvt5mqjncav4lxy8yfreynn273xyw6ylm",
-			"hetu1qql8ag4cluz6r4dz28p3w00dnc9w8ueu2nsn28",
+			"hetu1x2w87cvt5mqjncav4lxy8yfreynn273xnhq2pu",
+			"hetu1qql8ag4cluz6r4dz28p3w00dnc9w8ueua22a5q",
 			false,
 		},
 		{
@@ -115,13 +115,13 @@ func TestGetTransferSenderRecipient(t *testing.T) {
 				Data: transfertypes.ModuleCdc.MustMarshalJSON(
 					&transfertypes.FungibleTokenPacketData{
 						Sender:   "osmo1qql8ag4cluz6r4dz28p3w00dnc9w8ueuhnecd2",
-						Receiver: "hetu1x2w87cvt5mqjncav4lxy8yfreynn273xyw6ylm",
+						Receiver: "hetu1x2w87cvt5mqjncav4lxy8yfreynn273xnhq2pu",
 						Amount:   "123456",
 					},
 				),
 			},
-			"hetu1qql8ag4cluz6r4dz28p3w00dnc9w8ueu2nsn28",
-			"hetu1x2w87cvt5mqjncav4lxy8yfreynn273xyw6ylm",
+			"hetu1qql8ag4cluz6r4dz28p3w00dnc9w8ueua22a5q",
+			"hetu1x2w87cvt5mqjncav4lxy8yfreynn273xnhq2pu",
 			false,
 		},
 	}
@@ -165,7 +165,7 @@ func TestGetTransferAmount(t *testing.T) {
 				Data: transfertypes.ModuleCdc.MustMarshalJSON(
 					&transfertypes.FungibleTokenPacketData{
 						Sender:   "cosmos1qql8ag4cluz6r4dz28p3w00dnc9w8ueulg2gmc",
-						Receiver: "hetu1x2w87cvt5mqjncav4lxy8yfreynn273xyw6ylm",
+						Receiver: "hetu1x2w87cvt5mqjncav4lxy8yfreynn273xnhq2pu",
 						Amount:   "",
 					},
 				),
@@ -179,7 +179,7 @@ func TestGetTransferAmount(t *testing.T) {
 				Data: transfertypes.ModuleCdc.MustMarshalJSON(
 					&transfertypes.FungibleTokenPacketData{
 						Sender:   "cosmos1qql8ag4cluz6r4dz28p3w00dnc9w8ueulg2gmc",
-						Receiver: "hetu1x2w87cvt5mqjncav4lxy8yfreynn273xyw6ylm",
+						Receiver: "hetu1x2w87cvt5mqjncav4lxy8yfreynn273xnhq2pu",
 						Amount:   "test",
 					},
 				),
@@ -193,7 +193,7 @@ func TestGetTransferAmount(t *testing.T) {
 				Data: transfertypes.ModuleCdc.MustMarshalJSON(
 					&transfertypes.FungibleTokenPacketData{
 						Sender:   "cosmos1qql8ag4cluz6r4dz28p3w00dnc9w8ueulg2gmc",
-						Receiver: "hetu1x2w87cvt5mqjncav4lxy8yfreynn273xyw6ylm",
+						Receiver: "hetu1x2w87cvt5mqjncav4lxy8yfreynn273xnhq2pu",
 						Amount:   "10000",
 					},
 				),

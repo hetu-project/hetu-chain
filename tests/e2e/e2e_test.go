@@ -25,7 +25,7 @@ func (s *IntegrationTestSuite) TestUpgrade() {
 	s.T().Logf("SUCCESS")
 }
 
-// TestCLITxs executes different types of transactions against an Evmos node
+// TestCLITxs executes different types of transactions against an Hetu node
 // using the CLI client. The node used for the test has the latest changes introduced.
 func (s *IntegrationTestSuite) TestCLITxs() {
 	// start a node

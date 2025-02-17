@@ -262,7 +262,7 @@ func txCommand() *cobra.Command {
 // initAppConfig helps to override default appConfig template and configs.
 // return "", nil if no custom configuration is required for the application.
 func initAppConfig() (string, interface{}) {
-	customAppTemplate, customAppConfig := servercfg.AppConfig(cmdcfg.BaseDenom)
+	customAppTemplate, customAppConfig := servercfg.AppConfig(cmdcfg.BaseETHDenom)
 
 	srvCfg, ok := customAppConfig.(servercfg.Config)
 	if !ok {

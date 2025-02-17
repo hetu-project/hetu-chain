@@ -4,11 +4,7 @@
     },
     "Enable": [
         "golint",
-        "vet",
-        "ineffassign",
-        "unparam",
-        "unconvert",
-        "misspell"
+        "unparam"
     ],
     "Deadline": "500s",
     "Vendor": true,

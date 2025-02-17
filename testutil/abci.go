@@ -23,6 +23,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmtypes "github.com/cometbft/cometbft/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
@@ -99,24 +100,26 @@ func DeliverTx(
 	if err != nil {
 		return abci.ExecTxResult{}, err
 	}
-	return BroadcastTxBytes(appEvmos, txConfig.TxEncoder(), tx)
+	return BroadcastTxBytes(ctx, appEvmos, txConfig.TxEncoder(), tx)
 }
 
 // DeliverEthTx generates and broadcasts a Cosmos Tx populated with MsgEthereumTx messages.
 // If a private key is provided, it will attempt to sign all messages with the given private key,
 // otherwise, it will assume the messages have already been signed.
 func DeliverEthTx(
+	ctx sdk.Context,
 	appEvmos *app.Evmos,
 	priv cryptotypes.PrivKey,
 	msgs ...sdk.Msg,
 ) (abci.ExecTxResult, error) {
-	txConfig := encoding.MakeConfig().TxConfig
+	// txConfig := encoding.MakeConfig().TxConfig
+	txConfig := appEvmos.GetTxConfig()
 
 	tx, err := tx.PrepareEthTx(txConfig, appEvmos, priv, msgs...)
 	if err != nil {
 		return abci.ExecTxResult{}, err
 	}
-	return BroadcastTxBytes(appEvmos, txConfig.TxEncoder(), tx)
+	return BroadcastTxBytes(ctx, appEvmos, txConfig.TxEncoder(), tx)
 }
 
 // CheckTx checks a cosmos tx for a given set of msgs
@@ -163,16 +166,30 @@ func CheckEthTx(
 }
 
 // BroadcastTxBytes encodes a transaction and calls DeliverTx on the app.
-func BroadcastTxBytes(app *app.Evmos, txEncoder sdk.TxEncoder, tx sdk.Tx) (abci.ExecTxResult, error) {
+func BroadcastTxBytes(ctx sdk.Context, app *app.Evmos, txEncoder sdk.TxEncoder, tx sdk.Tx) (abci.ExecTxResult, error) {
 	// bz are bytes to be broadcasted over the network
 	bz, err := txEncoder(tx)
 	if err != nil {
 		return abci.ExecTxResult{}, err
 	}
 
-	req := abci.RequestFinalizeBlock{Txs: [][]byte{bz}}
+	header := ctx.BlockHeader()
+	// Update block header and BeginBlock
+	// header.Height++
+	header.AppHash = app.LastCommitID().Hash
+	// Calculate new block time after duration
+	newBlockTime := header.Time.Add(time.Second)
+	header.Time = newBlockTime
 
-	res, err := app.BaseApp.FinalizeBlock(&req)
+	// req := abci.RequestFinalizeBlock{Txs: [][]byte{bz}}
+	req := buildFinalizeBlockReq(header, nil, bz)
+
+	// dont include the DecidedLastCommit because we're not committing the changes
+	// here, is just for broadcasting the tx. To persist the changes, use the
+	// NextBlock or NextBlockAfter functions
+	req.DecidedLastCommit = abci.CommitInfo{}
+
+	res, err := app.BaseApp.FinalizeBlock(req)
 	if err != nil {
 		return abci.ExecTxResult{}, err
 	}
@@ -185,6 +202,36 @@ func BroadcastTxBytes(app *app.Evmos, txEncoder sdk.TxEncoder, tx sdk.Tx) (abci.
 	}
 
 	return *txRes, nil
+}
+
+// buildFinalizeBlockReq is a helper function to build
+// properly the FinalizeBlock request
+func buildFinalizeBlockReq(header cmtproto.Header, validators []*tmtypes.Validator, txs ...[]byte) *abci.RequestFinalizeBlock {
+	// add validator's commit info to allocate corresponding tokens to validators
+	ci := getCommitInfo(validators)
+	return &abci.RequestFinalizeBlock{
+		Height:             header.Height,
+		DecidedLastCommit:  ci,
+		Hash:               header.AppHash,
+		NextValidatorsHash: header.ValidatorsHash,
+		ProposerAddress:    header.ProposerAddress,
+		Time:               header.Time,
+		Txs:                txs,
+	}
+}
+
+func getCommitInfo(validators []*tmtypes.Validator) abci.CommitInfo {
+	voteInfos := make([]abci.VoteInfo, len(validators))
+	for i, val := range validators {
+		voteInfos[i] = abci.VoteInfo{
+			Validator: abci.Validator{
+				Address: val.Address,
+				Power:   val.VotingPower,
+			},
+			BlockIdFlag: cmtproto.BlockIDFlagCommit,
+		}
+	}
+	return abci.CommitInfo{Votes: voteInfos}
 }
 
 // checkTxBytes encodes a transaction and calls checkTx on the app.

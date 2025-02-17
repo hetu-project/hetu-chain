@@ -44,8 +44,13 @@ const (
 const (
 	// DisplayDenom defines the denomination displayed to users in client applications.
 	DisplayDenom = "hetu"
-	// BaseDenom defines to the default denomination used in Hetu (staking, EVM, governance, etc.)
+	// BaseDenom defines to the default denomination used in Hetu (staking, governance, etc.)
 	BaseDenom = "ahetu"
+
+	// DisplayETHDenom defines the denomination displayed to users in client applications.
+	DisplayETHDenom = "eth"
+	// BaseDenom defines to the default denomination used in Hetu (EVM, gas, etc.)
+	BaseETHDenom = "gas"
 )
 
 // SetBech32Prefixes sets the global prefixes to be used when serializing addresses and public keys to Bech32 strings.
@@ -69,6 +74,14 @@ func RegisterDenoms() {
 	}
 
 	if err := sdk.RegisterDenom(BaseDenom, math.LegacyNewDecWithPrec(1, types.BaseDenomUnit)); err != nil {
+		panic(err)
+	}
+
+	if err := sdk.RegisterFeeDenom(DisplayETHDenom, math.LegacyOneDec()); err != nil {
+		panic(err)
+	}
+
+	if err := sdk.RegisterFeeDenom(BaseETHDenom, math.LegacyNewDecWithPrec(1, types.BaseDenomUnit)); err != nil {
 		panic(err)
 	}
 }

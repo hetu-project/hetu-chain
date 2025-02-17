@@ -1,15 +1,15 @@
-# argument to provide specific version of evmos node
+# argument to provide specific version of hetu node
 ARG INITIAL_VERSION
-FROM tharsishq/evmos:$INITIAL_VERSION
+FROM hetuorg/hetu:$INITIAL_VERSION
 
 # jq needs to perform changes of node parameters
 RUN apt-get update \ 
-&& apt-get install ca-certificates=20210119 jq=1.6-2.1 -y \ 
---no-install-recommends \ 
-&& apt-get clean \
-&& rm -rf /var/lib/apt/lists/*
+    && apt-get install ca-certificates=20210119 jq=1.6-2.1 -y \ 
+    --no-install-recommends \ 
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /go/src/github.com/evmos/evmos
+WORKDIR /go/src/github.com/hetu/hetu
 
 COPY ./init-node.sh .
 

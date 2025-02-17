@@ -100,20 +100,20 @@ func TestGetEvmosAddressFromBech32(t *testing.T) {
 		},
 		{
 			"evmos address",
-			"hetu1qql8ag4cluz6r4dz28p3w00dnc9w8ueu2nsn28",
-			"hetu1qql8ag4cluz6r4dz28p3w00dnc9w8ueu2nsn28",
+			"hetu1qql8ag4cluz6r4dz28p3w00dnc9w8ueua22a5q",
+			"hetu1qql8ag4cluz6r4dz28p3w00dnc9w8ueua22a5q",
 			false,
 		},
 		{
 			"cosmos address",
 			"cosmos1qql8ag4cluz6r4dz28p3w00dnc9w8ueulg2gmc",
-			"hetu1qql8ag4cluz6r4dz28p3w00dnc9w8ueu2nsn28",
+			"hetu1qql8ag4cluz6r4dz28p3w00dnc9w8ueua22a5q",
 			false,
 		},
 		{
 			"osmosis address",
 			"osmo1qql8ag4cluz6r4dz28p3w00dnc9w8ueuhnecd2",
-			"hetu1qql8ag4cluz6r4dz28p3w00dnc9w8ueu2nsn28",
+			"hetu1qql8ag4cluz6r4dz28p3w00dnc9w8ueua22a5q",
 			false,
 		},
 	}
