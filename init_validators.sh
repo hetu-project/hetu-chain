@@ -29,7 +29,7 @@ CHAIN_ID="hetu_560000-1"
 KEYRING="test"
 KEYALGO="eth_secp256k1"
 DENOM="ahetu"
-HOME_PREFIX="$HOME/.hetud"
+HOME_PREFIX="/data/hetud"
 # Set balance and stake amounts (matching local_node.sh exactly)
 GENESIS_BALANCE="1000000000000000000000000000" # 1 million hetu
 GENTX_STAKE="1000000000000000000000000"        # 1 million hetu (1000000000000000000000000 = 10^24)
@@ -47,11 +47,14 @@ WS_PORT=8546
 # Clean up all existing data locally and remotely
 echo "Cleaning up all existing data..."
 
+# Stop any running hetu processes locally
+pkill hetud || true
+
 # Clean local node data
 rm -rf "${HOME_PREFIX}"/*
 for i in $(seq 0 $((NUM_VALIDATORS - 1))); do
     echo "Cleaning up local validator $i data..."
-    rm -rf "${HOME}/.hetud$i"
+    rm -rf "${HOME_PREFIX}$i"
 done
 
 # Clean remote node data (skip any IP matching primary)
@@ -63,7 +66,7 @@ for i in $(seq 0 $((NUM_VALIDATORS - 1))); do
         continue
     fi
     echo "Cleaning up data on $TARGET_IP..."
-    ssh root@${TARGET_IP} 'rm -rf ~/.hetud ~/.hetud* 2>/dev/null || true'
+    ssh ubuntu@${TARGET_IP} "pkill hetud || true; rm -rf \"${HOME_PREFIX}\" \"${HOME_PREFIX}\"* 2>/dev/null || true"
 done
 
 # Initialize primary node
@@ -75,16 +78,18 @@ GENESIS="${HOME_PREFIX}/config/genesis.json"
 TMP_GENESIS="${HOME_PREFIX}/config/tmp_genesis.json"
 
 # Change parameter token denominations to ahetu
-jq --arg denom "$DENOM" '.app_state["staking"]["params"]["bond_denom"]=$denom' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
-jq --arg denom "$DENOM" '.app_state["gov"]["deposit_params"]["min_deposit"][0]["denom"]=$denom' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
-jq --arg denom "$DENOM" '.app_state["gov"]["params"]["min_deposit"][0]["denom"]=$denom' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
-jq --arg denom "$DENOM" '.app_state["inflation"]["params"]["mint_denom"]=$denom' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+jq '.app_state["staking"]["params"]["bond_denom"]="ahetu"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+jq '.app_state["crisis"]["constant_fee"]["denom"]="ahetu"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+jq '.app_state["gov"]["deposit_params"]["min_deposit"][0]["denom"]="ahetu"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+jq '.app_state["evm"]["params"]["evm_denom"]="gas"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+jq '.app_state["inflation"]["params"]["mint_denom"]="ahetu"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+
 
 # Set gas limit in genesis
-jq '.consensus_params["block"]["max_gas"]="10000000"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+# jq '.consensus_params["block"]["max_gas"]="10000000"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
 
 # Set base fee in genesis
-jq --arg fee "$BASEFEE" '.app_state["feemarket"]["params"]["base_fee"]=$fee' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+# jq --arg fee "$BASEFEE" '.app_state["feemarket"]["params"]["base_fee"]=$fee' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
 
 # Change proposal periods to pass within a reasonable time
 sed -i.bak 's/"max_deposit_period": "172800s"/"max_deposit_period": "30s"/g' "$GENESIS"
@@ -111,7 +116,7 @@ done
 # Create clone directories, gentx, and get node IDs
 declare -a NODE_IDS
 for i in $(seq 0 $((NUM_VALIDATORS - 1))); do
-    CLONE_HOME="${HOME}/.hetud$i"
+    CLONE_HOME="${HOME_PREFIX}$i"
     echo "Creating gentx for validator $i in ${CLONE_HOME}..."
 
     # Initialize fresh node
@@ -139,6 +144,9 @@ for i in $(seq 0 $((NUM_VALIDATORS - 1))); do
     sed -i.bak -e '/^\[rpc\]/,/^\[/s|^laddr *= *.*|laddr = "tcp://0.0.0.0:26657"|' "$CONFIG_TOML"
     sed -i.bak -e '/^\[p2p\]/,/^\[/s|^laddr *= *.*|laddr = "tcp://0.0.0.0:26656"|' "$CONFIG_TOML"
 
+    # Set mempool type to narwhal
+    sed -i.bak -e '/^\[mempool\]/,/^\[/s|^type *= *.*|type = "narwhal"|' "$CONFIG_TOML"
+
     # Update other settings
     sed -i.bak \
         -e "s/^moniker *=.*/moniker = \"node${i}\"/" \
@@ -163,14 +171,14 @@ for i in $(seq 0 $((NUM_VALIDATORS - 1))); do
         -e 's/^evm.tracer = .*$/evm.tracer = ""/' \
         "$APP_TOML"
 
-    # Set timeouts for better network stability
-    sed -i.bak 's/timeout_propose = "3s"/timeout_propose = "30s"/g' "$CONFIG_TOML"
-    sed -i.bak 's/timeout_propose_delta = "500ms"/timeout_propose_delta = "5s"/g' "$CONFIG_TOML"
-    sed -i.bak 's/timeout_prevote = "1s"/timeout_prevote = "10s"/g' "$CONFIG_TOML"
-    sed -i.bak 's/timeout_prevote_delta = "500ms"/timeout_prevote_delta = "5s"/g' "$CONFIG_TOML"
-    sed -i.bak 's/timeout_precommit = "1s"/timeout_precommit = "10s"/g' "$CONFIG_TOML"
-    sed -i.bak 's/timeout_precommit_delta = "500ms"/timeout_precommit_delta = "5s"/g' "$CONFIG_TOML"
-    sed -i.bak 's/timeout_commit = "5s"/timeout_commit = "150s"/g' "$CONFIG_TOML"
+    # Set consensus timeouts
+    sed -i.bak 's/timeout_propose = ".*"/timeout_propose = "200ms"/g' "$CONFIG_TOML"
+    sed -i.bak 's/timeout_propose_delta = ".*"/timeout_propose_delta = "100ms"/g' "$CONFIG_TOML"
+    sed -i.bak 's/timeout_prevote = ".*"/timeout_prevote = "200ms"/g' "$CONFIG_TOML"
+    sed -i.bak 's/timeout_prevote_delta = ".*"/timeout_prevote_delta = "100ms"/g' "$CONFIG_TOML"
+    sed -i.bak 's/timeout_precommit = ".*"/timeout_precommit = "200ms"/g' "$CONFIG_TOML"
+    sed -i.bak 's/timeout_precommit_delta = ".*"/timeout_precommit_delta = "100ms"/g' "$CONFIG_TOML"
+    sed -i.bak 's/timeout_commit = ".*"/timeout_commit = "1s"/g' "$CONFIG_TOML"
     sed -i.bak 's/timeout_broadcast_tx_commit = "10s"/timeout_broadcast_tx_commit = "150s"/g' "$CONFIG_TOML"
 
     # Use the corresponding validator IP
@@ -209,7 +217,7 @@ hetud validate-genesis --home "${HOME_PREFIX}"
 
 # Configure peers for each validator
 for i in $(seq 0 $((NUM_VALIDATORS - 1))); do
-    CLONE_HOME="${HOME}/.hetud$i"
+    CLONE_HOME="${HOME_PREFIX}$i"
     PEERS=""
 
     # Build peers string excluding self
@@ -229,7 +237,7 @@ done
 
 # Copy genesis to all validators
 for i in $(seq 0 $((NUM_VALIDATORS - 1))); do
-    CLONE_HOME="${HOME}/.hetud$i"
+    CLONE_HOME="${HOME_PREFIX}$i"
     cp "${HOME_PREFIX}/config/genesis.json" "${CLONE_HOME}/config/"
 done
 
@@ -243,16 +251,16 @@ for i in $(seq 0 $((NUM_VALIDATORS - 1))); do
     fi
     echo "Copying validator $i data to $TARGET_IP..."
     # First remove the old directory on remote
-    ssh root@${TARGET_IP} "rm -rf ${HOME}/.hetud${i}"
+    ssh ubuntu@${TARGET_IP} "rm -rf ${HOME_PREFIX}${i}"
     # Then copy the new data
-    rsync -av "${HOME}/.hetud${i}/" "root@${TARGET_IP}:${HOME}/.hetud${i}/"
+    rsync -av "${HOME_PREFIX}${i}/" "ubuntu@${TARGET_IP}:${HOME_PREFIX}${i}/"
 done
 
 echo "All validators initialized successfully!"
 echo "Genesis file location: ${HOME_PREFIX}/config/genesis.json"
 echo "Validator information:"
 for i in $(seq 0 $((NUM_VALIDATORS - 1))); do
-    CLONE_HOME="${HOME}/.hetud$i"
+    CLONE_HOME="${HOME_PREFIX}$i"
     echo "Validator $i:"
     echo "  Directory: ${CLONE_HOME}"
     echo "  Node ID: ${NODE_IDS[$i]}"

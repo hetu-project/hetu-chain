@@ -10,10 +10,11 @@ if [ "$#" -ne 1 ]; then
 fi
 
 NODE_NUMBER=$1
-HOME_PREFIX="$HOME/.hetud${NODE_NUMBER}"
+HOME_PREFIX="/data/hetud"
+NODE_HOME="${HOME_PREFIX}${NODE_NUMBER}"
 
 # Start the node
 hetud start \
-    --home "${HOME_PREFIX}" \
+    --home "${NODE_HOME}" \
     --chain-id hetu_560000-1 \
     --log_level info
