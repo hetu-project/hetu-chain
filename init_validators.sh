@@ -4,9 +4,9 @@
 set -e
 
 # Check arguments
-if [ "$#" -lt 4 ]; then
-    echo "Usage: $0 <validator0_ip> <validator1_ip> <validator2_ip> <validator3_ip>"
-    echo "Example: $0 1.2.3.4 5.6.7.8 9.10.11.12 13.14.15.16"
+if [ "$#" -lt 7 ]; then
+    echo "Usage: $0 <validator0_ip> <validator1_ip> <validator2_ip> <validator3_ip> <validator4_ip> <validator5_ip> <validator6_ip>"
+    echo "Example: $0 1.2.3.4 5.6.7.8 9.10.11.12 13.14.15.16 17.18.19.20 21.22.23.24 25.26.27.28"
     exit 1
 fi
 
@@ -17,10 +17,10 @@ command -v jq >/dev/null 2>&1 || {
 }
 
 # Set number of validators
-NUM_VALIDATORS=4
+NUM_VALIDATORS=7
 
 # Store validator IPs in array
-declare -a VALIDATOR_IPS=($1 $2 $3 $4)
+declare -a VALIDATOR_IPS=($1 $2 $3 $4 $5 $6 $7)
 echo "All validator IPs: ${VALIDATOR_IPS[@]}"
 echo "Number of validators: $NUM_VALIDATORS"
 
@@ -77,6 +77,22 @@ hetud init "node0" -o --chain-id="${CHAIN_ID}" --home "${HOME_PREFIX}"
 GENESIS="${HOME_PREFIX}/config/genesis.json"
 TMP_GENESIS="${HOME_PREFIX}/config/tmp_genesis.json"
 
+# Create validator keys and add genesis accounts
+declare -a KEYS
+for i in $(seq 0 $((NUM_VALIDATORS - 1))); do
+    KEYS[$i]="validator$i"
+    echo "Creating validator key ${KEYS[$i]}..."
+    hetud keys add "${KEYS[$i]}" \
+        --keyring-backend="${KEYRING}" \
+        --algo="${KEYALGO}" \
+        --home "${HOME_PREFIX}"
+
+    echo "Adding genesis account for validator ${KEYS[$i]}..."
+    hetud add-genesis-account "${KEYS[$i]}" "${GENESIS_BALANCE}${DENOM},${GENESIS_BALANCE}gas" \
+        --keyring-backend="${KEYRING}" \
+        --home "${HOME_PREFIX}"
+done
+
 # Change parameter token denominations to ahetu
 jq '.app_state["staking"]["params"]["bond_denom"]="ahetu"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
 jq '.app_state["crisis"]["constant_fee"]["denom"]="ahetu"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
@@ -84,12 +100,26 @@ jq '.app_state["gov"]["deposit_params"]["min_deposit"][0]["denom"]="ahetu"' "$GE
 jq '.app_state["evm"]["params"]["evm_denom"]="gas"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
 jq '.app_state["inflation"]["params"]["mint_denom"]="ahetu"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
 
-
 # Set gas limit in genesis
-# jq '.consensus_params["block"]["max_gas"]="10000000"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+jq '.consensus_params["block"]["max_gas"]="10000000"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
 
-# Set base fee in genesis
-# jq --arg fee "$BASEFEE" '.app_state["feemarket"]["params"]["base_fee"]=$fee' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+# Set claims start time
+current_date=$(date -u +"%Y-%m-%dT%TZ")
+jq -r --arg current_date "$current_date" '.app_state["claims"]["params"]["airdrop_start_time"]=$current_date' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+
+# Set claims records for validator account
+amount_to_claim=10000
+claims_key="validator0"
+node_address=$(hetud keys show "$claims_key" --keyring-backend $KEYRING --home "$HOME_PREFIX" | grep "address" | cut -c12-)
+jq -r --arg node_address "$node_address" --arg amount_to_claim "$amount_to_claim" '.app_state["claims"]["claims_records"]=[{"initial_claimable_amount":$amount_to_claim, "actions_completed":[false, false, false, false],"address":$node_address}]' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+
+# Set claims decay
+jq '.app_state["claims"]["params"]["duration_of_decay"]="1000000s"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+jq '.app_state["claims"]["params"]["duration_until_decay"]="100000s"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+
+# Claim module account:
+# 0xA61808Fe40fEb8B3433778BBC2ecECCAA47c8c47 || hetu15cvq3ljql6utxseh0zau9m8ve2j8erz89c94rj
+jq -r --arg amount_to_claim "$amount_to_claim" '.app_state["bank"]["balances"] += [{"address":"hetu15cvq3ljql6utxseh0zau9m8ve2j8erz89c94rj","coins":[{"denom":"ahetu", "amount":$amount_to_claim}, {"denom":"gas", "amount":$amount_to_claim}]}]' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
 
 # Change proposal periods to pass within a reasonable time
 sed -i.bak 's/"max_deposit_period": "172800s"/"max_deposit_period": "30s"/g' "$GENESIS"
@@ -99,19 +129,10 @@ sed -i.bak 's/"expedited_voting_period": "86400s"/"expedited_voting_period": "15
 # Create gentx directory in primary node
 mkdir -p "${HOME_PREFIX}/config/gentx"
 
-# Create validator keys and add genesis accounts
-for i in $(seq 0 $((NUM_VALIDATORS - 1))); do
-    echo "Creating validator $i key..."
-    hetud keys add "validator$i" \
-        --keyring-backend="${KEYRING}" \
-        --algo="${KEYALGO}" \
-        --home "${HOME_PREFIX}"
-
-    echo "Adding genesis account for validator $i..."
-    hetud add-genesis-account "validator$i" "${GENESIS_BALANCE}${DENOM}" \
-        --keyring-backend="${KEYRING}" \
-        --home "${HOME_PREFIX}"
-done
+# Calculate total supply including claims amount
+total_supply=$(echo "$NUM_VALIDATORS * $GENESIS_BALANCE + $amount_to_claim" | bc)
+jq -r --arg total_supply "$total_supply" '.app_state["bank"]["supply"][0]["amount"]=$total_supply' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+jq -r --arg total_supply "$total_supply" '.app_state["bank"]["supply"][1]["amount"]=$total_supply' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
 
 # Create clone directories, gentx, and get node IDs
 declare -a NODE_IDS
@@ -155,8 +176,8 @@ for i in $(seq 0 $((NUM_VALIDATORS - 1))); do
         -e "s/^#allow_duplicate_ip *=.*/allow_duplicate_ip = true/" \
         "$CONFIG_TOML"
 
-    # Set minimum gas price to 0
-    sed -i.bak "s/^minimum-gas-prices *=.*/minimum-gas-prices = \"0${DENOM}\"/g" "$APP_TOML"
+    # Set minimum gas price
+    sed -i.bak 's/^minimum-gas-prices *=.*/minimum-gas-prices = "0.0001gas"/g' "$APP_TOML"
 
     # Configure API and EVM settings in app.toml
     sed -i.bak \
@@ -166,7 +187,7 @@ for i in $(seq 0 $((NUM_VALIDATORS - 1))); do
         -e "/^\[json-rpc\]/,/^\[/s|^address *= *.*|address = \"0.0.0.0:${JSON_RPC_PORT}\"|" \
         -e "/^\[json-rpc\]/,/^\[/s|^ws-address *= *.*|ws-address = \"0.0.0.0:${WS_PORT}\"|" \
         -e "/^\[json-rpc\]/,/^\[/s|^enable *= *.*|enable = true|" \
-        -e "/^\[json-rpc\]/,/^\[/s|^api *= *.*|api = \"eth,net,web3,txpool,debug\"|" \
+        -e "/^\[json-rpc\]/,/^\[/s|^api *= *.*|api = \"eth,txpool,personal,net,debug,web3\"|" \
         -e 's/^json-rpc.enable-indexer = .*$/json-rpc.enable-indexer = true/' \
         -e 's/^evm.tracer = .*$/evm.tracer = ""/' \
         "$APP_TOML"
