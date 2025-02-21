@@ -41,7 +41,7 @@ hetud init %MONIKER% --chain-id %CHAINID%
 rem Change parameter token denominations to ahetu
 cat %GENESIS% | jq ".app_state[\"staking\"][\"params\"][\"bond_denom\"]=\"ahetu\""   >   %TMPGENESIS% && move %TMPGENESIS% %GENESIS%
 cat %GENESIS% | jq ".app_state[\"crisis\"][\"constant_fee\"][\"denom\"]=\"ahetu\"" > %TMPGENESIS% && move %TMPGENESIS% %GENESIS%
-cat %GENESIS% | jq ".app_state[\"gov\"][\"deposit_params\"][\"min_deposit\"][0][\"denom\"]=\"ahetu\"" > %TMPGENESIS% && move %TMPGENESIS% %GENESIS%
+cat %GENESIS% | jq ".app_state[\"gov\"][\"params\"][\"min_deposit\"][0][\"denom\"]=\"ahetu\"" > %TMPGENESIS% && move %TMPGENESIS% %GENESIS%
 cat %GENESIS% | jq ".app_state[\"mint\"][\"params\"][\"mint_denom\"]=\"ahetu\"" > %TMPGENESIS% && move %TMPGENESIS% %GENESIS%
 
 rem increase block time (?)
