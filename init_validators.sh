@@ -96,7 +96,7 @@ done
 # Change parameter token denominations to ahetu
 jq '.app_state["staking"]["params"]["bond_denom"]="ahetu"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
 jq '.app_state["crisis"]["constant_fee"]["denom"]="ahetu"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
-jq '.app_state["gov"]["deposit_params"]["min_deposit"][0]["denom"]="ahetu"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+jq '.app_state["gov"]["params"]["min_deposit"][0]["denom"]="ahetu"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
 jq '.app_state["evm"]["params"]["evm_denom"]="gas"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
 jq '.app_state["inflation"]["params"]["mint_denom"]="ahetu"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
 
