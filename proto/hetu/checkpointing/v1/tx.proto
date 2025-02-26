@@ -1,0 +1,36 @@
+syntax = "proto3";
+package hetu.checkpointing.v1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/staking/v1beta1/tx.proto";
+import "cosmos/msg/v1/msg.proto";
+
+option go_package = "github.com/hetu-project/hetu/v1/x/checkpointing/types";
+
+// Msg defines the checkpointing Msg service.
+service Msg {
+  option (cosmos.msg.v1.service) = true;
+
+  // RegistValidator defines a method for registering a new validator of the checkpoint network
+  rpc RegistValidator(MsgRegistValidator)
+      returns (MsgRegistValidatorResponse);
+}
+
+// MsgRegistValidator defines a message to regist a validator
+message MsgRegistValidator {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+  option (cosmos.msg.v1.signer) = "msg_regist_validator";
+
+  // pubkey is the BLS public key of a validator
+  bytes bls_pubkey = 1
+      [ (gogoproto.customtype) =
+            "github.com/hetu-project/hetu/v1/crypto/bls12381.PublicKey" ];
+
+  // validator_address is the address of the validator
+  string validator_address = 2;
+}
+
+// MsgRegistValidatorResponse defines the MsgRegistValidator
+// response type
+message MsgRegistValidatorResponse {}

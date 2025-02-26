@@ -1,9 +1,11 @@
 package bls12381
 
 import (
+	"encoding/hex"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	blst "github.com/supranational/blst/bindings/go"
 )
 
 // Tests single BLS sig verification
@@ -113,4 +115,31 @@ func generateBatchTestKeyPairs(n int) ([]PrivateKey, []PublicKey) {
 		pubks[i] = pk
 	}
 	return sks, pubks
+}
+
+
+func TestNewBlsPubKeyFromHex(t *testing.T) {
+	// Generate a valid key pair
+	skSerialized := GenPrivKey()
+	sk := new(blst.SecretKey)
+	sk.Deserialize(skSerialized)
+	pk := new(BlsPubKey).From(sk)
+	pk_ser := pk.Serialize()
+	pk_compressed := pk.Compress()
+	hexStr := hex.EncodeToString(pk_ser)
+
+	// Test with a valid hex string
+	newPk, err := NewBlsPubKeyFromHex(hexStr)
+	require.Nil(t, err)
+	require.Equal(t, pk_compressed, newPk.Bytes())
+
+	// Test with an invalid hex string
+	invalidHexStr := "invalidhexstring"
+	_, err = NewBlsPubKeyFromHex(invalidHexStr)
+	require.NotNil(t, err)
+
+	// Test with a hex string of invalid length
+	invalidLengthHexStr := hex.EncodeToString(pk_ser[:48])
+	_, err = NewBlsPubKeyFromHex(invalidLengthHexStr)
+	require.NotNil(t, err)
 }

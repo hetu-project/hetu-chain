@@ -6782,10 +6782,10 @@ type CheckpointStateUpdateResponse struct {
 	State CheckpointStatus `protobuf:"varint,1,opt,name=state,proto3,enum=hetu.checkpointing.v1.CheckpointStatus" json:"state,omitempty"`
 	// status_desc represents the description of status enum.
 	StatusDesc string `protobuf:"bytes,2,opt,name=status_desc,json=statusDesc,proto3" json:"status_desc,omitempty"`
-	// block_height is the height of the Babylon block that triggers the state
+	// block_height is the height of the Hetu block that triggers the state
 	// update
 	BlockHeight uint64 `protobuf:"varint,3,opt,name=block_height,json=blockHeight,proto3" json:"block_height,omitempty"`
-	// block_time is the timestamp in the Babylon block that triggers the state
+	// block_time is the timestamp in the Hetu block that triggers the state
 	// update
 	BlockTime *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=block_time,json=blockTime,proto3" json:"block_time,omitempty"`
 }

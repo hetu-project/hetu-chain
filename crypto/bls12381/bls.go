@@ -2,6 +2,7 @@ package bls12381
 
 import (
 	"crypto/rand"
+	"encoding/hex"
 	"io"
 
 	cmtcrypto "github.com/cometbft/cometbft/crypto"
@@ -111,4 +112,21 @@ func VerifyMultiSig(sig Signature, pks []PublicKey, msg []byte) (bool, error) {
 		return false, err
 	}
 	return Verify(sig, aggPk, msg)
+}
+
+// NewBlsPubKeyFromHex creates a new BlsPubKey from a hex string
+func NewBlsPubKeyFromHex(hexStr string) (PublicKey, error) {
+    bytes, err := hex.DecodeString(hexStr)
+    if err != nil {
+        return nil, err
+    }
+    if len(bytes) != 192 {
+        return nil, errors.New("invalid BLS public key length")
+    }
+    pk := new(BlsPubKey)
+	p2a := pk.Deserialize(bytes)
+	if pk == nil {
+		return nil, errors.New("failed to deserialize BLS public key")
+	}
+	return p2a.Compress(), nil
 }

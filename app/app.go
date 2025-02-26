@@ -121,6 +121,7 @@ import (
 	ibctransfer "github.com/cosmos/ibc-go/v8/modules/apps/transfer"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v8/modules/core"
+
 	// ibcclient "github.com/cosmos/ibc-go/v8/modules/core/02-client/client"
 	ibcclienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 	ibcconnectiontypes "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
@@ -144,6 +145,7 @@ import (
 	"github.com/hetu-project/hetu/v1/ethereum/eip712"
 	srvflags "github.com/hetu-project/hetu/v1/server/flags"
 	evmostypes "github.com/hetu-project/hetu/v1/types"
+	"github.com/hetu-project/hetu/v1/x/checkpointing"
 	"github.com/hetu-project/hetu/v1/x/evm"
 	evmkeeper "github.com/hetu-project/hetu/v1/x/evm/keeper"
 	evmtypes "github.com/hetu-project/hetu/v1/x/evm/types"
@@ -155,6 +157,8 @@ import (
 	_ "github.com/hetu-project/hetu/v1/client/docs/statik"
 
 	"github.com/hetu-project/hetu/v1/app/ante"
+	checkpointingkeeper "github.com/hetu-project/hetu/v1/x/checkpointing/keeper"
+	checkpointingtypes "github.com/hetu-project/hetu/v1/x/checkpointing/types"
 	"github.com/hetu-project/hetu/v1/x/epochs"
 	epochskeeper "github.com/hetu-project/hetu/v1/x/epochs/keeper"
 	epochstypes "github.com/hetu-project/hetu/v1/x/epochs/types"
@@ -322,7 +326,10 @@ type Evmos struct {
 	Erc20Keeper     erc20keeper.Keeper
 	EpochsKeeper    epochskeeper.Keeper
 	VestingKeeper   vestingkeeper.Keeper
-
+	
+	// Hetu keepers
+	CheckpointingKeeper checkpointingkeeper.Keeper
+	
 	// the module manager
 	mm                 *module.Manager
 	BasicModuleManager module.BasicManager
@@ -406,6 +413,8 @@ func NewEvmos(
 		// evmos keys
 		inflationtypes.StoreKey, erc20types.StoreKey,
 		epochstypes.StoreKey, vestingtypes.StoreKey,
+		// hetu keys
+		checkpointingtypes.StoreKey,
 	)
 
 	// Add the EVM transient store key
@@ -640,6 +649,11 @@ func NewEvmos(
 		),
 	)
 
+	app.CheckpointingKeeper = checkpointingkeeper.NewKeeper(
+		appCodec,
+		runtime.NewKVStoreService(keys[checkpointingtypes.StoreKey]),
+	)
+
 	app.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
 		// register the governance hooks
@@ -779,6 +793,7 @@ func NewEvmos(
 			app.GetSubspace(erc20types.ModuleName)),
 		epochs.NewAppModule(appCodec, app.EpochsKeeper),
 		vesting.NewAppModule(app.VestingKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
+		checkpointing.NewAppModule(appCodec, app.CheckpointingKeeper),
 	)
 
 	// BasicModuleManager defines the module BasicManager which is in charge of setting up basic,
@@ -842,6 +857,7 @@ func NewEvmos(
 		vestingtypes.ModuleName,
 		inflationtypes.ModuleName,
 		erc20types.ModuleName,
+		checkpointingtypes.ModuleName,
 	)
 
 	// NOTE: fee market module must go last in order to retrieve the block gas used.
@@ -873,6 +889,7 @@ func NewEvmos(
 		vestingtypes.ModuleName,
 		inflationtypes.ModuleName,
 		erc20types.ModuleName,
+		checkpointingtypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are

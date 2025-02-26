@@ -6,7 +6,7 @@ The technical core of the Checkpointing module is the [BLS signature](https://en
 
 - making checkpoints and signing, verifying, then 
 - broadcast ckpt to the dispatcher of the checkpoints validation network,
-- dispatcher will dispatch ckpt and aggregating BLS signatures from validators, then
+- dispatcher will distribute ckpt and aggregating BLS signatures from validators, then
 - the dispatcher submits the results of BLS aggregated signatures to the Checkpointing module,
 - constructing checkpoints out of the BLS signatures, and
 - maintaining the status of the checkpoints.

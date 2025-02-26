@@ -16,4 +16,5 @@ var (
 	ErrConflictingCheckpoint   = errorsmod.Register(ModuleName, 10, "Conflicting checkpoint is found")
 	ErrInvalidAppHash          = errorsmod.Register(ModuleName, 11, "Provided app hash is Invalid")
 	ErrInsufficientVotingPower = errorsmod.Register(ModuleName, 12, "Accumulated voting power is not greater than 2/3 of total power")
+	ErrValAddrDoesNotExist     = errorsmod.Register(ModuleName, 13, "Validator address does not exist")
 )

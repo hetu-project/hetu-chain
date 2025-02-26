@@ -95,3 +95,17 @@ message BlsSig {
   // validator_address defines the validator's consensus address
   string validator_address = 5;
 }
+
+// ValidatorWithBLSSet defines a set of validators with their BLS public keys
+message ValidatorWithBlsKeySet { repeated ValidatorWithBlsKey val_set = 1; }
+
+// ValidatorWithBlsKey couples validator address, voting power, and its bls
+// public key
+message ValidatorWithBlsKey {
+  // validator_address is the address of the validator
+  string validator_address = 1;
+  // bls_pub_key is the BLS public key of the validator
+  bytes bls_pub_key = 2;
+  // voting_power is the voting power of the validator at the given epoch
+  uint64 voting_power = 3;
+}
