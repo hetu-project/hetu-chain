@@ -4,11 +4,16 @@
 set -e
 
 # Check arguments
-if [ "$#" -lt 7 ]; then
-    echo "Usage: $0 <validator0_ip> <validator1_ip> <validator2_ip> <validator3_ip> <validator4_ip> <validator5_ip> <validator6_ip>"
-    echo "Example: $0 1.2.3.4 5.6.7.8 9.10.11.12 13.14.15.16 17.18.19.20 21.22.23.24 25.26.27.28"
+if [ "$#" -lt 4 ]; then
+    echo "* Usage:"
+    echo "      $0 <username> <validator0_ip> <validator1_ip> <validator2_ip> <validator3_ip> [<validator4_ip> <validator5_ip> ...]"
+    echo "* Example:"
+    echo "      $0 root 1.2.3.4 5.6.7.8 9.10.11.12 13.14.15.16"
     exit 1
 fi
+
+USERNAME=$1
+shift
 
 # validate dependencies are installed
 command -v jq >/dev/null 2>&1 || {
@@ -17,10 +22,10 @@ command -v jq >/dev/null 2>&1 || {
 }
 
 # Set number of validators
-NUM_VALIDATORS=7
+NUM_VALIDATORS=$#
 
 # Store validator IPs in array
-declare -a VALIDATOR_IPS=($1 $2 $3 $4 $5 $6 $7)
+declare -a VALIDATOR_IPS=("$@")
 echo "All validator IPs: ${VALIDATOR_IPS[@]}"
 echo "Number of validators: $NUM_VALIDATORS"
 
@@ -66,7 +71,7 @@ for i in $(seq 0 $((NUM_VALIDATORS - 1))); do
         continue
     fi
     echo "Cleaning up data on $TARGET_IP..."
-    ssh ubuntu@${TARGET_IP} "pkill hetud || true; rm -rf \"${HOME_PREFIX}\" \"${HOME_PREFIX}\"* 2>/dev/null || true"
+    ssh ${USERNAME}@${TARGET_IP} "pkill hetud || true; rm -rf \"${HOME_PREFIX}\" \"${HOME_PREFIX}\"* 2>/dev/null || true"
 done
 
 # Initialize primary node
@@ -272,9 +277,9 @@ for i in $(seq 0 $((NUM_VALIDATORS - 1))); do
     fi
     echo "Copying validator $i data to $TARGET_IP..."
     # First remove the old directory on remote
-    ssh ubuntu@${TARGET_IP} "rm -rf ${HOME_PREFIX}${i}"
+    ssh ${USERNAME}@${TARGET_IP} "rm -rf ${HOME_PREFIX}${i}"
     # Then copy the new data
-    rsync -av "${HOME_PREFIX}${i}/" "ubuntu@${TARGET_IP}:${HOME_PREFIX}${i}/"
+    rsync -av "${HOME_PREFIX}${i}/" "${USERNAME}@${TARGET_IP}:${HOME_PREFIX}${i}/"
 done
 
 echo "All validators initialized successfully!"
