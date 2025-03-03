@@ -183,3 +183,25 @@ func TestEvmosCoinDenom(t *testing.T) {
 		})
 	}
 }
+
+func TestHas0xPrefix(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected bool
+	}{
+		{"valid 0x prefix", "0x123456", true},
+		{"valid 0X prefix", "0Xabcdef", true},
+		{"invalid prefix", "123456", false},
+		{"empty string", "", false},
+		{"short string", "0", false},
+		{"invalid prefix with 0x in middle", "1230x456", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := Has0xPrefix(tt.input)
+			require.Equal(t, tt.expected, result)
+		})
+	}
+}

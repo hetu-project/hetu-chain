@@ -33,8 +33,8 @@ $ hetud keys create-bls-key`,
 			privKey := hex.EncodeToString(skSerialized)
 			pubKey := hex.EncodeToString(pkSer)
 
-			fmt.Printf("Private Key: 0x%x\n", privKey)
-			fmt.Printf("Public Key: 0x%x\n", pubKey)
+			fmt.Printf("Private Key: 0x%s\n", privKey)
+			fmt.Printf("Public Key: 0x%s\n", pubKey)
 			return nil
 		},
 	}

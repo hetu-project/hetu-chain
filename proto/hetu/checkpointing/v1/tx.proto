@@ -20,7 +20,7 @@ service Msg {
 message MsgRegistValidator {
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
-  option (cosmos.msg.v1.signer) = "msg_regist_validator";
+  option (cosmos.msg.v1.signer) = "sender";
 
   // pubkey is the BLS public key of a validator
   bytes bls_pubkey = 1
@@ -29,6 +29,8 @@ message MsgRegistValidator {
 
   // validator_address is the address of the validator
   string validator_address = 2;
+  // sender is the cosmos bech32 address from the owner of the given Cosmos coins
+  string sender = 3;
 }
 
 // MsgRegistValidatorResponse defines the MsgRegistValidator

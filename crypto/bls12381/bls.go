@@ -121,7 +121,7 @@ func NewBlsPubKeyFromHex(hexStr string) (PublicKey, error) {
         return nil, err
     }
     if len(bytes) != 192 {
-        return nil, errors.New("invalid BLS public key length")
+        return nil, errors.New("invalid BLS uncompressed public key length")
     }
     pk := new(BlsPubKey)
 	p2a := pk.Deserialize(bytes)

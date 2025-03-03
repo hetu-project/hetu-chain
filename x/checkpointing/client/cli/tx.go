@@ -12,6 +12,7 @@ import (
 	"github.com/hetu-project/hetu/v1/crypto/bls12381"
 	hetutypes "github.com/hetu-project/hetu/v1/types"
 	"github.com/hetu-project/hetu/v1/x/checkpointing/types"
+	"github.com/hetu-project/hetu/v1/utils"
 )
 
 // GetTxCmd returns the transaction commands for this module
@@ -53,14 +54,22 @@ Notice, The validator needs staking on contract of the checkpoint network.`),
 			return fmt.Errorf("invalid eth account address %w", err)
 		}
 
-		blsPubKey, err := bls12381.NewBlsPubKeyFromHex(args[1])
+		var blspublic string
+		if utils.Has0xPrefix(args[1]) {
+			blspublic = args[1][2:]
+		} else {
+			blspublic = args[1]
+		}
+		blsPubKey, err := bls12381.NewBlsPubKeyFromHex(blspublic)
 		if err != nil {
 			return fmt.Errorf("invalid BLS public key %w", err)
 		}
 
+		sender := clientCtx.GetFromAddress()
 		msg := &types.MsgRegistValidator{
 			ValidatorAddress: valAddr,
 			BlsPubkey:        &blsPubKey,
+			Sender: 		 sender.String(),
 		}
 
 		return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
