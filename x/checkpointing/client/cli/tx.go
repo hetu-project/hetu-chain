@@ -34,11 +34,11 @@ func GetTxCmd() *cobra.Command {
 // CmdRegistBLSValidator returns the command to regist a validator with a BLS key
 func CmdRegistBLSValidator() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "regist-validator bls_pub_key validator_address",
+		Use:   "regist-validator validator_address bls_pub_key",
 		Short: "regist a new validator with a BLS key",
 		Args:  cobra.ExactArgs(2),
 		Long: strings.TrimSpace(`regist-validator will regist a new validator information with a BLS key.
-The BLS key could be generated before running the command (e.g., via hetud create-bls-key).
+The BLS key could be generated before running the command (e.g., via hetud keys create-bls-key).
 The validator address should be a valid eth hexstring address.
 Notice, The validator needs staking on contract of the checkpoint network.`),
 	}
@@ -48,12 +48,12 @@ Notice, The validator needs staking on contract of the checkpoint network.`),
 			return err
 		}
 
-		valAddr := args[1]
+		valAddr := args[0]
 		if err := hetutypes.ValidateAddress(valAddr); err != nil {
 			return fmt.Errorf("invalid eth account address %w", err)
 		}
 
-		blsPubKey, err := bls12381.NewBlsPubKeyFromHex(args[0])
+		blsPubKey, err := bls12381.NewBlsPubKeyFromHex(args[1])
 		if err != nil {
 			return fmt.Errorf("invalid BLS public key %w", err)
 		}

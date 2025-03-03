@@ -84,6 +84,7 @@ The pass backend requires GnuPG: https://gnupg.org/
 		keys.ParseKeyStringCommand(),
 		keys.MigrateCommand(),
 		flags.LineBreak,
+		CreateBlsKeyCmd(),
 		UnsafeExportEthKeyCommand(),
 		UnsafeImportKeyCommand(),
 	)
