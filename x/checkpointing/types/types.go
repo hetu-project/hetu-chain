@@ -8,8 +8,10 @@ import (
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
+	"github.com/boljen/go-bitmap"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/hetu-project/hetu/v1/crypto/bls12381"
 )
@@ -17,6 +19,7 @@ import (
 const (
 	// HashSize is the size in bytes of a hash
 	HashSize   = sha256.Size
+	BitmapBits = 1500 * 8 // 12000 bits for 12000 validators at top
 )
 
 // BlsSigner is an interface for signing BLS messages
@@ -35,7 +38,7 @@ func NewCheckpoint(epochNum uint64, blockHash BlockHash) *RawCheckpoint {
 	return &RawCheckpoint{
 		EpochNum:    epochNum,
 		BlockHash:   &blockHash,
-		Bitmap:      nil,
+		Bitmap:      bitmap.New(BitmapBits), // 1500 bytes, holding 12000 validators
 		BlsMultiSig: nil,
 	}
 }
@@ -46,6 +49,67 @@ func NewCheckpointWithMeta(ckpt *RawCheckpoint, status CheckpointStatus) *RawChe
 		Status:    status,
 		Lifecycle: []*CheckpointStateUpdate{},
 	}
+}
+
+// Accumulate does the following things
+// 1. aggregates the BLS signature
+// 2. aggregates the BLS public key
+// 3. updates Bitmap
+// 4. accumulates voting power
+// it returns nil if the checkpoint is updated, otherwise it returns an error
+func (cm *RawCheckpointWithMeta) Accumulate(
+	vals ValidatorSet,
+	signerAddr common.Address,
+	signerBlsKey bls12381.PublicKey,
+	sig bls12381.Signature,
+	totalPower int64) error {
+	// the checkpoint should be accumulating
+	if cm.Status != Accumulating {
+		return ErrCkptNotAccumulating
+	}
+
+	val, index, err := vals.FindValidatorWithIndex(signerAddr)
+	if err != nil {
+		return err
+	}
+
+	// return an error if the validator has already voted
+	if bitmap.Get(cm.Ckpt.Bitmap, index) {
+		return ErrCkptAlreadyVoted
+	}
+
+	// aggregate BLS sig
+	if cm.Ckpt.BlsMultiSig != nil {
+		aggSig, err := bls12381.AggrSig(*cm.Ckpt.BlsMultiSig, sig)
+		if err != nil {
+			return err
+		}
+		cm.Ckpt.BlsMultiSig = &aggSig
+	} else {
+		cm.Ckpt.BlsMultiSig = &sig
+	}
+
+	// aggregate BLS public key
+	if cm.BlsAggrPk != nil {
+		aggPK, err := bls12381.AggrPK(*cm.BlsAggrPk, signerBlsKey)
+		if err != nil {
+			return err
+		}
+		cm.BlsAggrPk = &aggPK
+	} else {
+		cm.BlsAggrPk = &signerBlsKey
+	}
+
+	// update bitmap
+	bitmap.Set(cm.Ckpt.Bitmap, index, true)
+
+	// accumulate voting power and update status when the threshold is reached
+	cm.PowerSum += uint64(val.Power)
+	if int64(cm.PowerSum)*3 > totalPower*2 {
+		cm.Status = Sealed
+	}
+
+	return nil
 }
 
 // RecordStateUpdate appends a new state update to the raw ckpt with meta

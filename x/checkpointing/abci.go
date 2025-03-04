@@ -2,6 +2,7 @@ package checkpointing
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/hetu-project/hetu/v1/x/checkpointing/keeper"
@@ -21,19 +22,50 @@ const (
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 	height := ctx.BlockHeight()
-	last_block := (height - 1) % EpochWindows
-	if last_block == 0 && height != 1 {
-		ctx.Logger().Info("Epoch begins", "height", height)
-		// new a checkpoint
-		// err := k.NewCheckpoint(ctx)
+	epochNum := types.CurrentEpochNumber(height, EpochWindows)
+	if types.FirstBlockInEpoch(height, EpochWindows) {
+		ctx.Logger().Info("Epoch begins", "block height", height, "epoch", epochNum)
+		err := k.InitValidatorBLSSet(ctx.Context(), epochNum)
+		if err != nil {
+			panic(fmt.Errorf("failed to store validator BLS set: %w", err))
+		}
 	}
 
 	return nil
 }
 
-func EndBlocker(ctx context.Context, k keeper.Keeper) {
+func EndBlocker(ctx context.Context, k keeper.Keeper) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 	if conflict := k.GetConflictingCheckpointReceived(ctx); conflict {
 		panic(types.ErrConflictingCheckpoint)
 	}
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	height := sdkCtx.BlockHeight()
+	appHash := sdkCtx.BlockHeader().AppHash
+	epochNum := types.CurrentEpochNumber(height, EpochWindows)
+	if types.LastBlockInEpoch(height, EpochWindows) {
+		// 1. new a checkpoint and save
+		k.BuildRawCheckpoint(ctx, epochNum, appHash)
+
+		// 2. aggregate and seal last checkpoint, update checkpoint
+		ckpt, err := k.GetRawCheckpoint(ctx, epochNum - 1)
+		if err != nil {
+			sdkCtx.Logger().Error("GetRawCheckpoint", "ailed to get checkpoint:", err.Error())
+			return nil
+		}
+
+		if ckpt.Status == types.Sealed {
+			sdkCtx.Logger().Info("Checkpoint already sealed", "epoch", epochNum - 1)
+			return nil
+		}
+		// todo: aggregate checkpoint
+		// ckpt.Accumulate()
+		// if err := k.AggregateCheckpoint(ctx, epochNum); err != nil {
+		// 	return fmt.Errorf("failed to aggregate checkpoint: %w", err)
+		// }
+		if err := k.SealCheckpoint(ctx, ckpt); err != nil {
+			return fmt.Errorf("failed to update checkpoint: %w", err)
+		}
+	}
+	return nil
 }

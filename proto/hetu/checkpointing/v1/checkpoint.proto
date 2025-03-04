@@ -109,3 +109,11 @@ message ValidatorWithBlsKey {
   // voting_power is the voting power of the validator at the given epoch
   uint64 voting_power = 3;
 }
+
+// Validator is a message that denotes a validator
+message Validator {
+  // addr is the validator's address
+  bytes addr = 1;
+  // power is the validator's voting power
+  int64 power = 2;
+}

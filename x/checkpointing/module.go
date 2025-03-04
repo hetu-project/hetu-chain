@@ -139,8 +139,8 @@ func (am AppModule) BeginBlock(ctx context.Context) error {
 // EndBlock returns the end blocker for the checkpointing module. It returns no validator
 // updates.
 func (am AppModule) EndBlock(ctx context.Context) error {
-	EndBlocker(ctx, am.keeper)
-	return nil
+	return EndBlocker(ctx, am.keeper)
+	// return nil
 }
 
 // ExportGenesis is always empty, as InitGenesis does nothing either.
