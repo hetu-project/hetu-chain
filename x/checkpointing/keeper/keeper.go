@@ -52,23 +52,15 @@ func (k Keeper) SealCheckpoint(ctx context.Context, ckptWithMeta *types.RawCheck
 	if ckptWithMeta.Status != types.Sealed {
 		return fmt.Errorf("the checkpoint is not Sealed")
 	}
-
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	// if reaching this line, it means ckptWithMeta is updated,
 	// and we need to write the updated ckptWithMeta back to KVStore
-	if err := k.AddRawCheckpoint(ctx, ckptWithMeta); err != nil {
-		return err
-	}
+	k.SetCheckpointSealed(ctx, ckptWithMeta)
 
 	// record state update of Sealed
 	ckptWithMeta.RecordStateUpdate(ctx, types.Sealed)
-	// emit event
-	if err := sdkCtx.EventManager().EmitTypedEvent(
-		&types.EventCheckpointSealed{Checkpoint: ckptWithMeta},
-	); err != nil {
-		panic(fmt.Errorf("failed to emit checkpoint sealed event for epoch %v", ckptWithMeta.Ckpt.EpochNum))
-	}
+
 	// invoke hook
 	if err := k.AfterRawCheckpointSealed(ctx, ckptWithMeta.Ckpt.EpochNum); err != nil {
 		k.Logger(sdkCtx).Error("failed to trigger checkpoint sealed hook for epoch %v: %v", ckptWithMeta.Ckpt.EpochNum, err)
@@ -196,11 +188,30 @@ func (k Keeper) validateCheckpointStatus(
 
 // SetCheckpointSubmitted sets the status of a checkpoint to SUBMITTED,
 // and records the associated state update in lifecycle
+func (k Keeper) SetCheckpointSealed(ctx context.Context, ckpt *types.RawCheckpointWithMeta) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	newCkpt, err := k.updateCheckpoint(ctx, ckpt, []types.CheckpointStatus{types.Accumulating, types.Sealed}, types.Sealed)
+	if err != nil {
+		failSetStatusMsg := fmt.Sprintf("failed to set checkpoint status to SEALED for epoch %v: %v", ckpt.Ckpt.EpochNum, err)
+		k.Logger(sdkCtx).Error(failSetStatusMsg)
+		return
+	}
+	err = sdkCtx.EventManager().EmitTypedEvent(
+		&types.EventCheckpointSealed{Checkpoint: newCkpt},
+	)
+	if err != nil {
+		k.Logger(sdkCtx).Error("failed to emit checkpoint submitted event for epoch %v", ckpt.Ckpt.EpochNum)
+	}
+}
+
+// SetCheckpointSubmitted sets the status of a checkpoint to SUBMITTED,
+// and records the associated state update in lifecycle
 func (k Keeper) SetCheckpointSubmitted(ctx context.Context, epoch uint64) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	ckpt, err := k.setCheckpointStatus(ctx, epoch, []types.CheckpointStatus{types.Sealed}, types.Submitted)
 	if err != nil {
-		k.Logger(sdkCtx).Error("failed to set checkpoint status to SUBMITTED for epoch %v: %v", epoch, err)
+		failSetStatusMsg := fmt.Sprintf("failed to set checkpoint status to SUBMITTED for epoch %v: %v", epoch, err)
+		k.Logger(sdkCtx).Error(failSetStatusMsg)
 		return
 	}
 	err = sdkCtx.EventManager().EmitTypedEvent(
@@ -306,6 +317,31 @@ func (k Keeper) setCheckpointStatus(
 		panic("failed to update checkpoint status")
 	}
 	statusChangeMsg := fmt.Sprintf("Checkpointing: checkpoint status for epoch %v successfully changed from %v to %v", epoch, from.String(), to.String())
+	k.Logger(sdk.UnwrapSDKContext(ctx)).Info(statusChangeMsg)
+	return ckptWithMeta, nil
+}
+
+// updateCheckpoint sets a new ckptWithMeta to the given state,
+// and records the state update in its lifecycle
+func (k Keeper) updateCheckpoint(
+	ctx context.Context,
+	ckptWithMeta *types.RawCheckpointWithMeta,
+	expectedStatus []types.CheckpointStatus,
+	to types.CheckpointStatus,
+) (*types.RawCheckpointWithMeta, error) {
+	var err error
+	if err := k.validateCheckpointStatus(ckptWithMeta, expectedStatus); err != nil {
+		return nil, err
+	}
+
+	from := ckptWithMeta.Status
+	ckptWithMeta.Status = to                    // set status
+	ckptWithMeta.RecordStateUpdate(ctx, to)     // record state update to the lifecycle
+	err = k.UpdateCheckpoint(ctx, ckptWithMeta) // write back to KVStore
+	if err != nil {
+		panic("failed to update checkpoint status")
+	}
+	statusChangeMsg := fmt.Sprintf("Checkpointing: update & status for epoch %v successfully changed from %v to %v", ckptWithMeta.Ckpt.EpochNum, from.String(), to.String())
 	k.Logger(sdk.UnwrapSDKContext(ctx)).Info(statusChangeMsg)
 	return ckptWithMeta, nil
 }

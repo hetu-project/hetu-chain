@@ -65,7 +65,8 @@ func (cm *RawCheckpointWithMeta) Accumulate(
 	totalPower int64) error {
 	// the checkpoint should be accumulating
 	if cm.Status != Accumulating {
-		return ErrCkptNotAccumulating
+		// return nil if the checkpoint is no longer accumulating(maybe sealed)
+		return nil
 	}
 
 	val, index, err := vals.FindValidatorWithIndex(signerAddr)

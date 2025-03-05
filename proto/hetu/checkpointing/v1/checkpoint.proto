@@ -52,11 +52,11 @@ enum CheckpointStatus {
       [ (gogoproto.enumvalue_customname) = "Accumulating" ];
   // SEALED defines a checkpoint that has accumulated sufficient BLS signatures.
   CKPT_STATUS_SEALED = 1 [ (gogoproto.enumvalue_customname) = "Sealed" ];
-  // SUBMITTED defines a checkpoint that is included on BTC.
+  // SUBMITTED defines a checkpoint that is included on L1.
   CKPT_STATUS_SUBMITTED = 2 [ (gogoproto.enumvalue_customname) = "Submitted" ];
-  // CONFIRMED defines a checkpoint that is k-deep on BTC.
+  // CONFIRMED defines a checkpoint that is k-deep on L1.
   CKPT_STATUS_CONFIRMED = 3 [ (gogoproto.enumvalue_customname) = "Confirmed" ];
-  // FINALIZED defines a checkpoint that is w-deep on BTC.
+  // FINALIZED defines a checkpoint that is w-deep on L1.
   CKPT_STATUS_FINALIZED = 4 [ (gogoproto.enumvalue_customname) = "Finalized" ];
 }
 

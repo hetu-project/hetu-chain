@@ -37,11 +37,11 @@ const (
 	Accumulating CheckpointStatus = 0
 	// SEALED defines a checkpoint that has accumulated sufficient BLS signatures.
 	Sealed CheckpointStatus = 1
-	// SUBMITTED defines a checkpoint that is included on BTC.
+	// SUBMITTED defines a checkpoint that is included on L1.
 	Submitted CheckpointStatus = 2
-	// CONFIRMED defines a checkpoint that is k-deep on BTC.
+	// CONFIRMED defines a checkpoint that is k-deep on L1.
 	Confirmed CheckpointStatus = 3
-	// FINALIZED defines a checkpoint that is w-deep on BTC.
+	// FINALIZED defines a checkpoint that is w-deep on L1.
 	Finalized CheckpointStatus = 4
 )
 
