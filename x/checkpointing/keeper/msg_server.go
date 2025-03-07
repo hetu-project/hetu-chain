@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -27,15 +28,25 @@ var _ types.MsgServer = msgServer{}
 func (m msgServer) RegistValidator(goCtx context.Context, msg *types.MsgRegistValidator) (*types.MsgRegistValidatorResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// query the validator's account balance from the staking contract
-
 	err := hetutypes.ValidateAddress(msg.ValidatorAddress)
 	if err != nil {
 		return nil, fmt.Errorf("invalid eth account address %w", err)
 	}
 
-	// store validator BLS public key
-	err = m.k.CreateRegistration(ctx, *msg.BlsPubkey, common.HexToAddress(msg.ValidatorAddress))
+	// Query the validator's stake from the staking contract
+	validatorAddr := common.HexToAddress(msg.ValidatorAddress)
+	stake, err := m.k.GetValidatorStake(ctx, validatorAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query validator stake: %w", err)
+	}
+
+	// Check if the validator has staked enough tokens
+	if stake.Cmp(big.NewInt(0)) <= 0 {
+		return nil, fmt.Errorf("validator has not staked any tokens")
+	}
+
+	// Store validator BLS public key
+	err = m.k.CreateRegistration(ctx, *msg.BlsPubkey, validatorAddr)
 	if err != nil {
 		return nil, err
 	}

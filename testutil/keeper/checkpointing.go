@@ -35,6 +35,7 @@ func CheckpointingKeeper(t testing.TB, signer types.BlsSigner) (*keeper.Keeper, 
 	k := keeper.NewKeeper(
 		cdc,
 		runtime.NewKVStoreService(storeKey),
+		nil,
 	)
 
 	ctx := sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())

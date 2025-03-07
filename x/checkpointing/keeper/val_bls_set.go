@@ -30,25 +30,34 @@ func (k Keeper) GetCurrentValidatorBlsKeySet(ctx context.Context, epochNumber ui
 
 // InitValidatorBLSSet stores the validator set with BLS keys in the beginning of the current epoch
 // This is called upon BeginBlock
-func (k Keeper) InitValidatorBLSSet(ctx context.Context, epochNumber uint64) error {
-	// todo: get the validator set of the current epoch from staking contract
-	// valset := k.GetValidatorSet(ctx, epochNumber)
-	valset := []types.Validator{}
+func (k Keeper) InitValidatorBLSSet(ctx sdk.Context, epochNumber uint64) error {
+	// Get the top validators from the staking contract
+	valset, dispatcherURLs, err := k.GetTopValidators(ctx, 100) // Get top 100 validators
+	if err != nil {
+		return fmt.Errorf("failed to get validators from staking contract: %w", err)
+	}
+	if len(valset) != len(dispatcherURLs) {
+		return fmt.Errorf("validator set and dispatcher URLs set have different lengths")
+	}
+
 	valBlsSet := &types.ValidatorWithBlsKeySet{
 		ValSet: make([]*types.ValidatorWithBlsKey, len(valset)),
 	}
+
 	for i, val := range valset {
-		blsPubkey, err := k.GetBlsPubKey(ctx, common.Address(val.Addr))
+		blsPubkey, err := k.GetBlsPubKey(ctx, common.BytesToAddress(val.Addr))
 		if err != nil {
 			return fmt.Errorf("failed to get BLS public key of address %v: %w", val.Addr, err)
 		}
 		valBls := &types.ValidatorWithBlsKey{
-			ValidatorAddress: val.GetValAddressStr(),
+			ValidatorAddress: common.BytesToAddress(val.Addr).Hex(),
 			BlsPubKey:        blsPubkey,
 			VotingPower:      uint64(val.Power),
+			DispatcherUrl:    dispatcherURLs[i],
 		}
 		valBlsSet.ValSet[i] = valBls
 	}
+
 	valBlsSetBytes := types.ValidatorBlsKeySetToBytes(k.cdc, valBlsSet)
 	store := k.valBlsSetStore(ctx)
 	store.Set(types.ValidatorBlsKeySetKey(epochNumber), valBlsSetBytes)

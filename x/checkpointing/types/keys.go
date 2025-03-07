@@ -1,8 +1,10 @@
 package types
 
 import (
-	"github.com/hetu-project/hetu/v1/crypto/bls12381"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/hetu-project/hetu/v1/crypto/bls12381"
 )
 
 const (
@@ -17,6 +19,9 @@ const (
 
 	// QuerierRoute defines the module's query routing key
 	QuerierRoute = ModuleName
+	
+	// QuerierRoute defines the module's query routing key
+	CkPTContractAddrKey = "ckpt_contract_addr"
 
 	// MemStoreKey defines the in-memory store key
 	MemStoreKey = "mem_checkpointing"
@@ -34,7 +39,14 @@ var (
 
 	LastFinalizedEpochKey            = []byte{0x04} // LastFinalizedEpochKey defines the key to store the last finalised epoch
 	ConflictingCheckpointReceivedKey = []byte{0x05} // ConflictingCheckpointReceivedKey defines the key to store the ConflictingCheckpointReceived flag
+
+	// ModuleAddress is the native module address for EVM
+	ModuleAddress common.Address
 )
+
+func init() {
+	ModuleAddress = common.BytesToAddress(authtypes.NewModuleAddress(ModuleName).Bytes())
+}
 
 // CkptsObjectKey defines epoch
 func CkptsObjectKey(epoch uint64) []byte {

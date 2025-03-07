@@ -108,6 +108,8 @@ message ValidatorWithBlsKey {
   bytes bls_pub_key = 2;
   // voting_power is the voting power of the validator at the given epoch
   uint64 voting_power = 3;
+  // dispatcher_url is the dispatcher URL of the validator
+  string dispatcher_url = 4;
 }
 
 // Validator is a message that denotes a validator

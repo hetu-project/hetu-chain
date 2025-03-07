@@ -652,6 +652,7 @@ func NewEvmos(
 	app.CheckpointingKeeper = checkpointingkeeper.NewKeeper(
 		appCodec,
 		runtime.NewKVStoreService(keys[checkpointingtypes.StoreKey]),
+		app.Erc20Keeper,	// for evm calls
 	)
 
 	app.GovKeeper = *govKeeper.SetHooks(
