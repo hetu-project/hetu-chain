@@ -13,23 +13,14 @@ import (
 	"github.com/hetu-project/hetu/v1/x/checkpointing/types"
 )
 
-// StakingContractAddress is the address of the deployed staking contract
-var StakingContractAddress common.Address
-
-// SetStakingContractAddress sets the address of the staking contract
-func (k Keeper) SetStakingContractAddress(addr common.Address) {
-	StakingContractAddress = addr
-}
-
-// GetStakingContractAddress returns the address of the staking contract
-func (k Keeper) GetStakingContractAddress() common.Address {
-	return StakingContractAddress
-}
-
 // GetValidatorStake queries the staking contract to get a validator's stake
 func (k Keeper) GetValidatorStake(ctx sdk.Context, validatorAddr common.Address) (*big.Int, error) {
 	ckptContractABI := contracts.CKPTValStakingContract.ABI
 
+	StakingContractAddress, err := k.GetValidatorContractAddresses(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get staking contract address: %w", err)
+	}
 	res, err := k.evm.CallEVM(ctx, ckptContractABI, types.ModuleAddress, StakingContractAddress, false, "getStake", validatorAddr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to call staking contract: %w", err)
@@ -52,6 +43,10 @@ func (k Keeper) GetValidatorStake(ctx sdk.Context, validatorAddr common.Address)
 func (k Keeper) GetTopValidators(ctx sdk.Context, count uint64) ([]types.Validator, []string, error) {
 	ckptContractABI := contracts.CKPTValStakingContract.ABI
 
+	StakingContractAddress, err := k.GetValidatorContractAddresses(ctx)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get staking contract address: %w", err)
+	}
 	res, err := k.evm.CallEVM(ctx, ckptContractABI, types.ModuleAddress, StakingContractAddress, false, "getTopValidators", big.NewInt(int64(count)))
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to call staking contract: %w", err)
@@ -88,6 +83,11 @@ func (k Keeper) GetTopValidators(ctx sdk.Context, count uint64) ([]types.Validat
 func (k Keeper) GetValidatorDispatcherURL(ctx sdk.Context, validatorAddr common.Address) (string, error) {
 	ckptContractABI := contracts.CKPTValStakingContract.ABI
 
+	StakingContractAddress, err := k.GetValidatorContractAddresses(ctx)
+	if err != nil {
+		return "", fmt.Errorf("failed to get staking contract address: %w", err)
+	}
+
 	res, err := k.evm.CallEVM(ctx, ckptContractABI, types.ModuleAddress, StakingContractAddress, false, "getValidator", validatorAddr)
 	if err != nil {
 		return "", fmt.Errorf("failed to call staking contract: %w", err)
@@ -111,7 +111,7 @@ func (k Keeper) GetValidatorDispatcherURL(ctx sdk.Context, validatorAddr common.
 }
 
 // StoreValidatorContractAddresses stores the contract addresses for validators
-func (k Keeper) StoreValidatorContractAddresses(ctx sdk.Context, epochNumber uint64, contractAddr common.Address) error {
+func (k Keeper) StoreValidatorContractAddresses(ctx sdk.Context, contractAddr common.Address) error {
 	store := k.contractAddressStore(ctx)
 
 	key := tmhash.Sum([]byte(types.CkPTContractAddrKey))

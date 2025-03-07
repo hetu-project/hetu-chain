@@ -53,3 +53,20 @@ func (m msgServer) RegistValidator(goCtx context.Context, msg *types.MsgRegistVa
 
 	return &types.MsgRegistValidatorResponse{}, nil
 }
+
+// RegistStakeContract handles the registration of a validator's staking contract address
+func (m msgServer) RegistStakeContract(
+	goCtx context.Context,
+	msg *types.MsgRegistStakeContract,
+) (*types.MsgRegistStakeContractResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	contractAddr := common.HexToAddress(msg.ContractAddress)
+
+	err := m.k.StoreValidatorContractAddresses(ctx, contractAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgRegistStakeContractResponse{}, nil
+}

@@ -14,6 +14,10 @@ service Msg {
   // RegistValidator defines a method for registering a new validator of the checkpoint network
   rpc RegistValidator(MsgRegistValidator)
       returns (MsgRegistValidatorResponse);
+
+  // RegistStakeContract defines a method for registering a validator's staking contract address
+  rpc RegistStakeContract(MsgRegistStakeContract)
+      returns (MsgRegistStakeContractResponse);
 }
 
 // MsgRegistValidator defines a message to regist a validator
@@ -36,3 +40,18 @@ message MsgRegistValidator {
 // MsgRegistValidatorResponse defines the MsgRegistValidator
 // response type
 message MsgRegistValidatorResponse {}
+
+// MsgRegistStakeContract defines a message to register a validator's staking contract address
+message MsgRegistStakeContract {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+  option (cosmos.msg.v1.signer) = "sender";
+
+  // contract_address is the staking contract address of the validator
+  string contract_address = 1;
+  // sender is the cosmos bech32 address from the owner of the given Cosmos coins
+  string sender = 2;
+}
+
+// MsgRegistStakeContractResponse defines the MsgRegistStakeContract response type
+message MsgRegistStakeContractResponse {}

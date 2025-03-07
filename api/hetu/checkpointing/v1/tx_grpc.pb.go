@@ -19,7 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Msg_RegistValidator_FullMethodName = "/hetu.checkpointing.v1.Msg/RegistValidator"
+	Msg_RegistValidator_FullMethodName     = "/hetu.checkpointing.v1.Msg/RegistValidator"
+	Msg_RegistStakeContract_FullMethodName = "/hetu.checkpointing.v1.Msg/RegistStakeContract"
 )
 
 // MsgClient is the client API for Msg service.
@@ -28,6 +29,8 @@ const (
 type MsgClient interface {
 	// RegistValidator defines a method for registering a new validator of the checkpoint network
 	RegistValidator(ctx context.Context, in *MsgRegistValidator, opts ...grpc.CallOption) (*MsgRegistValidatorResponse, error)
+	// RegistStakeContract defines a method for registering a validator's staking contract address
+	RegistStakeContract(ctx context.Context, in *MsgRegistStakeContract, opts ...grpc.CallOption) (*MsgRegistStakeContractResponse, error)
 }
 
 type msgClient struct {
@@ -47,12 +50,23 @@ func (c *msgClient) RegistValidator(ctx context.Context, in *MsgRegistValidator,
 	return out, nil
 }
 
+func (c *msgClient) RegistStakeContract(ctx context.Context, in *MsgRegistStakeContract, opts ...grpc.CallOption) (*MsgRegistStakeContractResponse, error) {
+	out := new(MsgRegistStakeContractResponse)
+	err := c.cc.Invoke(ctx, Msg_RegistStakeContract_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
 type MsgServer interface {
 	// RegistValidator defines a method for registering a new validator of the checkpoint network
 	RegistValidator(context.Context, *MsgRegistValidator) (*MsgRegistValidatorResponse, error)
+	// RegistStakeContract defines a method for registering a validator's staking contract address
+	RegistStakeContract(context.Context, *MsgRegistStakeContract) (*MsgRegistStakeContractResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -62,6 +76,9 @@ type UnimplementedMsgServer struct {
 
 func (UnimplementedMsgServer) RegistValidator(context.Context, *MsgRegistValidator) (*MsgRegistValidatorResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegistValidator not implemented")
+}
+func (UnimplementedMsgServer) RegistStakeContract(context.Context, *MsgRegistStakeContract) (*MsgRegistStakeContractResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RegistStakeContract not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -94,6 +111,24 @@ func _Msg_RegistValidator_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_RegistStakeContract_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgRegistStakeContract)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).RegistStakeContract(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_RegistStakeContract_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).RegistStakeContract(ctx, req.(*MsgRegistStakeContract))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -104,6 +139,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RegistValidator",
 			Handler:    _Msg_RegistValidator_Handler,
+		},
+		{
+			MethodName: "RegistStakeContract",
+			Handler:    _Msg_RegistStakeContract_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

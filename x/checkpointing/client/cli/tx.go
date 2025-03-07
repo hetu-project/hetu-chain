@@ -11,8 +11,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/hetu-project/hetu/v1/crypto/bls12381"
 	hetutypes "github.com/hetu-project/hetu/v1/types"
-	"github.com/hetu-project/hetu/v1/x/checkpointing/types"
 	"github.com/hetu-project/hetu/v1/utils"
+	"github.com/hetu-project/hetu/v1/x/checkpointing/types"
 )
 
 // GetTxCmd returns the transaction commands for this module
@@ -27,6 +27,7 @@ func GetTxCmd() *cobra.Command {
 
 	txCmd.AddCommand(
 		CmdRegistBLSValidator(),
+		CmdRegistStakeContract(),
 	)
 
 	return txCmd
@@ -69,7 +70,40 @@ Notice, The validator needs staking on contract of the checkpoint network.`),
 		msg := &types.MsgRegistValidator{
 			ValidatorAddress: valAddr,
 			BlsPubkey:        &blsPubKey,
-			Sender: 		 sender.String(),
+			Sender:           sender.String(),
+		}
+
+		return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// CmdRegistStakeContract returns the command to register a checkpoint validator's staking contract address
+func CmdRegistStakeContract() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "regist-ckpt-stake-contract contract_address",
+		Short: "register a checkpoint validator's staking contract address",
+		Args:  cobra.ExactArgs(1),
+		Long: strings.TrimSpace(`regist-ckpt-stake-contract will register a checkpoint validator's staking contract address.
+The contract address should be a valid eth hexstring address.`),
+	}
+	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+		clientCtx, err := client.GetClientTxContext(cmd)
+		if err != nil {
+			return err
+		}
+
+		contractAddr := args[0]
+		if err := hetutypes.ValidateAddress(contractAddr); err != nil {
+			return fmt.Errorf("invalid eth contract address %w", err)
+		}
+
+		sender := clientCtx.GetFromAddress()
+		msg := &types.MsgRegistStakeContract{
+			ContractAddress: contractAddr,
+			Sender:          sender.String(),
 		}
 
 		return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)

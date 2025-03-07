@@ -146,6 +146,7 @@ import (
 	srvflags "github.com/hetu-project/hetu/v1/server/flags"
 	evmostypes "github.com/hetu-project/hetu/v1/types"
 	"github.com/hetu-project/hetu/v1/x/checkpointing"
+	ckpttypes "github.com/hetu-project/hetu/v1/x/checkpointing/types"
 	"github.com/hetu-project/hetu/v1/x/evm"
 	evmkeeper "github.com/hetu-project/hetu/v1/x/evm/keeper"
 	evmtypes "github.com/hetu-project/hetu/v1/x/evm/types"
@@ -258,6 +259,7 @@ var (
 		evmtypes.ModuleName:            {authtypes.Minter, authtypes.Burner}, // used for secure addition and subtraction of balance using module account
 		inflationtypes.ModuleName:      {authtypes.Minter},
 		erc20types.ModuleName:          {authtypes.Minter, authtypes.Burner},
+		ckpttypes.ModuleName:          nil,
 		ratelimittypes.ModuleName:      nil,
 	}
 

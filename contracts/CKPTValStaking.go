@@ -9,7 +9,7 @@ import (
 
 var (
 	//go:embed compiled_contracts/CKPTValStaking.json
-	CKPTValStakingABI []byte //nolint: golint
+	CKPTValStakingJSON []byte //nolint: golint
 
 	// CKPTValStakingContract is the compiled CKPTValStaking contract
 	CKPTValStakingContract evmtypes.CompiledContract
@@ -17,7 +17,7 @@ var (
 
 func init() {
 
-	err := json.Unmarshal(CKPTValStakingABI, &CKPTValStakingContract)
+	err := json.Unmarshal(CKPTValStakingJSON, &CKPTValStakingContract)
 	if err != nil {
 		panic(err)
 	}

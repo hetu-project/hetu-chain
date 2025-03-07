@@ -33,7 +33,8 @@ func BeginBlocker(ctx context.Context, k keeper.Keeper) error {
 		sdkCtx.Logger().Info("Epoch begins", "block height", height, "epoch", epochNum)
 		err := k.InitValidatorBLSSet(sdkCtx, epochNum)
 		if err != nil {
-			panic(fmt.Errorf("failed to store validator BLS set: %w", err))
+			sdkCtx.Logger().Error("failed to store validator BLS set", "error", err.Error())
+			return nil
 		}
 	}
 
