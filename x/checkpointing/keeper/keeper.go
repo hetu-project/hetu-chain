@@ -19,6 +19,7 @@ import (
 type Keeper struct {
 	cdc          codec.BinaryCodec
 	storeService corestoretypes.KVStoreService
+	accountKeeper types.AccountKeeper
 	evm			 types.ERC20Keeper
 	hooks        types.CheckpointingHooks
 }
@@ -26,11 +27,13 @@ type Keeper struct {
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeService corestoretypes.KVStoreService,
+	ak types.AccountKeeper,
 	evm types.ERC20Keeper,
 ) Keeper {
 	return Keeper{
 		cdc:          cdc,
 		storeService: storeService,
+		accountKeeper: ak,
 		evm:          evm,
 		hooks:        nil,
 	}

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 
 	"cosmossdk.io/core/appmodule"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -13,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/hetu-project/hetu/v1/x/checkpointing/client/cli"
@@ -97,15 +99,18 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 
+	ak     authkeeper.AccountKeeper
 	keeper keeper.Keeper
 }
 
 func NewAppModule(
 	cdc codec.Codec,
+	ak authkeeper.AccountKeeper,
 	keeper keeper.Keeper,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(cdc),
+		ak:             ak,
 		keeper:         keeper,
 	}
 }
@@ -141,6 +146,11 @@ func (am AppModule) BeginBlock(ctx context.Context) error {
 func (am AppModule) EndBlock(ctx context.Context) error {
 	return EndBlocker(ctx, am.keeper)
 	// return nil
+}
+
+func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
+	InitGenesis(ctx, am.keeper, am.ak, nil)
+	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis is always empty, as InitGenesis does nothing either.

@@ -259,7 +259,7 @@ var (
 		evmtypes.ModuleName:            {authtypes.Minter, authtypes.Burner}, // used for secure addition and subtraction of balance using module account
 		inflationtypes.ModuleName:      {authtypes.Minter},
 		erc20types.ModuleName:          {authtypes.Minter, authtypes.Burner},
-		ckpttypes.ModuleName:          nil,
+		ckpttypes.ModuleName:          {authtypes.Staking},
 		ratelimittypes.ModuleName:      nil,
 	}
 
@@ -654,6 +654,7 @@ func NewEvmos(
 	app.CheckpointingKeeper = checkpointingkeeper.NewKeeper(
 		appCodec,
 		runtime.NewKVStoreService(keys[checkpointingtypes.StoreKey]),
+		app.AccountKeeper,
 		app.Erc20Keeper,	// for evm calls
 	)
 
@@ -796,7 +797,7 @@ func NewEvmos(
 			app.GetSubspace(erc20types.ModuleName)),
 		epochs.NewAppModule(appCodec, app.EpochsKeeper),
 		vesting.NewAppModule(app.VestingKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
-		checkpointing.NewAppModule(appCodec, app.CheckpointingKeeper),
+		checkpointing.NewAppModule(appCodec, app.AccountKeeper, app.CheckpointingKeeper),
 	)
 
 	// BasicModuleManager defines the module BasicManager which is in charge of setting up basic,
@@ -933,6 +934,7 @@ func NewEvmos(
 		erc20types.ModuleName,
 		epochstypes.ModuleName,
 		ratelimittypes.ModuleName,
+		ckpttypes.ModuleName,
 		// NOTE: crisis module must go at the end to check for invariants on each module
 		crisistypes.ModuleName,
 	)
@@ -1332,6 +1334,7 @@ func initParamsKeeper(
 	// evmos subspaces
 	paramsKeeper.Subspace(inflationtypes.ModuleName)
 	paramsKeeper.Subspace(erc20types.ModuleName)
+	paramsKeeper.Subspace(ckpttypes.ModuleName)
 	return paramsKeeper
 }
 

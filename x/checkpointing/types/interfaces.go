@@ -3,20 +3,23 @@ package types
 import (
 	"context"
 
+	"cosmossdk.io/core/address"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
 	evmtypes "github.com/hetu-project/hetu/v1/x/evm/types"
 )
 
 // AccountKeeper defines the expected interface needed to retrieve account info.
 type AccountKeeper interface {
-	transfertypes.AccountKeeper
+	AddressCodec() address.Codec
+	GetModuleAddress(moduleName string) sdk.AccAddress
+	GetSequence(context.Context, sdk.AccAddress) (uint64, error)
 	GetAccount(context.Context, sdk.AccAddress) sdk.AccountI
+	GetAllAccounts(context.Context) (accounts []sdk.AccountI)
+	GetModuleAccountAndPermissions(context.Context, string) (sdk.ModuleAccountI, []string)
 }
 
 // ERC20Keeper defines the expected ERC20 keeper interface for supporting
