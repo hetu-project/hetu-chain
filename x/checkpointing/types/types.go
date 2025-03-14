@@ -19,7 +19,7 @@ import (
 const (
 	// HashSize is the size in bytes of a hash
 	HashSize   = sha256.Size
-	BitmapBits = 1500 * 8 // 12000 bits for 12000 validators at top
+	BitmapBits = 64 * 8 // 512 bits for 512 validators at top for a epoch
 )
 
 // BlsSigner is an interface for signing BLS messages
@@ -38,7 +38,7 @@ func NewCheckpoint(epochNum uint64, blockHash BlockHash) *RawCheckpoint {
 	return &RawCheckpoint{
 		EpochNum:    epochNum,
 		BlockHash:   &blockHash,
-		Bitmap:      bitmap.New(BitmapBits), // 1500 bytes, holding 12000 validators
+		Bitmap:      bitmap.New(BitmapBits), // 64 bytes, holding 512 validators
 		BlsMultiSig: nil,
 	}
 }

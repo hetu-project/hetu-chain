@@ -30,7 +30,9 @@ contract CKPTValStaking is Ownable {
         uint256 pendingRewards;
         uint256 unstakeTime; // 0 means not unstaking
         string dispatcherURL;
+        string blsPublicKey;
         bool isActive;
+        uint256 index; // Index in the validatorAddresses array
     }
 
     // Mapping from address to validator info
@@ -48,8 +50,16 @@ contract CKPTValStaking is Ownable {
     );
     event Unstaked(address indexed validator, uint256 amount);
     event RewardsClaimed(address indexed validator, uint256 amount);
-    event ValidatorRegistered(address indexed validator, string dispatcherURL);
-    event ValidatorUpdated(address indexed validator, string dispatcherURL);
+    event ValidatorRegistered(
+        address indexed validator,
+        string dispatcherURL,
+        string blsPublicKey
+    );
+    event ValidatorUpdated(
+        address indexed validator,
+        string dispatcherURL,
+        string blsPublicKey
+    );
 
     constructor(
         address _stakingToken,
@@ -76,8 +86,11 @@ contract CKPTValStaking is Ownable {
         minimumStake = _minimumStake;
     }
 
-    // Register as a validator with dispatcher URL
-    function registerValidator(string calldata _dispatcherURL) external {
+    // Register as a validator with dispatcher URL and BLS public key
+    function registerValidator(
+        string calldata _dispatcherURL,
+        string calldata _blsPublicKey
+    ) external {
         require(validators[msg.sender].stakedAmount == 0, "Already registered");
 
         validators[msg.sender] = Validator({
@@ -86,26 +99,35 @@ contract CKPTValStaking is Ownable {
             pendingRewards: 0,
             unstakeTime: 0,
             dispatcherURL: _dispatcherURL,
-            isActive: false
+            blsPublicKey: _blsPublicKey,
+            isActive: false,
+            index: validatorAddresses.length
         });
 
         validatorAddresses.push(msg.sender);
 
-        emit ValidatorRegistered(msg.sender, _dispatcherURL);
+        emit ValidatorRegistered(msg.sender, _dispatcherURL, _blsPublicKey);
     }
 
-    // Update validator's dispatcher URL
-    function updateDispatcherURL(string calldata _dispatcherURL) external {
+    // Update validator's dispatcher URL and BLS public key
+    function updateValidatorInfo(
+        string calldata _dispatcherURL,
+        string calldata _blsPublicKey
+    ) external {
         require(validators[msg.sender].stakedAmount > 0, "Not a validator");
 
         validators[msg.sender].dispatcherURL = _dispatcherURL;
+        validators[msg.sender].blsPublicKey = _blsPublicKey;
 
-        emit ValidatorUpdated(msg.sender, _dispatcherURL);
+        emit ValidatorUpdated(msg.sender, _dispatcherURL, _blsPublicKey);
     }
 
     // Stake tokens to become a validator
     function stake(uint256 _amount) external {
-        require(_amount == minimumStake, "Must stake exact minimum amount");
+        require(
+            _amount >= minimumStake,
+            "Must stake exact bigger than minimum amount"
+        );
         require(validators[msg.sender].stakedAmount == 0, "Already staked");
         require(
             validators[msg.sender].unstakeTime == 0,
@@ -126,6 +148,7 @@ contract CKPTValStaking is Ownable {
         // Activate validator if not already active
         if (!validators[msg.sender].isActive) {
             validators[msg.sender].isActive = true;
+            validators[msg.sender].index = validatorAddresses.length;
             validatorAddresses.push(msg.sender); // Add new validator address
         }
 
@@ -215,7 +238,9 @@ contract CKPTValStaking is Ownable {
             uint256 pendingRewards,
             uint256 unstakeTime,
             string memory dispatcherURL,
-            bool isActive
+            string memory blsPublicKey,
+            bool isActive,
+            uint256 index
         )
     {
         Validator storage validator = validators[_validator];
@@ -234,7 +259,9 @@ contract CKPTValStaking is Ownable {
             currentRewards,
             validator.unstakeTime,
             validator.dispatcherURL,
-            validator.isActive
+            validator.blsPublicKey,
+            validator.isActive,
+            validator.index
         );
     }
 
@@ -247,14 +274,20 @@ contract CKPTValStaking is Ownable {
         returns (
             address[] memory addresses,
             uint256[] memory stakes,
-            string[] memory dispatcherURLs
+            string[] memory dispatcherURLs,
+            string[] memory blsPublicKeys
         )
     {
         uint256 validatorCount = validatorAddresses.length;
 
         // If no validators, return empty arrays
         if (validatorCount == 0) {
-            return (new address[](0), new uint256[](0), new string[](0));
+            return (
+                new address[](0),
+                new uint256[](0),
+                new string[](0),
+                new string[](0)
+            );
         }
 
         // Determine how many validators to return
@@ -263,6 +296,7 @@ contract CKPTValStaking is Ownable {
         addresses = new address[](returnCount);
         stakes = new uint256[](returnCount);
         dispatcherURLs = new string[](returnCount);
+        blsPublicKeys = new string[](returnCount);
 
         uint256 validFound = 0;
         uint256 startCursor = validatorCursor;
@@ -281,6 +315,7 @@ contract CKPTValStaking is Ownable {
                 addresses[validFound] = validatorAddr;
                 stakes[validFound] = validator.stakedAmount;
                 dispatcherURLs[validFound] = validator.dispatcherURL;
+                blsPublicKeys[validFound] = validator.blsPublicKey;
                 validFound++;
             }
         }
@@ -291,10 +326,11 @@ contract CKPTValStaking is Ownable {
                 mstore(addresses, validFound)
                 mstore(stakes, validFound)
                 mstore(dispatcherURLs, validFound)
+                mstore(blsPublicKeys, validFound)
             }
         }
 
-        return (addresses, stakes, dispatcherURLs);
+        return (addresses, stakes, dispatcherURLs, blsPublicKeys);
     }
 
     // Update cursor for validator rotation (non-view function)

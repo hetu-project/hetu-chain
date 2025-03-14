@@ -362,19 +362,18 @@ func (k Keeper) CreateRegistration(ctx context.Context, blsPubKey bls12381.Publi
 
 // GetBLSPubKeySet returns the set of BLS public keys in the same order of the validator set for a given epoch
 func (k Keeper) GetBLSPubKeySet(ctx context.Context, epochNumber uint64) ([]*types.ValidatorWithBlsKey, error) {
-	// todo: get validator set from contract
-	// valset := k.GetValidatorSet(ctx, epochNumber)
-	valset := []*stakingtypes.Validator{}
+	valset := k.GetValidatorBlsKeySet(ctx, epochNumber).ValSet
 	valWithblsKeys := make([]*types.ValidatorWithBlsKey, len(valset))
 	for i, val := range valset {
-		pubkey, err := k.GetBlsPubKey(ctx, common.BytesToAddress([]byte(val.OperatorAddress)))
+		pubkey := new(bls12381.PublicKey)
+		err := pubkey.Unmarshal(val.BlsPubKey)
 		if err != nil {
 			return nil, err
 		}
 		valWithblsKeys[i] = &types.ValidatorWithBlsKey{
-			ValidatorAddress: val.OperatorAddress,
-			BlsPubKey:        pubkey,
-			VotingPower:      uint64(val.Tokens.Int64()),
+			ValidatorAddress: val.ValidatorAddress,
+			BlsPubKey:        pubkey.Bytes(),
+			VotingPower:      uint64(val.GetVotingPower()),
 		}
 	}
 

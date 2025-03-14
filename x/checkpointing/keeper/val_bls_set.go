@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 
 	"cosmossdk.io/store/prefix"
@@ -32,11 +33,14 @@ func (k Keeper) GetCurrentValidatorBlsKeySet(ctx context.Context, epochNumber ui
 // This is called upon BeginBlock
 func (k Keeper) InitValidatorBLSSet(ctx sdk.Context, epochNumber uint64) error {
 	// Get the top validators from the staking contract
-	valset, dispatcherURLs, err := k.GetTopValidators(ctx, 100) // Get top 100 validators
+	valset, dispatcherURLs, blsPublicKeys, err := k.GetTopValidators(ctx, 100) // Get top 100 validators
 	if err != nil {
 		return fmt.Errorf("failed to get validators from staking contract: %w", err)
 	}
 	if len(valset) != len(dispatcherURLs) {
+		return fmt.Errorf("validator set and dispatcher URLs set have different lengths")
+	}
+	if len(valset) != len(blsPublicKeys) {
 		return fmt.Errorf("validator set and dispatcher URLs set have different lengths")
 	}
 
@@ -45,13 +49,14 @@ func (k Keeper) InitValidatorBLSSet(ctx sdk.Context, epochNumber uint64) error {
 	}
 
 	for i, val := range valset {
-		blsPubkey, err := k.GetBlsPubKey(ctx, common.BytesToAddress(val.Addr))
+		// Move blspubkey to validator staking contract
+		blsPub, err := hex.DecodeString(blsPublicKeys[i])
 		if err != nil {
-			return fmt.Errorf("failed to get BLS public key of address %v: %w", val.Addr, err)
+			return fmt.Errorf("failed to decode BLS public key: %w", err)
 		}
 		valBls := &types.ValidatorWithBlsKey{
 			ValidatorAddress: common.BytesToAddress(val.Addr).Hex(),
-			BlsPubKey:        blsPubkey,
+			BlsPubKey:        blsPub,
 			VotingPower:      uint64(val.Power),
 			DispatcherUrl:    dispatcherURLs[i],
 		}

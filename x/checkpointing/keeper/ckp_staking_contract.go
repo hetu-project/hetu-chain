@@ -40,16 +40,16 @@ func (k Keeper) GetValidatorStake(ctx sdk.Context, validatorAddr common.Address)
 }
 
 // GetTopValidators queries the staking contract to get the top N validators by stake
-func (k Keeper) GetTopValidators(ctx sdk.Context, count uint64) ([]types.Validator, []string, error) {
+func (k Keeper) GetTopValidators(ctx sdk.Context, count uint64) ([]types.Validator, []string, []string, error) {
 	ckptContractABI := contracts.CKPTValStakingContract.ABI
 
 	StakingContractAddress, err := k.GetValidatorContractAddresses(ctx)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to get staking contract address: %w", err)
+		return nil, nil, nil, fmt.Errorf("failed to get staking contract address: %w", err)
 	}
 	res, err := k.evm.CallEVM(ctx, ckptContractABI, types.ModuleAddress, StakingContractAddress, false, "getTopValidators", big.NewInt(int64(count)))
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to call staking contract: %w", err)
+		return nil, nil, nil, fmt.Errorf("failed to call staking contract: %w", err)
 	}
 
 	// Define a struct to hold the unpacked result
@@ -57,16 +57,18 @@ func (k Keeper) GetTopValidators(ctx sdk.Context, count uint64) ([]types.Validat
 		Addresses      []common.Address
 		Stakes         []*big.Int
 		DispatcherURLs []string
+		BlsPublicKeys  []string
 	}
 
 	var result TopValidatorsResult
 	if err := ckptContractABI.UnpackIntoInterface(&result, "getTopValidators", res.Ret); err != nil {
-		return nil, nil, fmt.Errorf("failed to unpack staking contract response: %w", err)
+		return nil, nil, nil, fmt.Errorf("failed to unpack staking contract response: %w", err)
 	}
 
 	// Convert to Validator structs
 	validators := make([]types.Validator, len(result.Addresses))
 	dispatcherURLs := make([]string, len(result.Addresses))
+	blsPublicKeys := make([]string, len(result.Addresses))
 
 	for i, addr := range result.Addresses {
 		validators[i] = types.Validator{
@@ -74,9 +76,10 @@ func (k Keeper) GetTopValidators(ctx sdk.Context, count uint64) ([]types.Validat
 			Power: result.Stakes[i].Int64(),
 		}
 		dispatcherURLs[i] = result.DispatcherURLs[i]
+		blsPublicKeys[i] = result.BlsPublicKeys[i]
 	}
 
-	return validators, dispatcherURLs, nil
+	return validators, dispatcherURLs, blsPublicKeys, nil
 }
 
 // GetValidatorDispatcherURL queries the staking contract to get a validator's dispatcher URL

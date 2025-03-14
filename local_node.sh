@@ -12,7 +12,8 @@ KEYRING="test"
 KEYALGO="eth_secp256k1"
 LOGLEVEL="info"
 # Set dedicated home directory for the hetud instance
-HOMEDIR="$HOME/.tmp-hetud"
+# HOMEDIR="$HOME/.tmp-hetud"
+HOMEDIR="/Users/blake/work/nagara/code/hetu/evmos/.vscode/hetud-config"
 # to trace evm
 #TRACE="--trace"
 TRACE=""
