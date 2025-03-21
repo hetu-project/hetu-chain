@@ -33,7 +33,7 @@ func (k Keeper) GetCurrentValidatorBlsKeySet(ctx context.Context, epochNumber ui
 // This is called upon BeginBlock
 func (k Keeper) InitValidatorBLSSet(ctx sdk.Context, epochNumber uint64) error {
 	// Get the top validators from the staking contract
-	valset, dispatcherURLs, blsPublicKeys, err := k.GetTopValidators(ctx, 100) // Get top 100 validators
+	valset, dispatcherURLs, blsPublicKeys, err := k.GetTopValidators(ctx, types.DefaultValidatorSize) // Get top 512 validators
 	if err != nil {
 		return fmt.Errorf("failed to get validators from staking contract: %w", err)
 	}

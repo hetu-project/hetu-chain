@@ -190,45 +190,187 @@ func (m *MsgRegistStakeContractResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgRegistStakeContractResponse proto.InternalMessageInfo
 
+type AddrSig struct {
+	Address   string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	Signature string `protobuf:"bytes,2,opt,name=signature,proto3" json:"signature,omitempty"`
+}
+
+func (m *AddrSig) Reset()         { *m = AddrSig{} }
+func (m *AddrSig) String() string { return proto.CompactTextString(m) }
+func (*AddrSig) ProtoMessage()    {}
+func (*AddrSig) Descriptor() ([]byte, []int) {
+	return fileDescriptor_74c41b14ed2cffe3, []int{4}
+}
+func (m *AddrSig) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AddrSig) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AddrSig.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AddrSig) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AddrSig.Merge(m, src)
+}
+func (m *AddrSig) XXX_Size() int {
+	return m.Size()
+}
+func (m *AddrSig) XXX_DiscardUnknown() {
+	xxx_messageInfo_AddrSig.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AddrSig proto.InternalMessageInfo
+
+func (m *AddrSig) GetAddress() string {
+	if m != nil {
+		return m.Address
+	}
+	return ""
+}
+
+func (m *AddrSig) GetSignature() string {
+	if m != nil {
+		return m.Signature
+	}
+	return ""
+}
+
+// MsgBLSCallback defines a message to upload BLS signature
+type MsgBLSCallback struct {
+	// epoch_num defines the epoch number the raw checkpoint is for
+	EpochNum uint64 `protobuf:"varint,1,opt,name=epoch_num,json=epochNum,proto3" json:"epoch_num,omitempty"`
+	// eth_address is the Ethereum address as key, bls_signature is the BLS signature as value
+	AddrSigs []*AddrSig `protobuf:"bytes,2,rep,name=addr_sigs,json=addrSigs,proto3" json:"addr_sigs,omitempty"`
+	// sender is the cosmos bech32 address from the owner of the given Cosmos coins
+	Sender string `protobuf:"bytes,3,opt,name=sender,proto3" json:"sender,omitempty"`
+}
+
+func (m *MsgBLSCallback) Reset()         { *m = MsgBLSCallback{} }
+func (m *MsgBLSCallback) String() string { return proto.CompactTextString(m) }
+func (*MsgBLSCallback) ProtoMessage()    {}
+func (*MsgBLSCallback) Descriptor() ([]byte, []int) {
+	return fileDescriptor_74c41b14ed2cffe3, []int{5}
+}
+func (m *MsgBLSCallback) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgBLSCallback) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgBLSCallback.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgBLSCallback) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgBLSCallback.Merge(m, src)
+}
+func (m *MsgBLSCallback) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgBLSCallback) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgBLSCallback.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgBLSCallback proto.InternalMessageInfo
+
+// MsgBLSCallbackResponse defines the MsgBLSCallback response type
+type MsgBLSCallbackResponse struct {
+}
+
+func (m *MsgBLSCallbackResponse) Reset()         { *m = MsgBLSCallbackResponse{} }
+func (m *MsgBLSCallbackResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgBLSCallbackResponse) ProtoMessage()    {}
+func (*MsgBLSCallbackResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_74c41b14ed2cffe3, []int{6}
+}
+func (m *MsgBLSCallbackResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgBLSCallbackResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgBLSCallbackResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgBLSCallbackResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgBLSCallbackResponse.Merge(m, src)
+}
+func (m *MsgBLSCallbackResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgBLSCallbackResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgBLSCallbackResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgBLSCallbackResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgRegistValidator)(nil), "hetu.checkpointing.v1.MsgRegistValidator")
 	proto.RegisterType((*MsgRegistValidatorResponse)(nil), "hetu.checkpointing.v1.MsgRegistValidatorResponse")
 	proto.RegisterType((*MsgRegistStakeContract)(nil), "hetu.checkpointing.v1.MsgRegistStakeContract")
 	proto.RegisterType((*MsgRegistStakeContractResponse)(nil), "hetu.checkpointing.v1.MsgRegistStakeContractResponse")
+	proto.RegisterType((*AddrSig)(nil), "hetu.checkpointing.v1.AddrSig")
+	proto.RegisterType((*MsgBLSCallback)(nil), "hetu.checkpointing.v1.MsgBLSCallback")
+	proto.RegisterType((*MsgBLSCallbackResponse)(nil), "hetu.checkpointing.v1.MsgBLSCallbackResponse")
 }
 
 func init() { proto.RegisterFile("hetu/checkpointing/v1/tx.proto", fileDescriptor_74c41b14ed2cffe3) }
 
 var fileDescriptor_74c41b14ed2cffe3 = []byte{
-	// 443 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x53, 0x4d, 0x6b, 0x14, 0x41,
-	0x10, 0x9d, 0x4e, 0x30, 0x90, 0x46, 0x48, 0xec, 0x68, 0x5c, 0x06, 0xe9, 0x5d, 0xf6, 0x94, 0x44,
-	0x32, 0xc3, 0x24, 0x04, 0x54, 0xf0, 0x60, 0x3c, 0x4a, 0x30, 0xac, 0xe0, 0x41, 0x84, 0x30, 0xdd,
-	0xd3, 0xf4, 0x8e, 0xf3, 0xd1, 0xcd, 0x54, 0xcf, 0x92, 0xc1, 0x8b, 0x78, 0xf2, 0xe8, 0x4f, 0xc8,
-	0x4f, 0xc8, 0xcf, 0xf0, 0xe0, 0x21, 0x47, 0xf1, 0x20, 0xb2, 0x7b, 0x88, 0xbf, 0xc1, 0x93, 0xcc,
-	0xd7, 0x4a, 0x76, 0x17, 0x56, 0x6f, 0x55, 0xf5, 0x1e, 0xef, 0xbd, 0x9a, 0xa9, 0xc6, 0x74, 0x28,
-	0x4c, 0xee, 0xf2, 0xa1, 0xe0, 0x91, 0x56, 0x61, 0x6a, 0xc2, 0x54, 0xba, 0x23, 0xcf, 0x35, 0xe7,
-	0x8e, 0xce, 0x94, 0x51, 0xe4, 0x5e, 0x89, 0x3b, 0x37, 0x70, 0x67, 0xe4, 0xd9, 0x77, 0xa5, 0x92,
-	0xaa, 0x62, 0xb8, 0x65, 0x55, 0x93, 0xed, 0x2e, 0x57, 0x90, 0x28, 0x70, 0xc1, 0xf8, 0x51, 0x2d,
-	0xc4, 0x84, 0xf1, 0xff, 0xaa, 0xd9, 0xf7, 0x1b, 0x42, 0x02, 0x95, 0x4b, 0x02, 0xb2, 0x06, 0xfa,
-	0x5f, 0x11, 0x26, 0x27, 0x20, 0x07, 0x42, 0x86, 0x60, 0x5e, 0xfb, 0x71, 0x18, 0xf8, 0x46, 0x65,
-	0xe4, 0x2d, 0xc6, 0x2c, 0x86, 0x33, 0x9d, 0xb3, 0x48, 0x14, 0x1d, 0xd4, 0x43, 0x3b, 0xb7, 0x8f,
-	0x9f, 0x7e, 0xff, 0xd1, 0x7d, 0x2c, 0x43, 0x33, 0xcc, 0x99, 0xc3, 0x55, 0xe2, 0x96, 0x01, 0xf7,
-	0x75, 0xa6, 0xde, 0x09, 0x6e, 0xaa, 0xa6, 0x54, 0xe6, 0x59, 0xa1, 0x8d, 0x72, 0x59, 0x0c, 0xde,
-	0xc1, 0xe1, 0x23, 0xcf, 0x39, 0xcd, 0x59, 0x1c, 0xf2, 0x17, 0xa2, 0x18, 0xac, 0xb3, 0x18, 0x4e,
-	0x2b, 0x3d, 0xf2, 0x10, 0xdf, 0x19, 0xb5, 0x56, 0x67, 0x7e, 0x10, 0x64, 0x02, 0xa0, 0xb3, 0xd2,
-	0x43, 0x3b, 0xeb, 0x83, 0xcd, 0x29, 0xf0, 0xac, 0x9e, 0x93, 0x6d, 0xbc, 0x06, 0x22, 0x0d, 0x44,
-	0xd6, 0x59, 0xad, 0x18, 0x4d, 0xf7, 0x64, 0xeb, 0xd3, 0x45, 0xd7, 0xfa, 0x75, 0xd1, 0xb5, 0x3e,
-	0x5e, 0x5f, 0xee, 0x35, 0xc3, 0xfe, 0x03, 0x6c, 0xcf, 0x6f, 0x33, 0x10, 0xa0, 0x55, 0x0a, 0xa2,
-	0xaf, 0xf1, 0xf6, 0x14, 0x7d, 0x65, 0xfc, 0x48, 0x3c, 0x57, 0xa9, 0xc9, 0x7c, 0x6e, 0xc8, 0x2e,
-	0xde, 0xe4, 0x4d, 0x3d, 0x0d, 0x84, 0x2a, 0xbb, 0x8d, 0x76, 0x3e, 0x9f, 0x67, 0x65, 0x79, 0x9e,
-	0x1e, 0xa6, 0x8b, 0x1d, 0xdb, 0x4c, 0x07, 0xbf, 0x11, 0x5e, 0x3d, 0x01, 0x49, 0x14, 0xde, 0x98,
-	0xfd, 0x09, 0xbb, 0xce, 0xc2, 0x1b, 0x70, 0xe6, 0x37, 0xb4, 0xbd, 0x7f, 0xa6, 0xb6, 0xc6, 0xe4,
-	0x3d, 0xde, 0x5a, 0xf4, 0x25, 0xf6, 0x97, 0x29, 0xdd, 0xa0, 0xdb, 0x47, 0xff, 0x45, 0x6f, 0xcd,
-	0xed, 0x5b, 0x1f, 0xae, 0x2f, 0xf7, 0xd0, 0xf1, 0xcb, 0x2f, 0x63, 0x8a, 0xae, 0xc6, 0x14, 0xfd,
-	0x1c, 0x53, 0xf4, 0x79, 0x42, 0xad, 0xab, 0x09, 0xb5, 0xbe, 0x4d, 0xa8, 0xf5, 0xe6, 0x68, 0xd9,
-	0xa1, 0x9d, 0xcf, 0xbc, 0x1d, 0x53, 0x68, 0x01, 0x6c, 0xad, 0xba, 0xea, 0xc3, 0x3f, 0x01, 0x00,
-	0x00, 0xff, 0xff, 0xeb, 0x7b, 0x4e, 0xc7, 0x5e, 0x03, 0x00, 0x00,
+	// 558 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x54, 0x3d, 0x6f, 0xd3, 0x40,
+	0x18, 0x8e, 0x13, 0x68, 0x9b, 0x2b, 0xa2, 0xe5, 0x0a, 0x25, 0x32, 0x95, 0x13, 0x45, 0x42, 0x4a,
+	0x8b, 0x62, 0x2b, 0xa9, 0x2a, 0xf1, 0x21, 0x86, 0xa6, 0x23, 0x04, 0x2a, 0x47, 0x62, 0x40, 0x48,
+	0xd1, 0xf9, 0x72, 0xba, 0x98, 0xd8, 0x3e, 0xcb, 0x77, 0x8e, 0x1a, 0xb1, 0x20, 0x26, 0x46, 0x36,
+	0xd6, 0xfe, 0x84, 0xfe, 0x0c, 0x06, 0x86, 0x8e, 0x88, 0x01, 0x50, 0x32, 0x94, 0x9f, 0x51, 0xf9,
+	0x62, 0xbb, 0x49, 0x93, 0x2a, 0xed, 0xf6, 0x7e, 0x3c, 0x7a, 0x9e, 0xe7, 0xee, 0x7d, 0xef, 0x80,
+	0xd6, 0x25, 0x22, 0x34, 0x70, 0x97, 0xe0, 0x9e, 0xcf, 0x6c, 0x4f, 0xd8, 0x1e, 0x35, 0xfa, 0x35,
+	0x43, 0x1c, 0xe9, 0x7e, 0xc0, 0x04, 0x83, 0x0f, 0xa2, 0xbe, 0x3e, 0xd5, 0xd7, 0xfb, 0x35, 0xf5,
+	0x3e, 0x65, 0x94, 0x49, 0x84, 0x11, 0x45, 0x63, 0xb0, 0x5a, 0xc4, 0x8c, 0xbb, 0x8c, 0x1b, 0x5c,
+	0xa0, 0xde, 0x98, 0xc8, 0x22, 0x02, 0x5d, 0xb0, 0xa9, 0x0f, 0x63, 0x80, 0xcb, 0xa5, 0x8a, 0xcb,
+	0xe9, 0xb8, 0x51, 0xfe, 0xa9, 0x00, 0xd8, 0xe4, 0xd4, 0x24, 0xd4, 0xe6, 0xe2, 0x1d, 0x72, 0xec,
+	0x0e, 0x12, 0x2c, 0x80, 0x1f, 0x00, 0xb0, 0x1c, 0xde, 0xf6, 0x43, 0xab, 0x47, 0x06, 0x05, 0xa5,
+	0xa4, 0x54, 0xee, 0x34, 0x5e, 0xfe, 0xfe, 0x53, 0x7c, 0x46, 0x6d, 0xd1, 0x0d, 0x2d, 0x1d, 0x33,
+	0xd7, 0x88, 0x0c, 0x56, 0xfd, 0x80, 0x7d, 0x24, 0x58, 0xc8, 0x24, 0x62, 0xc6, 0xc1, 0xc0, 0x17,
+	0xcc, 0xb0, 0x1c, 0x5e, 0xab, 0xef, 0x3e, 0xad, 0xe9, 0x87, 0xa1, 0xe5, 0xd8, 0xf8, 0x15, 0x19,
+	0x98, 0x79, 0xcb, 0xe1, 0x87, 0x92, 0x0f, 0x3e, 0x01, 0xf7, 0xfa, 0x89, 0x54, 0x1b, 0x75, 0x3a,
+	0x01, 0xe1, 0xbc, 0x90, 0x2d, 0x29, 0x95, 0xbc, 0xb9, 0x9e, 0x36, 0xf6, 0xc7, 0x75, 0xb8, 0x09,
+	0x96, 0x38, 0xf1, 0x3a, 0x24, 0x28, 0xe4, 0x24, 0x22, 0xce, 0x9e, 0x6f, 0x7c, 0x3d, 0x2e, 0x66,
+	0xfe, 0x1f, 0x17, 0x33, 0x5f, 0xce, 0x4e, 0x76, 0xe2, 0x62, 0x79, 0x0b, 0xa8, 0xb3, 0xa7, 0x31,
+	0x09, 0xf7, 0x99, 0xc7, 0x49, 0xd9, 0x07, 0x9b, 0x69, 0xb7, 0x25, 0x50, 0x8f, 0x1c, 0x30, 0x4f,
+	0x04, 0x08, 0x0b, 0xb8, 0x0d, 0xd6, 0x71, 0x1c, 0xa7, 0x86, 0x14, 0x29, 0xb7, 0x96, 0xd4, 0x67,
+	0xfd, 0x64, 0x17, 0xfb, 0x29, 0x01, 0x6d, 0xbe, 0x62, 0xea, 0x69, 0x1f, 0x2c, 0x47, 0xcc, 0x2d,
+	0x9b, 0xc2, 0x02, 0x58, 0x9e, 0xd6, 0x4e, 0x52, 0xb8, 0x05, 0xf2, 0xdc, 0xa6, 0x1e, 0x12, 0x61,
+	0x40, 0x62, 0xd9, 0x8b, 0x42, 0xf9, 0xbb, 0x02, 0xee, 0x36, 0x39, 0x6d, 0xbc, 0x6e, 0x1d, 0x20,
+	0xc7, 0xb1, 0x10, 0xee, 0xc1, 0x47, 0x20, 0x4f, 0x7c, 0x86, 0xbb, 0x6d, 0x2f, 0x74, 0x25, 0xd9,
+	0x2d, 0x73, 0x45, 0x16, 0xde, 0x84, 0x2e, 0x7c, 0x01, 0xf2, 0x11, 0x71, 0x9b, 0xdb, 0x34, 0xba,
+	0xf6, 0x5c, 0x65, 0xb5, 0xae, 0xe9, 0x73, 0xd7, 0x4d, 0x8f, 0xad, 0x99, 0x2b, 0x68, 0x1c, 0xdc,
+	0x70, 0x1c, 0x05, 0x79, 0xe1, 0x13, 0xc6, 0x92, 0x63, 0xd7, 0xff, 0x66, 0x41, 0xae, 0xc9, 0x29,
+	0x64, 0x60, 0xed, 0xf2, 0xee, 0x6d, 0x5f, 0xe1, 0x65, 0x76, 0xb0, 0x6a, 0xed, 0xda, 0xd0, 0x44,
+	0x18, 0x7e, 0x02, 0x1b, 0xf3, 0x16, 0xa0, 0xba, 0x88, 0x69, 0x0a, 0xae, 0xee, 0xdd, 0x08, 0x9e,
+	0x8a, 0x63, 0xb0, 0x3a, 0x39, 0xa5, 0xc7, 0x57, 0xb3, 0x4c, 0xc0, 0xd4, 0xea, 0xb5, 0x60, 0x89,
+	0x88, 0x7a, 0xfb, 0xf3, 0xd9, 0xc9, 0x8e, 0xd2, 0x78, 0xfb, 0x63, 0xa8, 0x29, 0xa7, 0x43, 0x4d,
+	0xf9, 0x37, 0xd4, 0x94, 0x6f, 0x23, 0x2d, 0x73, 0x3a, 0xd2, 0x32, 0xbf, 0x46, 0x5a, 0xe6, 0xfd,
+	0xde, 0xa2, 0x47, 0x7c, 0x74, 0xe9, 0x5f, 0x12, 0x03, 0x9f, 0x70, 0x6b, 0x49, 0xfe, 0x18, 0xbb,
+	0xe7, 0x01, 0x00, 0x00, 0xff, 0xff, 0xa1, 0xf9, 0xa8, 0x90, 0xba, 0x04, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -247,6 +389,8 @@ type MsgClient interface {
 	RegistValidator(ctx context.Context, in *MsgRegistValidator, opts ...grpc.CallOption) (*MsgRegistValidatorResponse, error)
 	// RegistStakeContract defines a method for registering a validator's staking contract address
 	RegistStakeContract(ctx context.Context, in *MsgRegistStakeContract, opts ...grpc.CallOption) (*MsgRegistStakeContractResponse, error)
+	// BLSCallback defines a method for uploading BLS signature
+	BLSCallback(ctx context.Context, in *MsgBLSCallback, opts ...grpc.CallOption) (*MsgBLSCallbackResponse, error)
 }
 
 type msgClient struct {
@@ -275,12 +419,23 @@ func (c *msgClient) RegistStakeContract(ctx context.Context, in *MsgRegistStakeC
 	return out, nil
 }
 
+func (c *msgClient) BLSCallback(ctx context.Context, in *MsgBLSCallback, opts ...grpc.CallOption) (*MsgBLSCallbackResponse, error) {
+	out := new(MsgBLSCallbackResponse)
+	err := c.cc.Invoke(ctx, "/hetu.checkpointing.v1.Msg/BLSCallback", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// RegistValidator defines a method for registering a new validator of the checkpoint network
 	RegistValidator(context.Context, *MsgRegistValidator) (*MsgRegistValidatorResponse, error)
 	// RegistStakeContract defines a method for registering a validator's staking contract address
 	RegistStakeContract(context.Context, *MsgRegistStakeContract) (*MsgRegistStakeContractResponse, error)
+	// BLSCallback defines a method for uploading BLS signature
+	BLSCallback(context.Context, *MsgBLSCallback) (*MsgBLSCallbackResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -292,6 +447,9 @@ func (*UnimplementedMsgServer) RegistValidator(ctx context.Context, req *MsgRegi
 }
 func (*UnimplementedMsgServer) RegistStakeContract(ctx context.Context, req *MsgRegistStakeContract) (*MsgRegistStakeContractResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegistStakeContract not implemented")
+}
+func (*UnimplementedMsgServer) BLSCallback(ctx context.Context, req *MsgBLSCallback) (*MsgBLSCallbackResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BLSCallback not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -334,6 +492,24 @@ func _Msg_RegistStakeContract_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_BLSCallback_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgBLSCallback)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).BLSCallback(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hetu.checkpointing.v1.Msg/BLSCallback",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).BLSCallback(ctx, req.(*MsgBLSCallback))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "hetu.checkpointing.v1.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -345,6 +521,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RegistStakeContract",
 			Handler:    _Msg_RegistStakeContract_Handler,
+		},
+		{
+			MethodName: "BLSCallback",
+			Handler:    _Msg_BLSCallback_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -483,6 +663,115 @@ func (m *MsgRegistStakeContractResponse) MarshalToSizedBuffer(dAtA []byte) (int,
 	return len(dAtA) - i, nil
 }
 
+func (m *AddrSig) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AddrSig) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AddrSig) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Signature) > 0 {
+		i -= len(m.Signature)
+		copy(dAtA[i:], m.Signature)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Signature)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgBLSCallback) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgBLSCallback) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgBLSCallback) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Sender) > 0 {
+		i -= len(m.Sender)
+		copy(dAtA[i:], m.Sender)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Sender)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.AddrSigs) > 0 {
+		for iNdEx := len(m.AddrSigs) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.AddrSigs[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if m.EpochNum != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.EpochNum))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgBLSCallbackResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgBLSCallbackResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgBLSCallbackResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -542,6 +831,54 @@ func (m *MsgRegistStakeContract) Size() (n int) {
 }
 
 func (m *MsgRegistStakeContractResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *AddrSig) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Signature)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgBLSCallback) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.EpochNum != 0 {
+		n += 1 + sovTx(uint64(m.EpochNum))
+	}
+	if len(m.AddrSigs) > 0 {
+		for _, e := range m.AddrSigs {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	l = len(m.Sender)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgBLSCallbackResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -896,6 +1233,305 @@ func (m *MsgRegistStakeContractResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgRegistStakeContractResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AddrSig) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AddrSig: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AddrSig: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Signature", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Signature = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgBLSCallback) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgBLSCallback: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgBLSCallback: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EpochNum", wireType)
+			}
+			m.EpochNum = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.EpochNum |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AddrSigs", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AddrSigs = append(m.AddrSigs, &AddrSig{})
+			if err := m.AddrSigs[len(m.AddrSigs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Sender", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Sender = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgBLSCallbackResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgBLSCallbackResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgBLSCallbackResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

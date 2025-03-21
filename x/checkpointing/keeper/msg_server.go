@@ -70,3 +70,9 @@ func (m msgServer) RegistStakeContract(
 
 	return &types.MsgRegistStakeContractResponse{}, nil
 }
+
+// BLSCallback handles the BLS signature upload
+func (m msgServer) BLSCallback(goCtx context.Context, msg *types.MsgBLSCallback) (*types.MsgBLSCallbackResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	return m.k.BLSCallback(ctx, msg)
+}

@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion7
 const (
 	Msg_RegistValidator_FullMethodName     = "/hetu.checkpointing.v1.Msg/RegistValidator"
 	Msg_RegistStakeContract_FullMethodName = "/hetu.checkpointing.v1.Msg/RegistStakeContract"
+	Msg_BLSCallback_FullMethodName         = "/hetu.checkpointing.v1.Msg/BLSCallback"
 )
 
 // MsgClient is the client API for Msg service.
@@ -31,6 +32,8 @@ type MsgClient interface {
 	RegistValidator(ctx context.Context, in *MsgRegistValidator, opts ...grpc.CallOption) (*MsgRegistValidatorResponse, error)
 	// RegistStakeContract defines a method for registering a validator's staking contract address
 	RegistStakeContract(ctx context.Context, in *MsgRegistStakeContract, opts ...grpc.CallOption) (*MsgRegistStakeContractResponse, error)
+	// BLSCallback defines a method for uploading BLS signature
+	BLSCallback(ctx context.Context, in *MsgBLSCallback, opts ...grpc.CallOption) (*MsgBLSCallbackResponse, error)
 }
 
 type msgClient struct {
@@ -59,6 +62,15 @@ func (c *msgClient) RegistStakeContract(ctx context.Context, in *MsgRegistStakeC
 	return out, nil
 }
 
+func (c *msgClient) BLSCallback(ctx context.Context, in *MsgBLSCallback, opts ...grpc.CallOption) (*MsgBLSCallbackResponse, error) {
+	out := new(MsgBLSCallbackResponse)
+	err := c.cc.Invoke(ctx, Msg_BLSCallback_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -67,6 +79,8 @@ type MsgServer interface {
 	RegistValidator(context.Context, *MsgRegistValidator) (*MsgRegistValidatorResponse, error)
 	// RegistStakeContract defines a method for registering a validator's staking contract address
 	RegistStakeContract(context.Context, *MsgRegistStakeContract) (*MsgRegistStakeContractResponse, error)
+	// BLSCallback defines a method for uploading BLS signature
+	BLSCallback(context.Context, *MsgBLSCallback) (*MsgBLSCallbackResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -79,6 +93,9 @@ func (UnimplementedMsgServer) RegistValidator(context.Context, *MsgRegistValidat
 }
 func (UnimplementedMsgServer) RegistStakeContract(context.Context, *MsgRegistStakeContract) (*MsgRegistStakeContractResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegistStakeContract not implemented")
+}
+func (UnimplementedMsgServer) BLSCallback(context.Context, *MsgBLSCallback) (*MsgBLSCallbackResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BLSCallback not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -129,6 +146,24 @@ func _Msg_RegistStakeContract_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_BLSCallback_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgBLSCallback)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).BLSCallback(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_BLSCallback_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).BLSCallback(ctx, req.(*MsgBLSCallback))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -143,6 +178,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RegistStakeContract",
 			Handler:    _Msg_RegistStakeContract_Handler,
+		},
+		{
+			MethodName: "BLSCallback",
+			Handler:    _Msg_BLSCallback_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

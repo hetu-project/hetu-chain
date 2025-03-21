@@ -19,7 +19,7 @@ const (
 
 	// QuerierRoute defines the module's query routing key
 	QuerierRoute = ModuleName
-	
+
 	// QuerierRoute defines the module's query routing key
 	CkPTContractAddrKey = "ckpt_contract_addr"
 
@@ -31,11 +31,14 @@ var (
 	CheckpointsPrefix        = []byte{0x1} // reserve this namespace for checkpoints
 	RegistrationPrefix       = []byte{0x2} // reserve this namespace for BLS keys
 	ValidatorBlsKeySetPrefix = []byte{0x3} // reserve this namespace for validator BLS key set
+	UploadBlsSigPrefix       = []byte{0x4} // reserve this namespace for uploading BLS sig
 
 	CkptsObjectPrefix = append(CheckpointsPrefix, 0x0) // where we save the concrete BLS sig bytes
 
 	AddrToBlsKeyPrefix = append(RegistrationPrefix, 0x0) // where we save the concrete BLS public keys
 	BlsKeyToAddrPrefix = append(RegistrationPrefix, 0x1) // where we save BLS key set
+
+	EpochKeyToValBlsSigKey = append(UploadBlsSigPrefix, 0x0) // EpochKeyToValBlsSigKey defines the key to store the BLS sigs for a given epoch
 
 	LastFinalizedEpochKey            = []byte{0x04} // LastFinalizedEpochKey defines the key to store the last finalised epoch
 	ConflictingCheckpointReceivedKey = []byte{0x05} // ConflictingCheckpointReceivedKey defines the key to store the ConflictingCheckpointReceived flag

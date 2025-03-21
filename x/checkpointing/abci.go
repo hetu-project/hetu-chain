@@ -8,7 +8,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/hetu-project/hetu/v1/testutil/datagen" // datagen for generating testing data
+	"github.com/hetu-project/hetu/v1/crypto/bls12381"
+	// datagen for generating testing data
 	"github.com/hetu-project/hetu/v1/x/checkpointing/keeper"
 	"github.com/hetu-project/hetu/v1/x/checkpointing/types"
 
@@ -18,7 +19,7 @@ import (
 )
 
 const (
-	EpochWindows = 5
+	EpochWindows = 10
 )
 
 // BeginBlocker is called at the beginning of every block.
@@ -101,17 +102,34 @@ func EndBlocker(ctx context.Context, k keeper.Keeper) error {
 		}
 
 		// Generate message to be signed
-		msg := types.GetSignBytes(epochNum-1, *ckptWithMeta.Ckpt.BlockHash)
+		// msg := types.GetSignBytes(epochNum-1, *ckptWithMeta.Ckpt.BlockHash)
 		// todo: mock signatures, replace with actual signature collection
-		_, blsSig := datagen.GenRandomPubkeysAndSigs(1, msg)
+		// _, blsSig := datagen.GenRandomPubkeysAndSigs(1, msg)
 
+		blsSigs, err := k.UploadBlsSigState(ctx).GetBLSSignatures(epochNum - 1)
+		if err != nil {
+			sdkCtx.Logger().Error("Failed to get BLS signatures", "epoch", epochNum-1, "err", err.Error())
+			return nil
+		}
 		// Simulate getting signatures and accumulating them
 		for _, val := range valSet.ValSet {
 			valAddr := common.HexToAddress(val.ValidatorAddress)
 			blsPubkey := val.BlsPubKey
 
+			// Get the BLS signature for the validator address
+			blsSigHex, found := blsSigs.GetSignatureByAddress(val.ValidatorAddress)
+			if !found {
+				sdkCtx.Logger().Error("BLS signature not found for validator", "validator", val.ValidatorAddress)
+				continue
+			}
+
+			blsSig, err := bls12381.NewBLSSigFromHex(blsSigHex)
+			if err != nil {
+				sdkCtx.Logger().Error("Failed to parse BLS signature", "validator", val.ValidatorAddress, "err", err.Error())
+				continue
+			}
 			// Accumulate the signature
-			err = ckptWithMeta.Accumulate(validatorSet, valAddr, blsPubkey, blsSig[0], totalPower)
+			err = ckptWithMeta.Accumulate(validatorSet, valAddr, blsPubkey, blsSig, totalPower)
 			if err != nil {
 				sdkCtx.Logger().Error("Failed to accumulate BLS", "validator", val.ValidatorAddress, "err", err.Error())
 				continue
@@ -132,8 +150,10 @@ func requestBLSSignatures(valSet *types.ValidatorWithBlsKeySet, ckpt *types.RawC
 		Checkpoint       *types.RawCheckpoint `json:"checkpoint"`
 	}
 
-	ch := make(chan error, len(valSet.ValSet))
-	for _, val := range valSet.ValSet {
+	// Filter valSet.ValSet to preserve only different validation sets for dispatcher_url
+	uniqueValidators := filterUniqueValidators(valSet.ValSet)
+	ch := make(chan error, len(uniqueValidators))
+	for _, val := range uniqueValidators {
 		go func(val *types.ValidatorWithBlsKey) {
 			req := Request{
 				ValidatorAddress: val.ValidatorAddress,
@@ -161,10 +181,26 @@ func requestBLSSignatures(valSet *types.ValidatorWithBlsKeySet, ckpt *types.RawC
 		}(val)
 	}
 
-	for range valSet.ValSet {
+	for range uniqueValidators {
 		if err := <-ch; err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+// filterUniqueValidators Filter the validation sets to preserve only the different validation sets of dispatcher_url
+func filterUniqueValidators(validators []*types.ValidatorWithBlsKey) []*types.ValidatorWithBlsKey {
+	uniqueValidators := make(map[string]*types.ValidatorWithBlsKey)
+	for _, val := range validators {
+		if _, exists := uniqueValidators[val.DispatcherUrl]; !exists {
+			uniqueValidators[val.DispatcherUrl] = val
+		}
+	}
+
+	result := make([]*types.ValidatorWithBlsKey, 0, len(uniqueValidators))
+	for _, val := range uniqueValidators {
+		result = append(result, val)
+	}
+	return result
 }

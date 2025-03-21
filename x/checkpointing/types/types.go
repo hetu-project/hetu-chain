@@ -20,6 +20,7 @@ const (
 	// HashSize is the size in bytes of a hash
 	HashSize   = sha256.Size
 	BitmapBits = 64 * 8 // 512 bits for 512 validators at top for a epoch
+	DefaultValidatorSize = 512
 )
 
 // BlsSigner is an interface for signing BLS messages
