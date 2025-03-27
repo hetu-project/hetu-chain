@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
 	"github.com/boljen/go-bitmap"
@@ -63,7 +64,7 @@ func (cm *RawCheckpointWithMeta) Accumulate(
 	signerAddr common.Address,
 	signerBlsKey bls12381.PublicKey,
 	sig bls12381.Signature,
-	totalPower int64) error {
+	totalPower uint64) error {
 	// the checkpoint should be accumulating
 	if cm.Status != Accumulating {
 		// return nil if the checkpoint is no longer accumulating(maybe sealed)
@@ -107,7 +108,15 @@ func (cm *RawCheckpointWithMeta) Accumulate(
 
 	// accumulate voting power and update status when the threshold is reached
 	cm.PowerSum += uint64(val.Power)
-	if int64(cm.PowerSum)*3 > totalPower*2 {
+	
+	powerSumBig := new(big.Int).SetUint64(cm.PowerSum)
+	totalPowerBig := new(big.Int).SetUint64(totalPower)
+	// Multiply PowerSum by 3 and TotalPower by 2
+	powerSumBig.Mul(powerSumBig, big.NewInt(3))
+	totalPowerBig.Mul(totalPowerBig, big.NewInt(2))
+
+	// Compare the results
+	if powerSumBig.Cmp(totalPowerBig) > 0 {
 		cm.Status = Sealed
 	}
 

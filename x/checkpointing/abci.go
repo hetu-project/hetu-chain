@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/hetu-project/hetu/v1/crypto/bls12381"
-	// datagen for generating testing data
 	"github.com/hetu-project/hetu/v1/x/checkpointing/keeper"
 	"github.com/hetu-project/hetu/v1/x/checkpointing/types"
 
@@ -19,7 +18,7 @@ import (
 )
 
 const (
-	EpochWindows = 10
+	EpochWindows = 30
 )
 
 // BeginBlocker is called at the beginning of every block.
@@ -87,9 +86,9 @@ func EndBlocker(ctx context.Context, k keeper.Keeper) error {
 		}
 
 		// Calculate total power
-		var totalPower int64 = 0
+		var totalPower uint64 = 0
 		for _, val := range valSet.ValSet {
-			totalPower += int64(val.VotingPower)
+			totalPower += uint64(val.VotingPower)
 		}
 
 		// Convert to types.ValidatorSet
@@ -101,17 +100,12 @@ func EndBlocker(ctx context.Context, k keeper.Keeper) error {
 			}
 		}
 
-		// Generate message to be signed
-		// msg := types.GetSignBytes(epochNum-1, *ckptWithMeta.Ckpt.BlockHash)
-		// todo: mock signatures, replace with actual signature collection
-		// _, blsSig := datagen.GenRandomPubkeysAndSigs(1, msg)
-
 		blsSigs, err := k.UploadBlsSigState(ctx).GetBLSSignatures(epochNum - 1)
 		if err != nil {
 			sdkCtx.Logger().Error("Failed to get BLS signatures", "epoch", epochNum-1, "err", err.Error())
 			return nil
 		}
-		// Simulate getting signatures and accumulating them
+		// getting signatures and accumulating them
 		for _, val := range valSet.ValSet {
 			valAddr := common.HexToAddress(val.ValidatorAddress)
 			blsPubkey := val.BlsPubKey

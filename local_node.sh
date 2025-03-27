@@ -12,8 +12,7 @@ KEYRING="test"
 KEYALGO="eth_secp256k1"
 LOGLEVEL="info"
 # Set dedicated home directory for the hetud instance
-# HOMEDIR="$HOME/.tmp-hetud"
-HOMEDIR="/Users/blake/work/nagara/code/hetu/evmos/.vscode/hetud-config"
+HOMEDIR="$HOME/.tmp-hetud"
 # to trace evm
 #TRACE="--trace"
 TRACE=""
@@ -111,6 +110,16 @@ if [[ $overwrite == "y" || $overwrite == "Y" ]]; then
 			sed -i 's/timeout_commit = "5s"/timeout_commit = "150s"/g' "$CONFIG"
 			sed -i 's/timeout_broadcast_tx_commit = "10s"/timeout_broadcast_tx_commit = "150s"/g' "$CONFIG"
 		fi
+	else
+		# Set common consensus timeouts
+		sed -i.bak 's/timeout_propose = ".*"/timeout_propose = "200ms"/g' "$CONFIG"
+		sed -i.bak 's/timeout_propose_delta = ".*"/timeout_propose_delta = "100ms"/g' "$CONFIG"
+		sed -i.bak 's/timeout_prevote = ".*"/timeout_prevote = "200ms"/g' "$CONFIG"
+		sed -i.bak 's/timeout_prevote_delta = ".*"/timeout_prevote_delta = "100ms"/g' "$CONFIG"
+		sed -i.bak 's/timeout_precommit = ".*"/timeout_precommit = "200ms"/g' "$CONFIG"
+		sed -i.bak 's/timeout_precommit_delta = ".*"/timeout_precommit_delta = "100ms"/g' "$CONFIG"
+		sed -i.bak 's/timeout_commit = ".*"/timeout_commit = "1s"/g' "$CONFIG"
+		sed -i.bak 's/timeout_broadcast_tx_commit = "10s"/timeout_broadcast_tx_commit = "150s"/g' "$CONFIG"
 	fi
 
 	# enable prometheus metrics

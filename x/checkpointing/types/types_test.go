@@ -18,7 +18,7 @@ func TestRawCheckpointWithMeta_Accumulate1(t *testing.T) {
 	r := rand.New(rand.NewSource(time.Now().Unix()))
 	epochNum := uint64(2)
 	n := 1
-	totalPower := int64(10)
+	totalPower := uint64(10)
 	ckptkeeper, ctx, _ := testkeeper.CheckpointingKeeper(t, nil)
 	blockHash := datagen.GenRandomBlockHash(r)
 	msg := types.GetSignBytes(epochNum, blockHash)
@@ -41,7 +41,7 @@ func TestRawCheckpointWithMeta_Accumulate4(t *testing.T) {
 	r := rand.New(rand.NewSource(time.Now().Unix()))
 	epochNum := uint64(2)
 	n := 4
-	totalPower := int64(10) * int64(n)
+	totalPower := uint64(10) * uint64(n)
 	ckptkeeper, ctx, _ := testkeeper.CheckpointingKeeper(t, nil)
 	blockHash := datagen.GenRandomBlockHash(r)
 	msg := types.GetSignBytes(epochNum, blockHash)

@@ -62,8 +62,10 @@ func (k Keeper) InitValidatorBLSSet(ctx sdk.Context, epochNumber uint64) error {
 		}
 		valBlsSet.ValSet[i] = valBls
 	}
-
-	valBlsSetBytes := types.ValidatorBlsKeySetToBytes(k.cdc, valBlsSet)
+	// sort the validator set by address
+	sortedSet := types.NewSortedValidatorSetWithBLS(*valBlsSet)
+	
+	valBlsSetBytes := types.ValidatorBlsKeySetToBytes(k.cdc, &sortedSet)
 	store := k.valBlsSetStore(ctx)
 	store.Set(types.ValidatorBlsKeySetKey(epochNumber), valBlsSetBytes)
 

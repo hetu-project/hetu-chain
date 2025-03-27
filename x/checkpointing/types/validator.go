@@ -31,6 +31,14 @@ func NewSortedValidatorSet(vals []Validator) ValidatorSet {
 	return vals
 }
 
+// NewSortedValidatorSetWithBLS returns a ValidatorWithBLSSet from a list of validators with bls
+func NewSortedValidatorSetWithBLS(vals ValidatorWithBlsKeySet) ValidatorWithBlsKeySet {
+	sort.Slice(vals.ValSet, func(i, j int) bool {
+		return sdk.BigEndianToUint64([]byte(vals.ValSet[i].ValidatorAddress)) < sdk.BigEndianToUint64([]byte(vals.ValSet[j].ValidatorAddress))
+	})
+	return vals
+}
+
 func NewValidatorSetFromBytes(vsBytes []byte) (ValidatorSet, error) {
 	var vs ValidatorSet
 	err := json.Unmarshal(vsBytes, &vs)
