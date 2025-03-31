@@ -8,17 +8,15 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/hetu-project/hetu/v1/crypto/bls12381"
 	"github.com/hetu-project/hetu/v1/x/checkpointing/keeper"
 	"github.com/hetu-project/hetu/v1/x/checkpointing/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/common"
 )
 
 const (
-	EpochWindows = 30
+	EpochWindows = 5 // Number of blocks in an epoch
 )
 
 // BeginBlocker is called at the beginning of every block.
@@ -68,7 +66,7 @@ func EndBlocker(ctx context.Context, k keeper.Keeper) error {
 		}
 
 		// 2. Send checkpoint to validators for signing via their dispatcher URLs
-		if err := requestBLSSignatures(valSet, newCkptMeta.Ckpt); err != nil {
+		if err := requestBLSSignatures(valSet, newCkptMeta); err != nil {
 			sdkCtx.Logger().Error("Failed to request BLS sign", "err", err.Error())
 			return nil
 		}
@@ -85,63 +83,18 @@ func EndBlocker(ctx context.Context, k keeper.Keeper) error {
 			return nil
 		}
 
-		// Calculate total power
-		var totalPower uint64 = 0
-		for _, val := range valSet.ValSet {
-			totalPower += uint64(val.VotingPower)
-		}
-
-		// Convert to types.ValidatorSet
-		validatorSet := make(types.ValidatorSet, len(valSet.ValSet))
-		for i, val := range valSet.ValSet {
-			validatorSet[i] = types.Validator{
-				Addr:  common.HexToAddress(val.ValidatorAddress).Bytes(),
-				Power: int64(val.VotingPower),
-			}
-		}
-
-		blsSigs, err := k.UploadBlsSigState(ctx).GetBLSSignatures(epochNum - 1)
-		if err != nil {
-			sdkCtx.Logger().Error("Failed to get BLS signatures", "epoch", epochNum-1, "err", err.Error())
-			return nil
-		}
-		// getting signatures and accumulating them
-		for _, val := range valSet.ValSet {
-			valAddr := common.HexToAddress(val.ValidatorAddress)
-			blsPubkey := val.BlsPubKey
-
-			// Get the BLS signature for the validator address
-			blsSigHex, found := blsSigs.GetSignatureByAddress(val.ValidatorAddress)
-			if !found {
-				sdkCtx.Logger().Error("BLS signature not found for validator", "validator", val.ValidatorAddress)
-				continue
-			}
-
-			blsSig, err := bls12381.NewBLSSigFromHex(blsSigHex)
-			if err != nil {
-				sdkCtx.Logger().Error("Failed to parse BLS signature", "validator", val.ValidatorAddress, "err", err.Error())
-				continue
-			}
-			// Accumulate the signature
-			err = ckptWithMeta.Accumulate(validatorSet, valAddr, blsPubkey, blsSig, totalPower)
-			if err != nil {
-				sdkCtx.Logger().Error("Failed to accumulate BLS", "validator", val.ValidatorAddress, "err", err.Error())
-				continue
-			}
-		}
-
-		if err := k.SealCheckpoint(ctx, ckptWithMeta); err != nil {
-			sdkCtx.Logger().Error("failed to update checkpoint", "err", err.Error())
-			return nil
-		}
+		// if err := k.SealCheckpoint(ctx, ckptWithMeta); err != nil {
+		// 	sdkCtx.Logger().Error("failed to update checkpoint", "err", err.Error())
+		// 	return nil
+		// }
 	}
 	return nil
 }
 
-func requestBLSSignatures(valSet *types.ValidatorWithBlsKeySet, ckpt *types.RawCheckpoint) error {
+func requestBLSSignatures(valSet *types.ValidatorWithBlsKeySet, ckpt_with_meta *types.RawCheckpointWithMeta) error {
 	type Request struct {
-		ValidatorAddress string               `json:"validator_address"`
-		Checkpoint       *types.RawCheckpoint `json:"checkpoint"`
+		ValidatorAddress   string                       `json:"validator_address"`
+		CheckpointWithMeta *types.RawCheckpointWithMeta `json:"checkpoint_with_meta"`
 	}
 
 	// Filter valSet.ValSet to preserve only different validation sets for dispatcher_url
@@ -150,8 +103,8 @@ func requestBLSSignatures(valSet *types.ValidatorWithBlsKeySet, ckpt *types.RawC
 	for _, val := range uniqueValidators {
 		go func(val *types.ValidatorWithBlsKey) {
 			req := Request{
-				ValidatorAddress: val.ValidatorAddress,
-				Checkpoint:       ckpt,
+				ValidatorAddress:   val.ValidatorAddress,
+				CheckpointWithMeta: ckpt_with_meta,
 			}
 			reqBody, err := json.Marshal(req)
 			if err != nil {

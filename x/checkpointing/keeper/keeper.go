@@ -56,7 +56,7 @@ func (k *Keeper) SetHooks(sh types.CheckpointingHooks) *Keeper {
 
 func (k Keeper) SealCheckpoint(ctx context.Context, ckptWithMeta *types.RawCheckpointWithMeta) error {
 	if ckptWithMeta.Status != types.Sealed {
-		return fmt.Errorf("the checkpoint is not Sealed")
+		return fmt.Errorf("the checkpoint is not Sealed, epoch %v", ckptWithMeta.Ckpt.EpochNum)
 	}
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 

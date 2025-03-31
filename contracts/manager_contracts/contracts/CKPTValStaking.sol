@@ -4,9 +4,17 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 
-contract CKPTValStaking is Ownable {
+contract CKPTValStaking is Ownable, AccessControl {
     using Math for uint256;
+
+    // Define a new role for validators
+    bytes32 public constant VALIDATOR_ROLE = keccak256("VALIDATOR_ROLE");
+
+    // Define new roles
+    bytes32 public constant DISPATCHER_ROLE = keccak256("DISPATCHER_ROLE");
+    bytes32 public constant DISTRIBUTER_ROLE = keccak256("DISTRIBUTER_ROLE");
 
     // Staking token (could be the native token or an ERC20)
     IERC20 public stakingToken;
@@ -23,6 +31,12 @@ contract CKPTValStaking is Ownable {
     // Cursor for validator rotation in getTopValidators
     uint256 private validatorCursor = 0;
 
+    // Stake lock period in seconds
+    uint256 public stakeLockPeriod = 1 days;
+
+    // Mapping to track when a stake becomes active
+    mapping(address => uint256) public stakeActivationTime;
+
     // Validator structure
     struct Validator {
         uint256 stakedAmount;
@@ -35,11 +49,27 @@ contract CKPTValStaking is Ownable {
         uint256 index; // Index in the validatorAddresses array
     }
 
+    // Checkpoint structure
+    struct Checkpoint {
+        uint64 epochNum; // Epoch number
+        bytes32 blockHash; // Hash of the latest block
+        bytes bitmap; // Bitmap indicating BLS signers
+        bytes blsMultiSig; // Aggregated BLS multi-signature
+        bytes blsAggrPk; // Aggregated BLS public key
+        uint64 powerSum; // Accumulated voting power
+    }
+
+    // Mapping from epoch to checkpoint
+    mapping(uint64 => Checkpoint) public epochToCheckpoint;
+
     // Mapping from address to validator info
     mapping(address => Validator) public validators;
 
     // Array of validator addresses for enumeration
     address[] public validatorAddresses;
+
+    // Mapping to track distributed epochs
+    mapping(uint64 => bool) public distributedEpochs;
 
     // Events
     event Staked(address indexed validator, uint256 amount);
@@ -60,6 +90,11 @@ contract CKPTValStaking is Ownable {
         string dispatcherURL,
         string blsPublicKey
     );
+    event CheckpointSubmitted(
+        uint64 indexed epochNum,
+        bytes32 blockHash,
+        uint64 powerSum
+    );
 
     constructor(
         address _stakingToken,
@@ -69,6 +104,12 @@ contract CKPTValStaking is Ownable {
         stakingToken = IERC20(_stakingToken);
         rewardRate = _rewardRate;
         minimumStake = _minimumStake;
+
+        // Grant the owner the default admin role and validator role
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(VALIDATOR_ROLE, msg.sender);
+        _grantRole(DISPATCHER_ROLE, msg.sender);
+        _grantRole(DISTRIBUTER_ROLE, msg.sender);
     }
 
     // Set reward rate (only owner)
@@ -86,12 +127,21 @@ contract CKPTValStaking is Ownable {
         minimumStake = _minimumStake;
     }
 
+    // Set stake lock period (only owner)
+    function setStakeLockPeriod(uint256 _stakeLockPeriod) external onlyOwner {
+        stakeLockPeriod = _stakeLockPeriod;
+    }
+
     // Register as a validator with dispatcher URL and BLS public key
     function registerValidator(
         string calldata _dispatcherURL,
         string calldata _blsPublicKey
     ) external {
         require(validators[msg.sender].stakedAmount == 0, "Already registered");
+        require(
+            hasRole(VALIDATOR_ROLE, msg.sender),
+            "CKPTValStaking: must have validator role to stake"
+        );
 
         validators[msg.sender] = Validator({
             stakedAmount: 0,
@@ -115,6 +165,10 @@ contract CKPTValStaking is Ownable {
         string calldata _blsPublicKey
     ) external {
         require(validators[msg.sender].stakedAmount > 0, "Not a validator");
+        require(
+            hasRole(VALIDATOR_ROLE, msg.sender),
+            "CKPTValStaking: must have validator role to stake"
+        );
 
         validators[msg.sender].dispatcherURL = _dispatcherURL;
         validators[msg.sender].blsPublicKey = _blsPublicKey;
@@ -122,8 +176,42 @@ contract CKPTValStaking is Ownable {
         emit ValidatorUpdated(msg.sender, _dispatcherURL, _blsPublicKey);
     }
 
+    // Grant validator role (only callable by owner or admin)
+    function grantValidatorRole(address account) external onlyOwner {
+        grantRole(VALIDATOR_ROLE, account);
+    }
+
+    // Revoke validator role (only callable by owner or admin)
+    function revokeValidatorRole(address account) external onlyOwner {
+        revokeRole(VALIDATOR_ROLE, account);
+    }
+
+    // Grant dispatcher role (only callable by owner)
+    function grantDispatcherRole(address account) external onlyOwner {
+        grantRole(DISPATCHER_ROLE, account);
+    }
+
+    // Revoke dispatcher role (only callable by owner)
+    function revokeDispatcherRole(address account) external onlyOwner {
+        revokeRole(DISPATCHER_ROLE, account);
+    }
+
+    // Grant distributer role (only callable by owner)
+    function grantDistributerRole(address account) external onlyOwner {
+        grantRole(DISTRIBUTER_ROLE, account);
+    }
+
+    // Revoke distributer role (only callable by owner)
+    function revokeDistributerRole(address account) external onlyOwner {
+        revokeRole(DISTRIBUTER_ROLE, account);
+    }
+
     // Stake tokens to become a validator
     function stake(uint256 _amount) external {
+        require(
+            hasRole(VALIDATOR_ROLE, msg.sender),
+            "CKPTValStaking: must have validator role to stake"
+        );
         require(
             _amount >= minimumStake,
             "Must stake exact bigger than minimum amount"
@@ -151,6 +239,9 @@ contract CKPTValStaking is Ownable {
             validators[msg.sender].index = validatorAddresses.length;
             validatorAddresses.push(msg.sender); // Add new validator address
         }
+
+        // Set stake activation time
+        stakeActivationTime[msg.sender] = block.timestamp + stakeLockPeriod;
 
         emit Staked(msg.sender, _amount);
     }
@@ -227,6 +318,36 @@ contract CKPTValStaking is Ownable {
         emit RewardsClaimed(msg.sender, rewards);
     }
 
+    // Submit a checkpoint (only callable by dispatcher)
+    function submitCheckpoint(
+        uint64 _epochNum,
+        bytes32 _blockHash,
+        bytes calldata _bitmap,
+        bytes calldata _blsMultiSig,
+        bytes calldata _blsAggrPk,
+        uint64 _powerSum
+    ) external {
+        require(
+            hasRole(DISPATCHER_ROLE, msg.sender),
+            "CKPTValStaking: must have dispatcher role to submit checkpoint"
+        );
+        require(
+            epochToCheckpoint[_epochNum].epochNum == 0,
+            "Checkpoint already exists for this epoch"
+        );
+
+        epochToCheckpoint[_epochNum] = Checkpoint({
+            epochNum: _epochNum,
+            blockHash: _blockHash,
+            bitmap: _bitmap,
+            blsMultiSig: _blsMultiSig,
+            blsAggrPk: _blsAggrPk,
+            powerSum: _powerSum
+        });
+
+        emit CheckpointSubmitted(_epochNum, _blockHash, _powerSum);
+    }
+
     // Get validator info
     function getValidator(
         address _validator
@@ -240,19 +361,26 @@ contract CKPTValStaking is Ownable {
             string memory dispatcherURL,
             string memory blsPublicKey,
             bool isActive,
-            uint256 index
+            uint256 index,
+            uint256 activationTime
         )
     {
         Validator storage validator = validators[_validator];
 
         // Calculate current rewards
         uint256 currentRewards = validator.pendingRewards;
-        if (validator.isActive && validator.stakedAmount > 0) {
+        if (
+            validator.isActive &&
+            validator.stakedAmount > 0 &&
+            block.timestamp >= stakeActivationTime[_validator]
+        ) {
             uint256 timeElapsed = block.timestamp - validator.lastRewardTime;
             currentRewards =
                 currentRewards +
                 ((timeElapsed * rewardRate * validator.stakedAmount) / 1e18);
         }
+
+        activationTime = stakeActivationTime[_validator];
 
         return (
             validator.stakedAmount,
@@ -261,7 +389,8 @@ contract CKPTValStaking is Ownable {
             validator.dispatcherURL,
             validator.blsPublicKey,
             validator.isActive,
-            validator.index
+            validator.index,
+            activationTime
         );
     }
 
@@ -311,7 +440,11 @@ contract CKPTValStaking is Ownable {
             address validatorAddr = validatorAddresses[index];
             Validator storage validator = validators[validatorAddr];
 
-            if (validator.isActive && validator.stakedAmount > 0) {
+            if (
+                validator.isActive &&
+                validator.stakedAmount > 0 &&
+                block.timestamp >= stakeActivationTime[validatorAddr]
+            ) {
                 addresses[validFound] = validatorAddr;
                 stakes[validFound] = validator.stakedAmount;
                 dispatcherURLs[validFound] = validator.dispatcherURL;
@@ -356,7 +489,11 @@ contract CKPTValStaking is Ownable {
     function _updateRewards(address _validator) internal {
         Validator storage validator = validators[_validator];
 
-        if (validator.isActive && validator.stakedAmount > 0) {
+        if (
+            validator.isActive &&
+            validator.stakedAmount > 0 &&
+            block.timestamp >= stakeActivationTime[_validator]
+        ) {
             uint256 timeElapsed = block.timestamp - validator.lastRewardTime;
             if (timeElapsed > 0) {
                 uint256 rewards = (timeElapsed *
@@ -366,5 +503,97 @@ contract CKPTValStaking is Ownable {
                 validator.lastRewardTime = block.timestamp;
             }
         }
+    }
+
+    // Distribute checkpoint rewards (only callable by distributer)
+    function distributeCheckpointRewards(uint64 _epochNum) external {
+        require(
+            hasRole(DISTRIBUTER_ROLE, msg.sender),
+            "CKPTValStaking: must have distributer role to distribute rewards"
+        );
+        Checkpoint storage checkpoint = epochToCheckpoint[_epochNum];
+        require(
+            checkpoint.epochNum != 0,
+            "Checkpoint does not exist for this epoch"
+        );
+        require(
+            !distributedEpochs[_epochNum],
+            "Rewards already distributed for this epoch"
+        );
+
+        // Get sorted validator set (max 512 validators)
+        address[] memory sortedValidators = _getSortedValidators();
+
+        uint256 validatorCount = sortedValidators.length;
+        require(validatorCount > 0, "No validators available for rewards");
+
+        uint256 rewardPerValidator = checkpoint.powerSum / validatorCount;
+
+        for (uint256 i = 0; i < validatorCount; i++) {
+            address validator = sortedValidators[i];
+            uint256 validatorIndex = i;
+
+            // Check if the validator participated in the checkpoint
+            if (
+                validatorIndex < 512 &&
+                _isBitmapSet(checkpoint.bitmap, validatorIndex)
+            ) {
+                validators[validator].pendingRewards += rewardPerValidator;
+            }
+        }
+
+        // Mark the epoch as distributed
+        distributedEpochs[_epochNum] = true;
+    }
+
+    // Internal function to get sorted validator set (max 512 validators)
+    function _getSortedValidators() internal view returns (address[] memory) {
+        uint256 validatorCount = validatorAddresses.length;
+        uint256 count = validatorCount > 512 ? 512 : validatorCount;
+
+        require(count > 0, "No validators available");
+
+        address[] memory sortedValidators = new address[](count);
+        for (uint256 i = 0; i < count; i++) {
+            sortedValidators[i] = validatorAddresses[i];
+        }
+
+        // Sort validators by address
+        for (uint256 i = 0; i < count - 1; i++) {
+            for (uint256 j = 0; j < count - i - 1; j++) {
+                if (
+                    _compareAddresses(
+                        sortedValidators[j],
+                        sortedValidators[j + 1]
+                    )
+                ) {
+                    (sortedValidators[j], sortedValidators[j + 1]) = (
+                        sortedValidators[j + 1],
+                        sortedValidators[j]
+                    );
+                }
+            }
+        }
+
+        return sortedValidators;
+    }
+
+    // Internal function to compare two addresses (BigEndian order)
+    function _compareAddresses(
+        address a,
+        address b
+    ) internal pure returns (bool) {
+        return uint256(uint160(a)) > uint256(uint160(b));
+    }
+
+    // Internal function to check if a bit is set in the bitmap
+    function _isBitmapSet(
+        bytes memory bitmap,
+        uint256 index
+    ) internal pure returns (bool) {
+        uint256 byteIndex = index / 8;
+        uint256 bitIndex = index % 8;
+        if (byteIndex >= bitmap.length) return false;
+        return (uint8(bitmap[byteIndex]) & (1 << bitIndex)) != 0;
     }
 }
