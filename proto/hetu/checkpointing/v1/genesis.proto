@@ -1,0 +1,18 @@
+syntax = "proto3";
+package hetu.checkpointing.v1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/hetu-project/hetu/v1/x/checkpointing/types";
+
+// GenesisState defines the checkpointing module's genesis state.
+message GenesisState {
+  // params defines all the parameters of the module.
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+// Params defines the parameters for the checkpointing module.
+message Params {
+  // epoch_windows defines the number of blocks in an epoch
+  uint64 epoch_windows = 1;
+} 

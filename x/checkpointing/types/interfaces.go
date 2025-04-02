@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	evmtypes "github.com/hetu-project/hetu/v1/x/evm/types"
 )
@@ -26,4 +27,11 @@ type AccountKeeper interface {
 // Call CKPTStaking contract by ckpt module.
 type ERC20Keeper interface {
 	CallEVM(ctx sdk.Context, abi abi.ABI, from, contract common.Address, commit bool, method string, args ...interface{}) (*evmtypes.MsgEthereumTxResponse, error)
+}
+
+// Subspace defines an interface that implements the legacy Cosmos SDK x/params Subspace type.
+// This is used to support the legacy Cosmos SDK x/params parameters format.
+type Subspace interface {
+	GetParamSet(ctx sdk.Context, ps paramtypes.ParamSet)
+	WithKeyTable(table paramtypes.KeyTable) paramtypes.Subspace
 }

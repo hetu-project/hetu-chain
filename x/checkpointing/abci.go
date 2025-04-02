@@ -15,10 +15,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-const (
-	EpochWindows = 5 // Number of blocks in an epoch
-)
-
 // BeginBlocker is called at the beginning of every block.
 // Upon each BeginBlock, if reaching the first block after the epoch begins
 // then we store the current validator set with BLS keys
@@ -26,8 +22,9 @@ func BeginBlocker(ctx context.Context, k keeper.Keeper) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	height := sdkCtx.BlockHeight()
-	epochNum := types.CurrentEpochNumber(height, EpochWindows)
-	if types.FirstBlockInEpoch(height, EpochWindows) {
+	epochWindows := int64(k.GetEpochWindows(ctx))
+	epochNum := types.CurrentEpochNumber(height, epochWindows)
+	if types.FirstBlockInEpoch(height, epochWindows) {
 		sdkCtx.Logger().Info("Epoch begins", "block height", height, "epoch", epochNum)
 		err := k.InitValidatorBLSSet(sdkCtx, epochNum)
 		if err != nil {
@@ -44,8 +41,9 @@ func EndBlocker(ctx context.Context, k keeper.Keeper) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	height := sdkCtx.BlockHeight()
 	appHash := sdkCtx.BlockHeader().AppHash
-	epochNum := types.CurrentEpochNumber(height, EpochWindows)
-	if types.LastBlockInEpoch(height, EpochWindows) {
+	epochWindows := int64(k.GetEpochWindows(ctx))
+	epochNum := types.CurrentEpochNumber(height, epochWindows)
+	if types.LastBlockInEpoch(height, epochWindows) {
 		// 1. new a checkpoint and save
 		newCkptMeta, err := k.BuildRawCheckpoint(ctx, epochNum, appHash)
 		if err != nil {

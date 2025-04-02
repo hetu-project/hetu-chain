@@ -20,4 +20,6 @@ var (
 	ErrConflictingCheckpoint    = errorsmod.Register(ModuleName, 14, "Conflicting checkpoint is found")
 	ErrInvalidAppHash           = errorsmod.Register(ModuleName, 15, "Provided app hash is Invalid")
 	ErrReportBlsSigDoesNotExist = errorsmod.Register(ModuleName, 16, "report bls signatures does not exist")
+	// ErrInvalidEpochWindows is returned when the epoch windows parameter is invalid
+	ErrInvalidEpochWindows 		= errorsmod.Register(ModuleName, 17, "invalid epoch windows parameter")
 )

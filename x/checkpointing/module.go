@@ -3,6 +3,7 @@ package checkpointing
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"cosmossdk.io/core/appmodule"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -14,9 +15,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/hetu-project/hetu/v1/x/checkpointing/client/cli"
 	"github.com/hetu-project/hetu/v1/x/checkpointing/keeper"
 	"github.com/hetu-project/hetu/v1/x/checkpointing/types"
@@ -101,17 +102,21 @@ type AppModule struct {
 
 	ak     authkeeper.AccountKeeper
 	keeper keeper.Keeper
+	// legacySubspace is used solely for migration of x/params managed parameters
+	legacySubspace types.Subspace
 }
 
 func NewAppModule(
 	cdc codec.Codec,
 	ak authkeeper.AccountKeeper,
 	keeper keeper.Keeper,
+	ss types.Subspace,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(cdc),
 		ak:             ak,
 		keeper:         keeper,
+		legacySubspace: ss,
 	}
 }
 
@@ -126,8 +131,22 @@ func (AppModule) QuerierRoute() string { return types.QuerierRoute }
 // RegisterServices registers a GRPC query service to respond to the
 // module-specific GRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
+
+	// migrator := keeper.NewMigrator(am.keeper, am.legacySubspace)
+	
+	// Register migrations
+	// if err := cfg.RegisterMigration(types.ModuleName, 1, migrator.Migrate1to2); err != nil {
+	// 	panic(fmt.Sprintf("failed to migrate %s to v2: %v", types.ModuleName, err))
+	// }
+
+	// Register migrations
+	if err := cfg.RegisterMigration(types.ModuleName, 1, func(ctx sdk.Context) error {
+        return nil
+    }); err != nil {
+		panic(fmt.Sprintf("failed to migrate %s to v2: %v", types.ModuleName, err))
+	}
 }
 
 // RegisterInvariants registers the capability module's invariants.
@@ -149,7 +168,9 @@ func (am AppModule) EndBlock(ctx context.Context) error {
 }
 
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
-	InitGenesis(ctx, am.keeper, am.ak, nil)
+	var genesisState types.GenesisState
+	cdc.MustUnmarshalJSON(data, &genesisState)
+	InitGenesis(ctx, am.keeper, am.ak, genesisState)
 	return []abci.ValidatorUpdate{}
 }
 

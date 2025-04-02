@@ -186,6 +186,8 @@ import (
 	// Force-load the tracer engines to trigger registration due to Go-Ethereum v1.10.15 changes
 	_ "github.com/ethereum/go-ethereum/eth/tracers/js"
 	_ "github.com/ethereum/go-ethereum/eth/tracers/native"
+
+	v1 "github.com/hetu-project/hetu/v1/app/upgrades/v1"
 )
 
 func init() {
@@ -259,7 +261,7 @@ var (
 		evmtypes.ModuleName:            {authtypes.Minter, authtypes.Burner}, // used for secure addition and subtraction of balance using module account
 		inflationtypes.ModuleName:      {authtypes.Minter},
 		erc20types.ModuleName:          {authtypes.Minter, authtypes.Burner},
-		ckpttypes.ModuleName:          {authtypes.Staking},
+		ckpttypes.ModuleName:           {authtypes.Staking},
 		ratelimittypes.ModuleName:      nil,
 	}
 
@@ -328,10 +330,10 @@ type Evmos struct {
 	Erc20Keeper     erc20keeper.Keeper
 	EpochsKeeper    epochskeeper.Keeper
 	VestingKeeper   vestingkeeper.Keeper
-	
+
 	// Hetu keepers
 	CheckpointingKeeper checkpointingkeeper.Keeper
-	
+
 	// the module manager
 	mm                 *module.Manager
 	BasicModuleManager module.BasicManager
@@ -655,7 +657,7 @@ func NewEvmos(
 		appCodec,
 		runtime.NewKVStoreService(keys[checkpointingtypes.StoreKey]),
 		app.AccountKeeper,
-		app.Erc20Keeper,	// for evm calls
+		app.Erc20Keeper, // for evm calls
 	)
 
 	app.GovKeeper = *govKeeper.SetHooks(
@@ -797,7 +799,7 @@ func NewEvmos(
 			app.GetSubspace(erc20types.ModuleName)),
 		epochs.NewAppModule(appCodec, app.EpochsKeeper),
 		vesting.NewAppModule(app.VestingKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
-		checkpointing.NewAppModule(appCodec, app.AccountKeeper, app.CheckpointingKeeper),
+		checkpointing.NewAppModule(appCodec, app.AccountKeeper, app.CheckpointingKeeper, app.GetSubspace(erc20types.ModuleName)),
 	)
 
 	// BasicModuleManager defines the module BasicManager which is in charge of setting up basic,
@@ -813,8 +815,8 @@ func NewEvmos(
 				[]govclient.ProposalHandler{
 					paramsclient.ProposalHandler,
 					// self proposal types
-					erc20client.RegisterCoinProposalHandler, 
-					erc20client.RegisterERC20ProposalHandler, 
+					erc20client.RegisterCoinProposalHandler,
+					erc20client.RegisterERC20ProposalHandler,
 					erc20client.ToggleTokenConversionProposalHandler,
 				},
 			),
@@ -1339,14 +1341,14 @@ func initParamsKeeper(
 }
 
 func (app *Evmos) setupUpgradeHandlers() {
-	// v0 upgrade handler
-	// app.UpgradeKeeper.SetUpgradeHandler(
-	// 	v0.UpgradeName,
-	// 	v0.CreateUpgradeHandler(
-	// 		app.mm, app.configurator,
-	// 		app.DistrKeeper,
-	// 	),
-	// )
+	// v1 upgrade handler
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v1.UpgradeName,
+		v1.CreateUpgradeHandler(
+			app.mm, app.configurator,
+			app.CheckpointingKeeper,
+		),
+	)
 
 	// When a planned update height is reached, the old binary will panic
 	// writing on disk the height and name of the update that triggered it
@@ -1363,14 +1365,17 @@ func (app *Evmos) setupUpgradeHandlers() {
 	var storeUpgrades *storetypes.StoreUpgrades
 
 	switch upgradeInfo.Name {
-	// case v0.UpgradeName:
-	// no store upgrades
-	default:
-		// no store upgrades
+	case v1.UpgradeName:
+		// Add checkpointing module store to the store upgrades
+		storeUpgrades = &storetypes.StoreUpgrades{
+			Added: []string{
+				ckpttypes.StoreKey,
+			},
+		}
 	}
 
 	if storeUpgrades != nil {
-		// configure store loader that checks if version == upgradeHeight and applies store upgrades
+		// Configure store loader that checks if version == upgradeHeight and applies store upgrades
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, storeUpgrades))
 	}
 }

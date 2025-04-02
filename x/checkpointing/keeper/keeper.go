@@ -9,6 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 
 	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -16,14 +17,17 @@ import (
 	"github.com/hetu-project/hetu/v1/x/checkpointing/types"
 )
 
+// Keeper of this module maintains collections of checkpoints.
 type Keeper struct {
-	cdc          codec.BinaryCodec
-	storeService corestoretypes.KVStoreService
+	storeService  corestoretypes.KVStoreService
+	cdc           codec.BinaryCodec
+	storeKey      storetypes.StoreKey
 	accountKeeper types.AccountKeeper
-	evm			 types.ERC20Keeper
-	hooks        types.CheckpointingHooks
+	evm           types.ERC20Keeper
+	hooks         types.CheckpointingHooks
 }
 
+// NewKeeper creates new instances of the checkpointing Keeper
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeService corestoretypes.KVStoreService,
@@ -31,11 +35,11 @@ func NewKeeper(
 	evm types.ERC20Keeper,
 ) Keeper {
 	return Keeper{
-		cdc:          cdc,
-		storeService: storeService,
+		cdc:           cdc,
+		storeService:  storeService,
 		accountKeeper: ak,
-		evm:          evm,
-		hooks:        nil,
+		evm:           evm,
+		hooks:         nil,
 	}
 }
 

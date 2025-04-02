@@ -3428,7 +3428,7 @@ type MsgBLSCallback struct {
 	// epoch_num defines the epoch number the raw checkpoint is for
 	EpochNum uint64 `protobuf:"varint,1,opt,name=epoch_num,json=epochNum,proto3" json:"epoch_num,omitempty"`
 	// eth_address is the Ethereum address as key, bls_signature is the BLS signature as value
-	AddrSigs []*AddrSig `protobuf:"bytes,2,rep,name=addr_sigs,json=addrSigs,proto3" json:"addr_sigs,omitempty"`
+	AddrSigs []*AddrSig `protobuf:"bytes,2,rep,name=addr_sigs,json=addrSigs,proto3" json:"addr_sigs,omitempty"` // key: eth_address, value: bls_signature
 	// sender is the cosmos bech32 address from the owner of the given Cosmos coins
 	Sender string `protobuf:"bytes,3,opt,name=sender,proto3" json:"sender,omitempty"`
 }
