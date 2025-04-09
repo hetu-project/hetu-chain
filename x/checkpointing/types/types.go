@@ -19,8 +19,8 @@ import (
 
 const (
 	// HashSize is the size in bytes of a hash
-	HashSize   = sha256.Size
-	BitmapBits = 64 * 8 // 512 bits for 512 validators at top for a epoch
+	HashSize             = sha256.Size
+	BitmapBits           = 64 * 8 // 512 bits for 512 validators at top for a epoch
 	DefaultValidatorSize = 512
 )
 
@@ -64,10 +64,10 @@ func (cm *RawCheckpointWithMeta) Accumulate(
 	signerAddr common.Address,
 	signerBlsKey bls12381.PublicKey,
 	sig bls12381.Signature,
-	totalPower uint64) error {
+	totalPower *big.Int) error {
 	// the checkpoint should be accumulating
 	if cm.Status != Accumulating {
-		// return nil if the checkpoint is no longer accumulating(maybe sealed)
+		// return nil if the checkpoint is no longer accumulating (maybe sealed)
 		return nil
 	}
 
@@ -107,10 +107,18 @@ func (cm *RawCheckpointWithMeta) Accumulate(
 	bitmap.Set(cm.Ckpt.Bitmap, index, true)
 
 	// accumulate voting power and update status when the threshold is reached
-	cm.PowerSum += uint64(val.Power)
+	valPowerBig := new(big.Int)
+	valPowerBig.SetString(val.Power, 10)
 	
-	powerSumBig := new(big.Int).SetUint64(cm.PowerSum)
-	totalPowerBig := new(big.Int).SetUint64(totalPower)
+	powerSumBig := new(big.Int)
+	powerSumBig.SetString(cm.PowerSum, 10)
+	powerSumBig.Add(powerSumBig, valPowerBig)
+	cm.PowerSum = powerSumBig.String()
+	
+	// convert totalPower to big.Int
+	totalPowerBig := new(big.Int)
+	totalPowerBig.Set(totalPower)
+
 	// Multiply PowerSum by 3 and TotalPower by 2
 	powerSumBig.Mul(powerSumBig, big.NewInt(3))
 	totalPowerBig.Mul(totalPowerBig, big.NewInt(2))

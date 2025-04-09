@@ -89,7 +89,7 @@ message BlsPublicKeyListResponse {
   // bls_pub_key is the BLS public key of the validator
   string bls_pub_key_hex = 2;
   // voting_power is the voting power of the validator at the given epoch
-  uint64 voting_power = 3;
+  string voting_power = 3;
 }
 
 // QueryBlsPublicKeyListResponse is the response type for the
@@ -151,7 +151,7 @@ message RawCheckpointWithMetaResponse {
       [ (gogoproto.customtype) =
             "github.com/hetu-project/hetu/v1/crypto/bls12381.PublicKey" ];
   // power_sum defines the accumulated voting power for the checkpoint
-  uint64 power_sum = 5;
+  string power_sum = 5;
   // lifecycle defines the lifecycle of this checkpoint, i.e., each state
   // transition and the time (in both timestamp and block height) of this
   // transition.

@@ -1,6 +1,8 @@
 package datagen
 
 import (
+	"math/big"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -10,13 +12,13 @@ import (
 )
 
 func GenRandomValSet(n int) checkpointingtypes.ValidatorSet {
-	power := int64(10)
+	power := new(big.Int).SetInt64(10)
 	var valSet []checkpointingtypes.Validator
 	for i := 0; i < n; i++ {
 		address := GenRandomValidatorAddress()
 		val := checkpointingtypes.Validator{
 			Addr:  address,
-			Power: power,
+			Power: power.String(),
 		}
 		valSet = append(valSet, val)
 	}
@@ -58,7 +60,7 @@ func GenerateValidatorSetWithBLSPrivKeys(n int) (*checkpointingtypes.ValidatorWi
 		val := &checkpointingtypes.ValidatorWithBlsKey{
 			ValidatorAddress: addr.String(),
 			BlsPubKey:        blsPrivkey.PubKey(),
-			VotingPower:      1000,
+			VotingPower:      "1000",
 		}
 		valSet.ValSet[i] = val
 		blsPrivKeys[i] = blsPrivkey

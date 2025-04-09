@@ -37,11 +37,8 @@ func (k Keeper) InitValidatorBLSSet(ctx sdk.Context, epochNumber uint64) error {
 	if err != nil {
 		return fmt.Errorf("failed to get validators from staking contract: %w", err)
 	}
-	if len(valset) != len(dispatcherURLs) {
-		return fmt.Errorf("validator set and dispatcher URLs set have different lengths")
-	}
-	if len(valset) != len(blsPublicKeys) {
-		return fmt.Errorf("validator set and dispatcher URLs set have different lengths")
+	if len(valset) != len(dispatcherURLs) || len(valset) != len(blsPublicKeys) {
+		return fmt.Errorf("validator set, dispatcher URLs, and BLS public keys have different lengths")
 	}
 
 	valBlsSet := &types.ValidatorWithBlsKeySet{
@@ -49,7 +46,6 @@ func (k Keeper) InitValidatorBLSSet(ctx sdk.Context, epochNumber uint64) error {
 	}
 
 	for i, val := range valset {
-		// Move blspubkey to validator staking contract
 		blsPub, err := hex.DecodeString(blsPublicKeys[i])
 		if err != nil {
 			return fmt.Errorf("failed to decode BLS public key: %w", err)
@@ -57,14 +53,15 @@ func (k Keeper) InitValidatorBLSSet(ctx sdk.Context, epochNumber uint64) error {
 		valBls := &types.ValidatorWithBlsKey{
 			ValidatorAddress: common.BytesToAddress(val.Addr).Hex(),
 			BlsPubKey:        blsPub,
-			VotingPower:      uint64(val.Power),
+			VotingPower:      val.Power, // Already in string format for bigint
 			DispatcherUrl:    dispatcherURLs[i],
 		}
 		valBlsSet.ValSet[i] = valBls
 	}
-	// sort the validator set by address
+
+	// Sort the validator set by address
 	sortedSet := types.NewSortedValidatorSetWithBLS(*valBlsSet)
-	
+
 	valBlsSetBytes := types.ValidatorBlsKeySetToBytes(k.cdc, &sortedSet)
 	store := k.valBlsSetStore(ctx)
 	store.Set(types.ValidatorBlsKeySetKey(epochNumber), valBlsSetBytes)

@@ -36,7 +36,7 @@ message RawCheckpointWithMeta {
       [ (gogoproto.customtype) =
             "github.com/hetu-project/hetu/v1/crypto/bls12381.PublicKey" ];
   // power_sum defines the accumulated voting power for the checkpoint
-  uint64 power_sum = 4;
+  string power_sum = 4;
   // lifecycle defines the lifecycle of this checkpoint, i.e., each state
   // transition and the time (in both timestamp and block height) of this
   // transition.
@@ -99,15 +99,14 @@ message BlsSig {
 // ValidatorWithBLSSet defines a set of validators with their BLS public keys
 message ValidatorWithBlsKeySet { repeated ValidatorWithBlsKey val_set = 1; }
 
-// ValidatorWithBlsKey couples validator address, voting power, and its bls
-// public key
+// ValidatorWithBlsKey couples validator address, voting power, and its BLS public key
 message ValidatorWithBlsKey {
   // validator_address is the address of the validator
   string validator_address = 1;
   // bls_pub_key is the BLS public key of the validator
   bytes bls_pub_key = 2;
   // voting_power is the voting power of the validator at the given epoch
-  uint64 voting_power = 3;
+  string voting_power = 3; // Changed to string for bigint support
   // dispatcher_url is the dispatcher URL of the validator
   string dispatcher_url = 4;
 }
@@ -117,5 +116,5 @@ message Validator {
   // addr is the validator's address
   bytes addr = 1;
   // power is the validator's voting power
-  int64 power = 2;
+  string power = 2; // Changed to string for bigint support
 }

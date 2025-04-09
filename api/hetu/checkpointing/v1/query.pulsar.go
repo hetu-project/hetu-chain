@@ -2486,8 +2486,8 @@ func (x *fastReflection_BlsPublicKeyListResponse) Range(f func(protoreflect.Fiel
 			return
 		}
 	}
-	if x.VotingPower != uint64(0) {
-		value := protoreflect.ValueOfUint64(x.VotingPower)
+	if x.VotingPower != "" {
+		value := protoreflect.ValueOfString(x.VotingPower)
 		if !f(fd_BlsPublicKeyListResponse_voting_power, value) {
 			return
 		}
@@ -2512,7 +2512,7 @@ func (x *fastReflection_BlsPublicKeyListResponse) Has(fd protoreflect.FieldDescr
 	case "hetu.checkpointing.v1.BlsPublicKeyListResponse.bls_pub_key_hex":
 		return x.BlsPubKeyHex != ""
 	case "hetu.checkpointing.v1.BlsPublicKeyListResponse.voting_power":
-		return x.VotingPower != uint64(0)
+		return x.VotingPower != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: hetu.checkpointing.v1.BlsPublicKeyListResponse"))
@@ -2534,7 +2534,7 @@ func (x *fastReflection_BlsPublicKeyListResponse) Clear(fd protoreflect.FieldDes
 	case "hetu.checkpointing.v1.BlsPublicKeyListResponse.bls_pub_key_hex":
 		x.BlsPubKeyHex = ""
 	case "hetu.checkpointing.v1.BlsPublicKeyListResponse.voting_power":
-		x.VotingPower = uint64(0)
+		x.VotingPower = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: hetu.checkpointing.v1.BlsPublicKeyListResponse"))
@@ -2559,7 +2559,7 @@ func (x *fastReflection_BlsPublicKeyListResponse) Get(descriptor protoreflect.Fi
 		return protoreflect.ValueOfString(value)
 	case "hetu.checkpointing.v1.BlsPublicKeyListResponse.voting_power":
 		value := x.VotingPower
-		return protoreflect.ValueOfUint64(value)
+		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: hetu.checkpointing.v1.BlsPublicKeyListResponse"))
@@ -2585,7 +2585,7 @@ func (x *fastReflection_BlsPublicKeyListResponse) Set(fd protoreflect.FieldDescr
 	case "hetu.checkpointing.v1.BlsPublicKeyListResponse.bls_pub_key_hex":
 		x.BlsPubKeyHex = value.Interface().(string)
 	case "hetu.checkpointing.v1.BlsPublicKeyListResponse.voting_power":
-		x.VotingPower = value.Uint()
+		x.VotingPower = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: hetu.checkpointing.v1.BlsPublicKeyListResponse"))
@@ -2630,7 +2630,7 @@ func (x *fastReflection_BlsPublicKeyListResponse) NewField(fd protoreflect.Field
 	case "hetu.checkpointing.v1.BlsPublicKeyListResponse.bls_pub_key_hex":
 		return protoreflect.ValueOfString("")
 	case "hetu.checkpointing.v1.BlsPublicKeyListResponse.voting_power":
-		return protoreflect.ValueOfUint64(uint64(0))
+		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: hetu.checkpointing.v1.BlsPublicKeyListResponse"))
@@ -2708,8 +2708,9 @@ func (x *fastReflection_BlsPublicKeyListResponse) ProtoMethods() *protoiface.Met
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		if x.VotingPower != 0 {
-			n += 1 + runtime.Sov(uint64(x.VotingPower))
+		l = len(x.VotingPower)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
 		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
@@ -2740,10 +2741,12 @@ func (x *fastReflection_BlsPublicKeyListResponse) ProtoMethods() *protoiface.Met
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if x.VotingPower != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64(x.VotingPower))
+		if len(x.VotingPower) > 0 {
+			i -= len(x.VotingPower)
+			copy(dAtA[i:], x.VotingPower)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.VotingPower)))
 			i--
-			dAtA[i] = 0x18
+			dAtA[i] = 0x1a
 		}
 		if len(x.BlsPubKeyHex) > 0 {
 			i -= len(x.BlsPubKeyHex)
@@ -2873,10 +2876,10 @@ func (x *fastReflection_BlsPublicKeyListResponse) ProtoMethods() *protoiface.Met
 				x.BlsPubKeyHex = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 3:
-				if wireType != 0 {
+				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field VotingPower", wireType)
 				}
-				x.VotingPower = 0
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -2886,11 +2889,24 @@ func (x *fastReflection_BlsPublicKeyListResponse) ProtoMethods() *protoiface.Met
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.VotingPower |= uint64(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.VotingPower = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -5663,8 +5679,8 @@ func (x *fastReflection_RawCheckpointWithMetaResponse) Range(f func(protoreflect
 			return
 		}
 	}
-	if x.PowerSum != uint64(0) {
-		value := protoreflect.ValueOfUint64(x.PowerSum)
+	if x.PowerSum != "" {
+		value := protoreflect.ValueOfString(x.PowerSum)
 		if !f(fd_RawCheckpointWithMetaResponse_power_sum, value) {
 			return
 		}
@@ -5699,7 +5715,7 @@ func (x *fastReflection_RawCheckpointWithMetaResponse) Has(fd protoreflect.Field
 	case "hetu.checkpointing.v1.RawCheckpointWithMetaResponse.bls_aggr_pk":
 		return len(x.BlsAggrPk) != 0
 	case "hetu.checkpointing.v1.RawCheckpointWithMetaResponse.power_sum":
-		return x.PowerSum != uint64(0)
+		return x.PowerSum != ""
 	case "hetu.checkpointing.v1.RawCheckpointWithMetaResponse.lifecycle":
 		return len(x.Lifecycle) != 0
 	default:
@@ -5727,7 +5743,7 @@ func (x *fastReflection_RawCheckpointWithMetaResponse) Clear(fd protoreflect.Fie
 	case "hetu.checkpointing.v1.RawCheckpointWithMetaResponse.bls_aggr_pk":
 		x.BlsAggrPk = nil
 	case "hetu.checkpointing.v1.RawCheckpointWithMetaResponse.power_sum":
-		x.PowerSum = uint64(0)
+		x.PowerSum = ""
 	case "hetu.checkpointing.v1.RawCheckpointWithMetaResponse.lifecycle":
 		x.Lifecycle = nil
 	default:
@@ -5760,7 +5776,7 @@ func (x *fastReflection_RawCheckpointWithMetaResponse) Get(descriptor protorefle
 		return protoreflect.ValueOfBytes(value)
 	case "hetu.checkpointing.v1.RawCheckpointWithMetaResponse.power_sum":
 		value := x.PowerSum
-		return protoreflect.ValueOfUint64(value)
+		return protoreflect.ValueOfString(value)
 	case "hetu.checkpointing.v1.RawCheckpointWithMetaResponse.lifecycle":
 		if len(x.Lifecycle) == 0 {
 			return protoreflect.ValueOfList(&_RawCheckpointWithMetaResponse_6_list{})
@@ -5796,7 +5812,7 @@ func (x *fastReflection_RawCheckpointWithMetaResponse) Set(fd protoreflect.Field
 	case "hetu.checkpointing.v1.RawCheckpointWithMetaResponse.bls_aggr_pk":
 		x.BlsAggrPk = value.Bytes()
 	case "hetu.checkpointing.v1.RawCheckpointWithMetaResponse.power_sum":
-		x.PowerSum = value.Uint()
+		x.PowerSum = value.Interface().(string)
 	case "hetu.checkpointing.v1.RawCheckpointWithMetaResponse.lifecycle":
 		lv := value.List()
 		clv := lv.(*_RawCheckpointWithMetaResponse_6_list)
@@ -5863,7 +5879,7 @@ func (x *fastReflection_RawCheckpointWithMetaResponse) NewField(fd protoreflect.
 	case "hetu.checkpointing.v1.RawCheckpointWithMetaResponse.bls_aggr_pk":
 		return protoreflect.ValueOfBytes(nil)
 	case "hetu.checkpointing.v1.RawCheckpointWithMetaResponse.power_sum":
-		return protoreflect.ValueOfUint64(uint64(0))
+		return protoreflect.ValueOfString("")
 	case "hetu.checkpointing.v1.RawCheckpointWithMetaResponse.lifecycle":
 		list := []*CheckpointStateUpdateResponse{}
 		return protoreflect.ValueOfList(&_RawCheckpointWithMetaResponse_6_list{list: &list})
@@ -5951,8 +5967,9 @@ func (x *fastReflection_RawCheckpointWithMetaResponse) ProtoMethods() *protoifac
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		if x.PowerSum != 0 {
-			n += 1 + runtime.Sov(uint64(x.PowerSum))
+		l = len(x.PowerSum)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
 		}
 		if len(x.Lifecycle) > 0 {
 			for _, e := range x.Lifecycle {
@@ -6005,10 +6022,12 @@ func (x *fastReflection_RawCheckpointWithMetaResponse) ProtoMethods() *protoifac
 				dAtA[i] = 0x32
 			}
 		}
-		if x.PowerSum != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64(x.PowerSum))
+		if len(x.PowerSum) > 0 {
+			i -= len(x.PowerSum)
+			copy(dAtA[i:], x.PowerSum)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.PowerSum)))
 			i--
-			dAtA[i] = 0x28
+			dAtA[i] = 0x2a
 		}
 		if len(x.BlsAggrPk) > 0 {
 			i -= len(x.BlsAggrPk)
@@ -6214,10 +6233,10 @@ func (x *fastReflection_RawCheckpointWithMetaResponse) ProtoMethods() *protoifac
 				}
 				iNdEx = postIndex
 			case 5:
-				if wireType != 0 {
+				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PowerSum", wireType)
 				}
-				x.PowerSum = 0
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -6227,11 +6246,24 @@ func (x *fastReflection_RawCheckpointWithMetaResponse) ProtoMethods() *protoifac
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.PowerSum |= uint64(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.PowerSum = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
 			case 6:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Lifecycle", wireType)
@@ -6542,7 +6574,7 @@ type BlsPublicKeyListResponse struct {
 	// bls_pub_key is the BLS public key of the validator
 	BlsPubKeyHex string `protobuf:"bytes,2,opt,name=bls_pub_key_hex,json=blsPubKeyHex,proto3" json:"bls_pub_key_hex,omitempty"`
 	// voting_power is the voting power of the validator at the given epoch
-	VotingPower uint64 `protobuf:"varint,3,opt,name=voting_power,json=votingPower,proto3" json:"voting_power,omitempty"`
+	VotingPower string `protobuf:"bytes,3,opt,name=voting_power,json=votingPower,proto3" json:"voting_power,omitempty"`
 }
 
 func (x *BlsPublicKeyListResponse) Reset() {
@@ -6579,11 +6611,11 @@ func (x *BlsPublicKeyListResponse) GetBlsPubKeyHex() string {
 	return ""
 }
 
-func (x *BlsPublicKeyListResponse) GetVotingPower() uint64 {
+func (x *BlsPublicKeyListResponse) GetVotingPower() string {
 	if x != nil {
 		return x.VotingPower
 	}
-	return 0
+	return ""
 }
 
 // QueryBlsPublicKeyListResponse is the response type for the
@@ -6852,7 +6884,7 @@ type RawCheckpointWithMetaResponse struct {
 	// bls_aggr_pk defines the aggregated BLS public key
 	BlsAggrPk []byte `protobuf:"bytes,4,opt,name=bls_aggr_pk,json=blsAggrPk,proto3" json:"bls_aggr_pk,omitempty"`
 	// power_sum defines the accumulated voting power for the checkpoint
-	PowerSum uint64 `protobuf:"varint,5,opt,name=power_sum,json=powerSum,proto3" json:"power_sum,omitempty"`
+	PowerSum string `protobuf:"bytes,5,opt,name=power_sum,json=powerSum,proto3" json:"power_sum,omitempty"`
 	// lifecycle defines the lifecycle of this checkpoint, i.e., each state
 	// transition and the time (in both timestamp and block height) of this
 	// transition.
@@ -6907,11 +6939,11 @@ func (x *RawCheckpointWithMetaResponse) GetBlsAggrPk() []byte {
 	return nil
 }
 
-func (x *RawCheckpointWithMetaResponse) GetPowerSum() uint64 {
+func (x *RawCheckpointWithMetaResponse) GetPowerSum() string {
 	if x != nil {
 		return x.PowerSum
 	}
-	return 0
+	return ""
 }
 
 func (x *RawCheckpointWithMetaResponse) GetLifecycle() []*CheckpointStateUpdateResponse {
@@ -6989,7 +7021,7 @@ var file_hetu_checkpointing_v1_query_proto_rawDesc = []byte{
 	0x0a, 0x0f, 0x62, 0x6c, 0x73, 0x5f, 0x70, 0x75, 0x62, 0x5f, 0x6b, 0x65, 0x79, 0x5f, 0x68, 0x65,
 	0x78, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x62, 0x6c, 0x73, 0x50, 0x75, 0x62, 0x4b,
 	0x65, 0x79, 0x48, 0x65, 0x78, 0x12, 0x21, 0x0a, 0x0c, 0x76, 0x6f, 0x74, 0x69, 0x6e, 0x67, 0x5f,
-	0x70, 0x6f, 0x77, 0x65, 0x72, 0x18, 0x03, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0b, 0x76, 0x6f, 0x74,
+	0x70, 0x6f, 0x77, 0x65, 0x72, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x76, 0x6f, 0x74,
 	0x69, 0x6e, 0x67, 0x50, 0x6f, 0x77, 0x65, 0x72, 0x22, 0xd0, 0x01, 0x0a, 0x1d, 0x51, 0x75, 0x65,
 	0x72, 0x79, 0x42, 0x6c, 0x73, 0x50, 0x75, 0x62, 0x6c, 0x69, 0x63, 0x4b, 0x65, 0x79, 0x4c, 0x69,
 	0x73, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x66, 0x0a, 0x17, 0x76, 0x61,
@@ -7060,7 +7092,7 @@ var file_hetu_checkpointing_v1_query_proto_rawDesc = []byte{
 	0x72, 0x79, 0x70, 0x74, 0x6f, 0x2f, 0x62, 0x6c, 0x73, 0x31, 0x32, 0x33, 0x38, 0x31, 0x2e, 0x50,
 	0x75, 0x62, 0x6c, 0x69, 0x63, 0x4b, 0x65, 0x79, 0x52, 0x09, 0x62, 0x6c, 0x73, 0x41, 0x67, 0x67,
 	0x72, 0x50, 0x6b, 0x12, 0x1b, 0x0a, 0x09, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x5f, 0x73, 0x75, 0x6d,
-	0x18, 0x05, 0x20, 0x01, 0x28, 0x04, 0x52, 0x08, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x53, 0x75, 0x6d,
+	0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x53, 0x75, 0x6d,
 	0x12, 0x52, 0x0a, 0x09, 0x6c, 0x69, 0x66, 0x65, 0x63, 0x79, 0x63, 0x6c, 0x65, 0x18, 0x06, 0x20,
 	0x03, 0x28, 0x0b, 0x32, 0x34, 0x2e, 0x68, 0x65, 0x74, 0x75, 0x2e, 0x63, 0x68, 0x65, 0x63, 0x6b,
 	0x70, 0x6f, 0x69, 0x6e, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x2e, 0x43, 0x68, 0x65, 0x63,

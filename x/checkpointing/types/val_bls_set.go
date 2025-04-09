@@ -1,6 +1,8 @@
 package types
 
 import (
+	"math/big"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/hetu-project/hetu/v1/crypto/bls12381"
 )
@@ -23,11 +25,12 @@ func (ks *ValidatorWithBlsKeySet) GetBLSKeySet() []bls12381.PublicKey {
 	return blsKeySet
 }
 
-func (ks *ValidatorWithBlsKeySet) GetTotalPower() uint64 {
-	var total uint64
+func (ks *ValidatorWithBlsKeySet) GetTotalPower() *big.Int {
+	total := big.NewInt(0)
 	for _, val := range ks.ValSet {
-		total += val.VotingPower
+		valPower := new(big.Int)
+		valPower.SetString(val.VotingPower, 10)
+		total.Add(total, valPower)
 	}
-
 	return total
 }

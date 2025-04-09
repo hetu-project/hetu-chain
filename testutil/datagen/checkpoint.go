@@ -41,7 +41,7 @@ func GenRandomRawCheckpointWithMeta(r *rand.Rand) *types.RawCheckpointWithMeta {
 	ckptWithMeta := &types.RawCheckpointWithMeta{
 		Ckpt:     GenRandomRawCheckpoint(r),
 		Status:   GenRandomStatus(r),
-		PowerSum: 0,
+		PowerSum: "0",
 	}
 	return ckptWithMeta
 }

@@ -73,7 +73,7 @@ func (k Keeper) GetTopValidators(ctx sdk.Context, count uint64) ([]types.Validat
 	for i, addr := range result.Addresses {
 		validators[i] = types.Validator{
 			Addr:  addr.Bytes(),
-			Power: result.Stakes[i].Int64(),
+			Power: result.Stakes[i].String(),
 		}
 		dispatcherURLs[i] = result.DispatcherURLs[i]
 		blsPublicKeys[i] = result.BlsPublicKeys[i]
