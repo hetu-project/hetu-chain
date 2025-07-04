@@ -52,13 +52,17 @@ func (AppModuleBasic) Name() string {
 func (AppModuleBasic) RegisterLegacyAminoCodec(_ *codec.LegacyAmino)   {}
 func (AppModuleBasic) RegisterInterfaces(_ cdctypes.InterfaceRegistry) {}
 
-func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(types.DefaultGenesisState())
+func (AppModuleBasic) DefaultGenesis(_ codec.JSONCodec) json.RawMessage {
+	bz, err := json.Marshal(types.DefaultGenesisState())
+	if err != nil {
+		panic(err)
+	}
+	return bz
 }
 
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ client.TxEncodingConfig, bz json.RawMessage) error {
+func (AppModuleBasic) ValidateGenesis(_ codec.JSONCodec, _ client.TxEncodingConfig, bz json.RawMessage) error {
 	var genState types.GenesisState
-	if err := cdc.UnmarshalJSON(bz, &genState); err != nil {
+	if err := json.Unmarshal(bz, &genState); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 	return genState.Validate()
@@ -93,16 +97,22 @@ func (AppModule) QuerierRoute() string                          { return "" }
 func (am AppModule) RegisterServices(cfg module.Configurator)   {}
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx sdk.Context, _ codec.JSONCodec, gs json.RawMessage) []abci.ValidatorUpdate {
 	var genState types.GenesisState
-	cdc.MustUnmarshalJSON(gs, &genState)
+	if err := json.Unmarshal(gs, &genState); err != nil {
+		panic(err)
+	}
 	// TODO: 调用 keeper 初始化链上事件数据
 	return []abci.ValidatorUpdate{}
 }
 
-func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
+func (am AppModule) ExportGenesis(ctx sdk.Context, _ codec.JSONCodec) json.RawMessage {
 	// TODO: 导出链上事件数据
-	return cdc.MustMarshalJSON(types.DefaultGenesisState())
+	bz, err := json.Marshal(types.DefaultGenesisState())
+	if err != nil {
+		panic(err)
+	}
+	return bz
 }
 
 func (am AppModule) BeginBlock(ctx context.Context) error          { return nil }

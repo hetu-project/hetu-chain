@@ -184,6 +184,17 @@ func (k *Keeper) ApplyTransaction(ctx sdk.Context, tx *ethtypes.Transaction) (*t
 
 	logs := types.LogsToEthereum(res.Logs)
 
+	// === 事件业务处理 ===
+	if k.eventHandler != nil && len(logs) > 0 {
+		// []*types.Log 转 []types.Log
+		plainLogs := make([]ethtypes.Log, len(logs))
+		for i, l := range logs {
+			plainLogs[i] = *l
+		}
+		k.eventHandler.HandleEvmLogs(ctx, plainLogs)
+	}
+	// ===================
+
 	// Compute block bloom filter
 	if len(logs) > 0 {
 		bloom = k.GetBlockBloomTransient(ctx)

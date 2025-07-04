@@ -40,6 +40,11 @@ import (
 // CustomContractFn defines a custom precompiled contract generator with ctx, rules and returns a precompiled contract.
 type CustomContractFn func(sdk.Context, params.Rules) vm.PrecompiledContract
 
+// EventHandler 事件处理接口，避免 import cycle
+type EventHandler interface {
+	HandleEvmLogs(ctx sdk.Context, logs []ethtypes.Log)
+}
+
 // Keeper grants access to the EVM module state and implements the go-ethereum StateDB interface.
 type Keeper struct {
 	// Protobuf codec
@@ -76,6 +81,7 @@ type Keeper struct {
 	// Legacy subspace
 	ss                paramstypes.Subspace
 	customContractFns []CustomContractFn
+	eventHandler      EventHandler
 }
 
 // NewKeeper generates new evm module keeper
@@ -394,4 +400,9 @@ func (k Keeper) AddTransientGasUsed(ctx sdk.Context, gasUsed uint64) (uint64, er
 	}
 	k.SetTransientGasUsed(ctx, result)
 	return result, nil
+}
+
+// SetEventHandler 设置事件处理依赖
+func (k *Keeper) SetEventHandler(handler EventHandler) {
+	k.eventHandler = handler
 }

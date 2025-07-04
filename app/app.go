@@ -121,6 +121,7 @@ import (
 	ibctransfer "github.com/cosmos/ibc-go/v8/modules/apps/transfer"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v8/modules/core"
+
 	// ibcclient "github.com/cosmos/ibc-go/v8/modules/core/02-client/client"
 	ibcclienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 	ibcconnectiontypes "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
@@ -181,6 +182,8 @@ import (
 	// Force-load the tracer engines to trigger registration due to Go-Ethereum v1.10.15 changes
 	_ "github.com/ethereum/go-ethereum/eth/tracers/js"
 	_ "github.com/ethereum/go-ethereum/eth/tracers/native"
+
+	eventkeeper "github.com/hetu-project/hetu/v1/x/event/keeper"
 )
 
 func init() {
@@ -308,6 +311,7 @@ type Evmos struct {
 	TransferKeeper        transferkeeper.Keeper
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
 	RateLimitKeeper       ratelimitkeeper.Keeper
+	EventKeeper           *eventkeeper.Keeper
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
@@ -735,6 +739,13 @@ func NewEvmos(
 	// If evidence needs to be handled for the app, set routes in router here and seal
 	app.EvidenceKeeper = *evidenceKeeper
 
+	// EVM keeper 初始化后，event keeper 初始化后，插入依赖注入
+	// 例如：
+	// app.EvmKeeper = evmkeeper.NewKeeper(...)
+	// app.EventKeeper = eventkeeper.NewKeeper(..., app.EvmKeeper)
+	// 依赖注入
+	app.EvmKeeper.SetEventHandler(app.EventKeeper)
+
 	/****  Module Options ****/
 
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
@@ -794,8 +805,8 @@ func NewEvmos(
 				[]govclient.ProposalHandler{
 					paramsclient.ProposalHandler,
 					// self proposal types
-					erc20client.RegisterCoinProposalHandler, 
-					erc20client.RegisterERC20ProposalHandler, 
+					erc20client.RegisterCoinProposalHandler,
+					erc20client.RegisterERC20ProposalHandler,
 					erc20client.ToggleTokenConversionProposalHandler,
 				},
 			),
@@ -975,6 +986,9 @@ func NewEvmos(
 		// so we have to ignore this error explicitly.
 		_ = app.tpsCounter.start(context.Background())
 	}()
+
+	// keeper 初始化处添加 event keeper 初始化
+	app.EventKeeper = eventkeeper.NewKeeper(appCodec, keys["event"], app.EvmKeeper)
 
 	return app
 }

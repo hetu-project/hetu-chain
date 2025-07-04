@@ -1,0 +1,248 @@
+[
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint16",
+          "name": "netuid",
+          "type": "uint16"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "github",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "discord",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "website",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "kappa",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "bondsPenalty",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "bondsMovingAverage",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "alphaLow",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "alphaHigh",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "alphaSigmoidSteepness",
+          "type": "string"
+        }
+      ],
+      "name": "SubnetRegistered",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "nextNetuid",
+      "outputs": [
+        {
+          "internalType": "uint16",
+          "name": "",
+          "type": "uint16"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "github",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "discord",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "website",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "kappa",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "bondsPenalty",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "bondsMovingAverage",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "alphaLow",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "alphaHigh",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "alphaSigmoidSteepness",
+          "type": "string"
+        }
+      ],
+      "name": "registerSubnet",
+      "outputs": [
+        {
+          "internalType": "uint16",
+          "name": "",
+          "type": "uint16"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint16",
+          "name": "",
+          "type": "uint16"
+        }
+      ],
+      "name": "subnets",
+      "outputs": [
+        {
+          "internalType": "uint16",
+          "name": "netuid",
+          "type": "uint16"
+        },
+        {
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        },
+        {
+          "internalType": "string",
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "github",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "discord",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "website",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "kappa",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "bondsPenalty",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "bondsMovingAverage",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "alphaLow",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "alphaHigh",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "alphaSigmoidSteepness",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ]
