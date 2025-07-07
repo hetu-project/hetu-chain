@@ -739,11 +739,11 @@ func NewEvmos(
 	// If evidence needs to be handled for the app, set routes in router here and seal
 	app.EvidenceKeeper = *evidenceKeeper
 
-	// EVM keeper 初始化后，event keeper 初始化后，插入依赖注入
-	// 例如：
+	// After EVM keeper initialization and event keeper initialization, insert dependency injection
+	// eg：
 	// app.EvmKeeper = evmkeeper.NewKeeper(...)
 	// app.EventKeeper = eventkeeper.NewKeeper(..., app.EvmKeeper)
-	// 依赖注入
+	// insert dependency injection
 	app.EvmKeeper.SetEventHandler(app.EventKeeper)
 
 	/****  Module Options ****/
@@ -1049,6 +1049,7 @@ func (app *Evmos) setPostHandler() {
 // of the new block for every registered module. If there is a registered fork at the current height,
 // BeginBlocker will schedule the upgrade plan and perform the state migration (if any).
 func (app *Evmos) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
+	fmt.Println("测试日志: BeginBlocker")
 	return app.mm.BeginBlock(ctx)
 }
 
