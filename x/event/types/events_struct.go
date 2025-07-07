@@ -17,30 +17,22 @@ type SubnetRegisteredEvent struct {
 	AlphaLow              string
 	AlphaHigh             string
 	AlphaSigmoidSteepness string
-	TxHash                string
-	BlockNumber           uint64
 }
 
 type SubnetMultiParamUpdatedEvent struct {
 	Netuid      uint16
 	Params      []string
 	Values      []string
-	TxHash      string
-	BlockNumber uint64
 }
 
 type TaoStakedEvent struct {
 	Netuid      uint16
 	Staker      string
 	Amount      string
-	TxHash      string
-	BlockNumber uint64
 }
 
 type TaoUnstakedEvent struct {
 	Netuid      uint16
 	Staker      string
 	Amount      string
-	TxHash      string
-	BlockNumber uint64
 }

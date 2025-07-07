@@ -4,6 +4,7 @@
 package keeper
 
 import (
+	"fmt"
 	"math/big"
 	"strings"
 
@@ -24,6 +25,7 @@ import (
 // 事件 topic hash 常量（需与合约事件签名一致）
 var (
 	SubnetRegisteredTopic        = crypto.Keccak256Hash([]byte("SubnetRegistered(uint16,address,string,string,string,string,string,uint256,uint256,uint256,uint256,uint256,uint256)")).Hex()
+	SubnetRegisteredTopic2       = crypto.Keccak256Hash([]byte("SubnetRegistered(uint16,address,string,string,string,string,string,string,string,string,string,string,string)")).Hex()
 	SubnetMultiParamUpdatedTopic = crypto.Keccak256Hash([]byte("SubnetMultiParamUpdated(uint16,string[],uint256[])")).Hex()
 	TaoStakedTopic               = crypto.Keccak256Hash([]byte("TaoStaked(uint16,address,uint256)")).Hex()
 	TaoUnstakedTopic             = crypto.Keccak256Hash([]byte("TaoUnstaked(uint16,address,uint256)")).Hex()
@@ -163,8 +165,14 @@ func (k *Keeper) HandleEvmLogs(ctx sdk.Context, logs []ethTypes.Log) {
 			continue
 		}
 		topic := log.Topics[0].Hex()
+		fmt.Printf("解析事件topic: %s\n", topic)
+		fmt.Printf("解析事件SubnetRegisteredTopic: %s\n", SubnetRegisteredTopic)
+		fmt.Printf("解析事件SubnetRegisteredTopic2: %s\n", SubnetRegisteredTopic2)
+		sig := "SubnetRegistered(uint16,address,string,string,string,string,string,string,string,string,string,string,string)"
+		fmt.Println(crypto.Keccak256Hash([]byte(sig)).Hex())
 		switch topic {
-		case SubnetRegisteredTopic:
+		case SubnetRegisteredTopic2:
+			fmt.Printf("解析子网创建事件\n")
 			info, err := parseSubnetRegistered(log)
 			if err != nil {
 				ctx.Logger().Error("parseSubnetRegistered failed", "err", err)
