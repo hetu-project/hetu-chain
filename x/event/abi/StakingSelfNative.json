@@ -11,17 +11,17 @@
         {
           "indexed": true,
           "internalType": "address",
-          "name": "staker",
+          "name": "validator",
           "type": "address"
         },
         {
           "indexed": false,
-          "internalType": "string",
+          "internalType": "uint256",
           "name": "amount",
-          "type": "string"
+          "type": "uint256"
         }
       ],
-      "name": "TaoStaked",
+      "name": "Staked",
       "type": "event"
     },
     {
@@ -36,17 +36,17 @@
         {
           "indexed": true,
           "internalType": "address",
-          "name": "staker",
+          "name": "validator",
           "type": "address"
         },
         {
           "indexed": false,
-          "internalType": "string",
+          "internalType": "uint256",
           "name": "amount",
-          "type": "string"
+          "type": "uint256"
         }
       ],
-      "name": "TaoUnstaked",
+      "name": "Unstaked",
       "type": "event"
     },
     {
@@ -57,14 +57,33 @@
           "type": "uint16"
         },
         {
-          "internalType": "string",
-          "name": "amount",
-          "type": "string"
+          "internalType": "address",
+          "name": "validator",
+          "type": "address"
         }
       ],
-      "name": "stakeTao",
+      "name": "getStake",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint16",
+          "name": "netuid",
+          "type": "uint16"
+        }
+      ],
+      "name": "stake",
       "outputs": [],
-      "stateMutability": "nonpayable",
+      "stateMutability": "payable",
       "type": "function"
     },
     {
@@ -80,12 +99,17 @@
           "type": "address"
         }
       ],
-      "name": "stakedAmount",
+      "name": "stakes",
       "outputs": [
         {
-          "internalType": "string",
-          "name": "",
-          "type": "string"
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
         }
       ],
       "stateMutability": "view",
@@ -99,12 +123,12 @@
           "type": "uint16"
         },
         {
-          "internalType": "string",
+          "internalType": "uint256",
           "name": "amount",
-          "type": "string"
+          "type": "uint256"
         }
       ],
-      "name": "unstakeTao",
+      "name": "unstake",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"

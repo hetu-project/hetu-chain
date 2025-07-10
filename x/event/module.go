@@ -102,13 +102,59 @@ func (am AppModule) InitGenesis(ctx sdk.Context, _ codec.JSONCodec, gs json.RawM
 	if err := json.Unmarshal(gs, &genState); err != nil {
 		panic(err)
 	}
-	// TODO: 调用 keeper 初始化链上事件数据
+
+	// 初始化子网数据
+	for _, subnet := range genState.Subnets {
+		am.keeper.SetSubnet(ctx, subnet)
+	}
+
+	// 初始化验证者质押数据
+	for _, stake := range genState.ValidatorStakes {
+		am.keeper.SetValidatorStake(ctx, stake)
+	}
+
+	// 初始化委托数据
+	for _, deleg := range genState.Delegations {
+		am.keeper.SetDelegation(ctx, deleg)
+	}
+
+	// 初始化权重数据
+	for _, weight := range genState.ValidatorWeights {
+		am.keeper.SetValidatorWeight(ctx, weight.Netuid, weight.Validator, weight.Weights)
+	}
+
 	return []abci.ValidatorUpdate{}
 }
 
 func (am AppModule) ExportGenesis(ctx sdk.Context, _ codec.JSONCodec) json.RawMessage {
-	// TODO: 导出链上事件数据
-	bz, err := json.Marshal(types.DefaultGenesisState())
+	// 导出所有数据
+	subnets := am.keeper.GetAllSubnets(ctx)
+
+	var validatorStakes []types.ValidatorStake
+	for _, subnet := range subnets {
+		stakes := am.keeper.GetAllValidatorStakesByNetuid(ctx, subnet.Netuid)
+		validatorStakes = append(validatorStakes, stakes...)
+	}
+
+	var delegations []types.Delegation
+	for _, subnet := range subnets {
+		for _, stake := range am.keeper.GetAllValidatorStakesByNetuid(ctx, subnet.Netuid) {
+			delegs := am.keeper.GetDelegationsByValidator(ctx, subnet.Netuid, stake.Validator)
+			delegations = append(delegations, delegs...)
+		}
+	}
+
+	var validatorWeights []types.ValidatorWeight
+	for _, subnet := range subnets {
+		for _, stake := range am.keeper.GetAllValidatorStakesByNetuid(ctx, subnet.Netuid) {
+			if weight, found := am.keeper.GetValidatorWeight(ctx, subnet.Netuid, stake.Validator); found {
+				validatorWeights = append(validatorWeights, weight)
+			}
+		}
+	}
+
+	genState := types.NewGenesisState(subnets, validatorStakes, delegations, validatorWeights)
+	bz, err := json.Marshal(genState)
 	if err != nil {
 		panic(err)
 	}

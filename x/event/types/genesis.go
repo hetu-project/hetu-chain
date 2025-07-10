@@ -5,24 +5,24 @@ package types
 
 // GenesisState defines the event module's genesis state.
 type GenesisState struct {
-	SubnetRegisteredEvents        []SubnetRegisteredEvent        `json:"subnet_registered_events"`
-	SubnetMultiParamUpdatedEvents []SubnetMultiParamUpdatedEvent `json:"subnet_multi_param_updated_events"`
-	TaoStakedEvents               []TaoStakedEvent               `json:"tao_staked_events"`
-	TaoUnstakedEvents             []TaoUnstakedEvent             `json:"tao_unstaked_events"`
+	Subnets          []Subnet          `json:"subnets"`
+	ValidatorStakes  []ValidatorStake  `json:"validator_stakes"`
+	Delegations      []Delegation      `json:"delegations"`
+	ValidatorWeights []ValidatorWeight `json:"validator_weights"`
 }
 
 // NewGenesisState creates a new genesis state instance
 func NewGenesisState(
-	subnetRegistered []SubnetRegisteredEvent,
-	subnetMultiParamUpdated []SubnetMultiParamUpdatedEvent,
-	taoStaked []TaoStakedEvent,
-	taoUnstaked []TaoUnstakedEvent,
+	subnets []Subnet,
+	validatorStakes []ValidatorStake,
+	delegations []Delegation,
+	validatorWeights []ValidatorWeight,
 ) *GenesisState {
 	return &GenesisState{
-		SubnetRegisteredEvents:        subnetRegistered,
-		SubnetMultiParamUpdatedEvents: subnetMultiParamUpdated,
-		TaoStakedEvents:               taoStaked,
-		TaoUnstakedEvents:             taoUnstaked,
+		Subnets:          subnets,
+		ValidatorStakes:  validatorStakes,
+		Delegations:      delegations,
+		ValidatorWeights: validatorWeights,
 	}
 }
 

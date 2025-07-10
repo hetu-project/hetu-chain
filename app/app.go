@@ -183,6 +183,10 @@ import (
 	_ "github.com/ethereum/go-ethereum/eth/tracers/js"
 	_ "github.com/ethereum/go-ethereum/eth/tracers/native"
 
+	"strings"
+
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	eventabi "github.com/hetu-project/hetu/v1/x/event/abi"
 	eventkeeper "github.com/hetu-project/hetu/v1/x/event/keeper"
 )
 
@@ -410,6 +414,8 @@ func NewEvmos(
 		// evmos keys
 		inflationtypes.StoreKey, erc20types.StoreKey,
 		epochstypes.StoreKey, vestingtypes.StoreKey,
+		// event keys
+		"event",
 	)
 
 	// Add the EVM transient store key
@@ -739,13 +745,6 @@ func NewEvmos(
 	// If evidence needs to be handled for the app, set routes in router here and seal
 	app.EvidenceKeeper = *evidenceKeeper
 
-	// After EVM keeper initialization and event keeper initialization, insert dependency injection
-	// eg：
-	// app.EvmKeeper = evmkeeper.NewKeeper(...)
-	// app.EventKeeper = eventkeeper.NewKeeper(..., app.EvmKeeper)
-	// insert dependency injection
-	app.EvmKeeper.SetEventHandler(app.EventKeeper)
-
 	/****  Module Options ****/
 
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
@@ -988,7 +987,35 @@ func NewEvmos(
 	}()
 
 	// keeper 初始化处添加 event keeper 初始化
-	app.EventKeeper = eventkeeper.NewKeeper(appCodec, keys["event"], app.EvmKeeper)
+	// 加载 ABI
+	subnetRegistryABI, err := abi.JSON(strings.NewReader(string(eventabi.SubnetRegistryABI)))
+	if err != nil {
+		panic(fmt.Sprintf("failed to parse SubnetRegistry ABI: %v", err))
+	}
+	stakingSelfABI, err := abi.JSON(strings.NewReader(string(eventabi.StakingSelfABI)))
+	if err != nil {
+		panic(fmt.Sprintf("failed to parse StakingSelf ABI: %v", err))
+	}
+	stakingDelegatedABI, err := abi.JSON(strings.NewReader(string(eventabi.StakingDelegatedABI)))
+	if err != nil {
+		panic(fmt.Sprintf("failed to parse StakingDelegated ABI: %v", err))
+	}
+	weightsABI, err := abi.JSON(strings.NewReader(string(eventabi.WeightsABI)))
+	if err != nil {
+		panic(fmt.Sprintf("failed to parse Weights ABI: %v", err))
+	}
+
+	app.EventKeeper = eventkeeper.NewKeeper(
+		appCodec,
+		keys["event"],
+		subnetRegistryABI,
+		stakingSelfABI,
+		stakingDelegatedABI,
+		weightsABI,
+	)
+
+	// 设置 EventKeeper 作为 EVM 的事件处理器
+	app.EvmKeeper.SetEventHandler(app.EventKeeper)
 
 	return app
 }
