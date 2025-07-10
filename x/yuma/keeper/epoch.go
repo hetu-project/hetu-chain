@@ -1,468 +1,414 @@
 package keeper
 
 import (
-	"fmt"
+	"errors"
+	"math/big"
+	"sort"
+	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/hetu-project/hetu/v1/x/yuma/types"
 )
 
-// RunEpoch 运行完整的Yuma共识epoch - 根据bittensor实现
-func (k Keeper) RunEpoch(ctx sdk.Context, netuid uint16) error {
-	// 1. 获取子网信息和参数
-	subnetInfo, found := k.GetSubnetInfo(ctx, netuid)
+// 错误定义
+var (
+	ErrSubnetNotFound = errors.New("subnet not found")
+	ErrEpochNotDue    = errors.New("epoch not due")
+)
+
+// RunEpoch 运行完整的 Bittensor epoch 算法
+func (k Keeper) RunEpoch(ctx sdk.Context, netuid uint16, raoEmission uint64) (*types.EpochResult, error) {
+	// 1. 获取子网数据
+	subnet, found := k.eventKeeper.GetSubnet(ctx, netuid)
 	if !found {
-		return fmt.Errorf("子网 %d 不存在", netuid)
+		return nil, ErrSubnetNotFound
 	}
 
-	params := k.GetParams(ctx)
+	// 2. 解析子网参数
+	params := types.ParseEpochParams(subnet.Params)
 
-	// 2. 检查是否应该运行epoch - 使用Tempo参数
+	// 3. 检查是否应该运行 epoch
 	if !k.shouldRunEpoch(ctx, netuid, params.Tempo) {
-		return nil // 还没到运行时间
+		return nil, ErrEpochNotDue
 	}
 
-	// 3. 获取所有神经元信息
-	neurons := k.GetAllNeurons(ctx, netuid)
-	if len(neurons) == 0 {
-		return nil
+	// 4. 获取子网的所有验证者数据
+	validators := k.getSubnetValidators(ctx, netuid)
+	if len(validators) == 0 {
+		return &types.EpochResult{
+			Netuid:    netuid,
+			Accounts:  []string{},
+			Emission:  []uint64{},
+			Dividend:  []uint64{},
+			Bonds:     [][]float64{},
+			Consensus: []float64{},
+		}, nil
 	}
 
-	// 4. 应用MaxAllowedUids限制
-	if len(neurons) > int(params.MaxAllowedUids) {
-		neurons = neurons[:params.MaxAllowedUids]
+	// 5. 计算活跃状态
+	active := k.calculateActive(ctx, netuid, validators, params)
+
+	// 6. 获取质押权重
+	stake := k.getStakeWeights(ctx, netuid, validators)
+
+	// 7. 归一化质押权重
+	activeStake := k.normalizeStake(stake, active)
+
+	// 8. 获取权重矩阵
+	weights := k.getWeightsMatrix(ctx, netuid, validators)
+
+	// 9. 计算共识分数（加权中位数）
+	consensus := k.weightedMedianCol(activeStake, weights, params.Kappa)
+
+	// 10. 裁剪权重
+	clippedWeights := k.clipWeights(weights, consensus, params.Delta)
+
+	// 11. 计算 bonds（历史权重EMA）
+	prevBonds := k.getPrevBonds(ctx, netuid, validators)
+	bonds := k.computeBonds(clippedWeights, prevBonds, params.Alpha)
+
+	// 12. 计算分红（dividends）
+	dividends := k.computeDividends(bonds)
+
+	// 13. 归一化分红
+	normDividends := k.normalizeDividends(dividends, active)
+
+	// 14. 分配 emission
+	emission := k.distributeEmission(normDividends, raoEmission)
+
+	// 15. 构建结果
+	result := &types.EpochResult{
+		Netuid:    netuid,
+		Accounts:  make([]string, len(validators)),
+		Emission:  emission,
+		Dividend:  make([]uint64, len(validators)),
+		Bonds:     bonds,
+		Consensus: consensus,
 	}
 
-	// 5. 收集和验证权重
-	weights := k.collectAndValidateWeights(ctx, netuid, neurons, params)
+	// 填充账户地址和分红
+	for i, validator := range validators {
+		result.Accounts[i] = validator.Address
+		result.Dividend[i] = uint64(normDividends[i] * float64(raoEmission))
+	}
 
-	// 6. 计算活跃性 - 使用ActivityCutoff参数
-	active := k.calculateActive(ctx, netuid, neurons, params.ActivityCutoff)
+	// 16. 保存 bonds 到存储
+	k.saveBonds(ctx, netuid, validators, bonds)
 
-	// 7. 应用免疫期保护 - 使用ImmunityPeriod参数
-	active = k.applyImmunityPeriod(ctx, neurons, active, params.ImmunityPeriod)
+	// 17. 更新最后 epoch 时间
+	k.setLastEpochBlock(ctx, netuid, uint64(ctx.BlockHeight()))
 
-	// 8. 更新bonds矩阵
-	bonds := k.updateBonds(ctx, netuid, weights, active, neurons)
-
-	// 9. 执行完整的Yuma共识计算
-	consensus := k.calculateConsensus(weights, active, bonds, params)
-	trust := k.calculateTrust(consensus, active, params)
-	ranks := k.calculateRanks(trust, active, params)
-	incentives := k.calculateIncentives(ranks, active, params)
-	dividends := k.calculateDividends(incentives, active, params)
-	emission := k.calculateEmission(ctx, netuid, incentives, dividends, params)
-
-	// 10. 更新神经元状态
-	k.updateNeuronStates(ctx, netuid, neurons, consensus, trust, ranks, incentives, dividends, emission, bonds)
-
-	// 11. 更新子网统计信息
-	k.updateSubnetStats(ctx, netuid, subnetInfo)
-
-	return nil
+	return result, nil
 }
 
-// shouldRunEpoch 检查是否应该运行epoch - 使用Tempo
-func (k Keeper) shouldRunEpoch(ctx sdk.Context, netuid uint16, tempo uint16) bool {
-	lastEpoch := k.GetLastEpochBlock(ctx, netuid)
-	currentBlock := uint16(ctx.BlockHeight())
-
+// shouldRunEpoch 检查是否应该运行 epoch
+func (k Keeper) shouldRunEpoch(ctx sdk.Context, netuid uint16, tempo uint64) bool {
+	lastEpoch := k.getLastEpochBlock(ctx, netuid)
+	currentBlock := uint64(ctx.BlockHeight())
 	return (currentBlock - lastEpoch) >= tempo
 }
 
-// collectAndValidateWeights 收集和验证权重 - 使用MaxWeightsLimit, MinAllowedWeights
-func (k Keeper) collectAndValidateWeights(ctx sdk.Context, netuid uint16, neurons []types.NeuronInfo, params types.Params) [][]sdk.Dec {
-	n := len(neurons)
-	weights := make([][]sdk.Dec, n)
+// getSubnetValidators 获取子网的所有验证者
+func (k Keeper) getSubnetValidators(ctx sdk.Context, netuid uint16) []types.ValidatorInfo {
+	// 从 event 模块获取所有质押信息
+	stakes := k.eventKeeper.GetAllValidatorStakesByNetuid(ctx, netuid)
 
-	for i := 0; i < n; i++ {
-		weights[i] = make([]sdk.Dec, n)
+	validators := make([]types.ValidatorInfo, 0, len(stakes))
+	validatorMap := make(map[string]types.ValidatorInfo)
 
-		// 获取神经元的权重数据
-		neuronWeights := k.GetNeuronWeights(ctx, netuid, neurons[i].Uid)
+	// 处理质押信息
+	for _, stake := range stakes {
+		amount, _ := new(big.Int).SetString(stake.Amount, 10)
+		stakeFloat := new(big.Float).SetInt(amount)
+		stakeValue, _ := stakeFloat.Float64()
 
-		// 验证权重数量限制
-		if len(neuronWeights) > int(params.MaxWeightsLimit) {
-			// 截断到最大限制
-			neuronWeights = neuronWeights[:params.MaxWeightsLimit]
+		validator := types.ValidatorInfo{
+			Address: stake.Validator,
+			Stake:   stakeValue,
+			Weights: []uint64{},
+			Active:  true, // 默认活跃，后续会更新
 		}
+		validatorMap[stake.Validator] = validator
+	}
 
-		// 验证最小权重数量
-		if len(neuronWeights) < int(params.MinAllowedWeights) && len(neuronWeights) > 0 {
-			// 权重数量不足，设置为零
-			continue
-		}
+	// 处理权重信息
+	for validatorAddr := range validatorMap {
+		weight, found := k.eventKeeper.GetValidatorWeight(ctx, netuid, validatorAddr)
+		if found {
+			// 将 map 转换为数组
+			weights := make([]uint64, 0, len(weight.Weights))
+			for _, w := range weight.Weights {
+				weights = append(weights, w)
+			}
 
-		// 验证权重设置速率限制
-		if !k.checkWeightsRateLimit(ctx, netuid, neurons[i].Uid, params.WeightsSetRateLimit) {
-			continue
-		}
-
-		// 填充权重矩阵
-		for j, weight := range neuronWeights {
-			if j < n {
-				weights[i][j] = weight
+			if v, exists := validatorMap[validatorAddr]; exists {
+				v.Weights = weights
+				validatorMap[validatorAddr] = v
 			}
 		}
+	}
 
-		// 归一化权重
-		weights[i] = k.normalizeWeights(weights[i])
+	// 转换为数组
+	for _, validator := range validatorMap {
+		validators = append(validators, validator)
+	}
+
+	return validators
+}
+
+// calculateActive 计算活跃状态
+func (k Keeper) calculateActive(ctx sdk.Context, netuid uint16, validators []types.ValidatorInfo, params types.EpochParams) []bool {
+	active := make([]bool, len(validators))
+
+	// TODO: 这里需要从 event 模块获取最后活跃时间
+	// 暂时所有验证者都设为活跃
+	for i := range validators {
+		active[i] = true
+	}
+
+	return active
+}
+
+// getStakeWeights 获取质押权重
+func (k Keeper) getStakeWeights(ctx sdk.Context, netuid uint16, validators []types.ValidatorInfo) []float64 {
+	stake := make([]float64, len(validators))
+	for i, validator := range validators {
+		stake[i] = validator.Stake
+	}
+	return stake
+}
+
+// normalizeStake 归一化质押权重
+func (k Keeper) normalizeStake(stake []float64, active []bool) []float64 {
+	sum := 0.0
+	for i, s := range stake {
+		if active[i] {
+			sum += s
+		}
+	}
+
+	if sum == 0 {
+		return make([]float64, len(stake))
+	}
+
+	out := make([]float64, len(stake))
+	for i, s := range stake {
+		if active[i] {
+			out[i] = s / sum
+		}
+	}
+	return out
+}
+
+// getWeightsMatrix 获取权重矩阵
+func (k Keeper) getWeightsMatrix(ctx sdk.Context, netuid uint16, validators []types.ValidatorInfo) [][]float64 {
+	n := len(validators)
+	weights := make([][]float64, n)
+
+	for i := 0; i < n; i++ {
+		weights[i] = make([]float64, n)
+		if i < len(validators[i].Weights) {
+			for j := 0; j < n; j++ {
+				if j < len(validators[i].Weights) {
+					weights[i][j] = float64(validators[i].Weights[j])
+				}
+			}
+		}
 	}
 
 	return weights
 }
 
-// calculateActive 计算活跃神经元 - 使用ActivityCutoff参数
-func (k Keeper) calculateActive(ctx sdk.Context, netuid uint16, neurons []types.NeuronInfo, activityCutoff uint16) []bool {
-	n := len(neurons)
-	active := make([]bool, n)
-	currentBlock := uint16(ctx.BlockHeight())
+// weightedMedianCol 加权中位数计算
+func (k Keeper) weightedMedianCol(stake []float64, weights [][]float64, kappa float64) []float64 {
+	n := len(weights[0]) // 节点数
+	m := len(stake)      // 验证者数
+	consensus := make([]float64, n)
 
-	for i, neuron := range neurons {
-		// 检查最后活跃时间
-		lastActive := neuron.LastUpdate
-		if (currentBlock - lastActive) <= activityCutoff {
-			active[i] = true
+	for j := 0; j < n; j++ {
+		// 收集所有验证者对节点j的打分
+		type pair struct {
+			w, s float64
+		}
+		var pairs []pair
+		for i := 0; i < m; i++ {
+			if i < len(weights) && j < len(weights[i]) {
+				pairs = append(pairs, pair{w: weights[i][j], s: stake[i]})
+			}
+		}
+
+		// 按分数升序排序
+		sort.Slice(pairs, func(a, b int) bool {
+			return pairs[a].w < pairs[b].w
+		})
+
+		// 计算加权中位数
+		total := 0.0
+		for _, p := range pairs {
+			total += p.s
+		}
+
+		acc := 0.0
+		for _, p := range pairs {
+			acc += p.s
+			if acc >= kappa*total {
+				consensus[j] = p.w
+				break
+			}
 		}
 	}
 
-	return active
+	return consensus
 }
 
-// applyImmunityPeriod 应用免疫期保护 - 使用ImmunityPeriod参数
-func (k Keeper) applyImmunityPeriod(ctx sdk.Context, neurons []types.NeuronInfo, active []bool, immunityPeriod uint16) []bool {
-	currentBlock := uint16(ctx.BlockHeight())
+// clipWeights 裁剪权重
+func (k Keeper) clipWeights(weights [][]float64, consensus []float64, delta float64) [][]float64 {
+	m := len(weights)
+	n := len(weights[0])
+	clipped := make([][]float64, m)
 
-	for i, neuron := range neurons {
-		// 检查神经元是否在免疫期内
-		if (currentBlock - neuron.BlockAtRegistration) <= immunityPeriod {
-			active[i] = true // 免疫期内的神经元总是活跃的
-		}
-	}
-
-	return active
-}
-
-// checkWeightsRateLimit 检查权重设置速率限制 - 使用WeightsSetRateLimit参数
-func (k Keeper) checkWeightsRateLimit(ctx sdk.Context, netuid uint16, uid uint16, rateLimit uint64) bool {
-	lastWeightsUpdate := k.GetLastWeightsUpdate(ctx, netuid, uid)
-	currentBlock := uint64(ctx.BlockHeight())
-
-	return (currentBlock - lastWeightsUpdate) >= rateLimit
-}
-
-// calculateConsensus 计算共识分数 - Yuma共识核心算法
-func (k Keeper) calculateConsensus(weights [][]sdk.Dec, active []bool, bonds [][]sdk.Dec, params types.Params) []sdk.Dec {
-	n := len(weights)
-	consensus := make([]sdk.Dec, n)
-
-	if n == 0 {
-		return consensus
-	}
-
-	// 计算共识分数: C = W^T * S
-	// 其中 W 是权重矩阵，S 是stake向量
-	for i := 0; i < n; i++ {
-		if !active[i] {
-			continue
-		}
-
-		consensusSum := sdk.ZeroDec()
+	for i := 0; i < m; i++ {
+		clipped[i] = make([]float64, n)
 		for j := 0; j < n; j++ {
-			if active[j] {
-				// 使用bonds作为stake权重
-				stake := bonds[j][i]
-				weight := weights[j][i]
-				consensusSum = consensusSum.Add(stake.Mul(weight))
+			if j < len(consensus) {
+				min := consensus[j] - delta
+				max := consensus[j] + delta
+				if weights[i][j] < min {
+					clipped[i][j] = min
+				} else if weights[i][j] > max {
+					clipped[i][j] = max
+				} else {
+					clipped[i][j] = weights[i][j]
+				}
 			}
 		}
-		consensus[i] = consensusSum
 	}
 
-	// 归一化共识分数
-	return k.normalizeVector(consensus, active)
+	return clipped
 }
 
-// calculateTrust 计算信任分数
-func (k Keeper) calculateTrust(consensus []sdk.Dec, active []bool, params types.Params) []sdk.Dec {
-	n := len(consensus)
-	trust := make([]sdk.Dec, n)
+// computeBonds Bonds 的 EMA 计算
+func (k Keeper) computeBonds(clippedWeights, prevBonds [][]float64, alpha float64) [][]float64 {
+	m := len(clippedWeights)
+	n := len(clippedWeights[0])
+	bonds := make([][]float64, m)
 
-	// 信任分数基于共识分数，但应用了kappa饱和
-	for i := 0; i < n; i++ {
-		if active[i] {
-			trustValue := consensus[i]
-			// 应用kappa饱和
-			kappaValue := params.Kappa.Quo(sdk.NewDec(65536)) // 归一化
-			if trustValue.GT(kappaValue) {
-				trustValue = kappaValue
+	for i := 0; i < m; i++ {
+		bonds[i] = make([]float64, n)
+		for j := 0; j < n; j++ {
+			prevBond := 0.0
+			if i < len(prevBonds) && j < len(prevBonds[i]) {
+				prevBond = prevBonds[i][j]
 			}
-			trust[i] = trustValue
+			bonds[i][j] = (1-alpha)*prevBond + alpha*clippedWeights[i][j]
 		}
 	}
 
-	return k.normalizeVector(trust, active)
+	return bonds
 }
 
-// calculateRanks 计算排名分数
-func (k Keeper) calculateRanks(trust []sdk.Dec, active []bool, params types.Params) []sdk.Dec {
-	n := len(trust)
-	ranks := make([]sdk.Dec, n)
+// computeDividends 分红计算
+func (k Keeper) computeDividends(bonds [][]float64) []float64 {
+	n := len(bonds[0])
+	dividends := make([]float64, n)
 
-	// 排名基于信任分数，应用rho稀疏化
-	for i := 0; i < n; i++ {
-		if active[i] {
-			rankValue := trust[i]
-			// 应用rho变换
-			rhoValue := params.Rho.Quo(sdk.NewDec(65536)) // 归一化
-			if rhoValue.GT(sdk.ZeroDec()) {
-				// 简化的rho变换: rank = rank^(1/rho)
-				rankValue = k.powerApproximation(rankValue, sdk.OneDec().Quo(rhoValue))
+	for j := 0; j < n; j++ {
+		sum := 0.0
+		for i := 0; i < len(bonds); i++ {
+			if j < len(bonds[i]) {
+				sum += bonds[i][j]
 			}
-			ranks[i] = rankValue
 		}
+		dividends[j] = sum
 	}
 
-	return k.normalizeVector(ranks, active)
+	return dividends
 }
 
-// calculateIncentives 计算激励分数
-func (k Keeper) calculateIncentives(ranks []sdk.Dec, active []bool, params types.Params) []sdk.Dec {
-	n := len(ranks)
-	incentives := make([]sdk.Dec, n)
-
-	// 激励直接基于排名
-	for i := 0; i < n; i++ {
+// normalizeDividends 归一化分红
+func (k Keeper) normalizeDividends(dividends []float64, active []bool) []float64 {
+	sum := 0.0
+	for i, d := range dividends {
 		if active[i] {
-			incentives[i] = ranks[i]
+			sum += d
 		}
 	}
 
-	return k.normalizeVector(incentives, active)
-}
+	if sum == 0 {
+		return make([]float64, len(dividends))
+	}
 
-// calculateDividends 计算分红分数
-func (k Keeper) calculateDividends(incentives []sdk.Dec, active []bool, params types.Params) []sdk.Dec {
-	n := len(incentives)
-	dividends := make([]sdk.Dec, n)
-
-	// 分红基于激励的平方根（降低方差）
-	for i := 0; i < n; i++ {
+	out := make([]float64, len(dividends))
+	for i, d := range dividends {
 		if active[i] {
-			dividends[i] = k.squareRoot(incentives[i])
+			out[i] = d / sum
 		}
 	}
-
-	return k.normalizeVector(dividends, active)
+	return out
 }
 
-// calculateEmission 计算最终发行
-func (k Keeper) calculateEmission(ctx sdk.Context, netuid uint16, incentives, dividends []sdk.Dec, params types.Params) []sdk.Dec {
-	n := len(incentives)
-	emission := make([]sdk.Dec, n)
+// distributeEmission 激励分配
+func (k Keeper) distributeEmission(normDividends []float64, raoEmission uint64) []uint64 {
+	n := len(normDividends)
+	emission := make([]uint64, n)
 
-	// 获取子网的总发行量
-	totalEmission := k.GetSubnetEmission(ctx, netuid)
-
-	// 激励和分红的混合
 	for i := 0; i < n; i++ {
-		incentiveWeight := sdk.NewDecWithPrec(7, 1) // 0.7
-		dividendWeight := sdk.NewDecWithPrec(3, 1)  // 0.3
-
-		combined := incentives[i].Mul(incentiveWeight).Add(dividends[i].Mul(dividendWeight))
-		emission[i] = combined.Mul(totalEmission)
+		emission[i] = uint64(normDividends[i] * float64(raoEmission))
 	}
 
 	return emission
 }
 
-// updateNeuronStates 更新神经元状态
-func (k Keeper) updateNeuronStates(ctx sdk.Context, netuid uint16, neurons []types.NeuronInfo,
-	consensus, trust, ranks, incentives, dividends, emission []sdk.Dec, bonds [][]sdk.Dec) {
+// getPrevBonds 获取上一轮的 bonds
+func (k Keeper) getPrevBonds(ctx sdk.Context, netuid uint16, validators []types.ValidatorInfo) [][]float64 {
+	n := len(validators)
+	bonds := make([][]float64, n)
 
-	for i, neuron := range neurons {
-		// 更新神经元的共识相关分数
-		neuron.Consensus = consensus[i]
-		neuron.Trust = trust[i]
-		neuron.Rank = ranks[i]
-		neuron.Incentive = incentives[i]
-		neuron.Dividends = dividends[i]
-		neuron.Emission = emission[i]
-
-		// 更新bonds数据
-		neuron.Bonds = [][]uint16{}
-		if len(bonds) > i {
-			bondsRow := make([]uint16, len(bonds[i]))
-			for j, bond := range bonds[i] {
-				bondsRow[j] = uint16(bond.MulInt64(65536).TruncateInt64()) // 转换为uint16
-			}
-			neuron.Bonds = append(neuron.Bonds, bondsRow)
-		}
-
-		// 更新最后处理时间
-		neuron.LastUpdate = uint16(ctx.BlockHeight())
-
-		// 保存更新后的神经元
-		k.SetNeuronInfo(ctx, netuid, neuron.Uid, neuron)
+	// TODO: 从存储中获取历史 bonds
+	// 暂时返回零矩阵
+	for i := 0; i < n; i++ {
+		bonds[i] = make([]float64, n)
 	}
+
+	return bonds
 }
 
-// updateSubnetStats 更新子网统计信息
-func (k Keeper) updateSubnetStats(ctx sdk.Context, netuid uint16, subnetInfo types.SubnetInfo) {
-	subnetInfo.LastUpdate = uint16(ctx.BlockHeight())
-	k.SetSubnetInfo(ctx, netuid, subnetInfo)
-	k.SetLastEpochBlock(ctx, netuid, uint16(ctx.BlockHeight()))
+// saveBonds 保存 bonds 到存储
+func (k Keeper) saveBonds(ctx sdk.Context, netuid uint16, validators []types.ValidatorInfo, bonds [][]float64) {
+	// TODO: 保存 bonds 到存储
+	// 这里可以保存到 KVStore 中
 }
 
-// 辅助函数
-
-// normalizeWeights 归一化权重向量
-func (k Keeper) normalizeWeights(weights []sdk.Dec) []sdk.Dec {
-	total := sdk.ZeroDec()
-	for _, weight := range weights {
-		total = total.Add(weight)
-	}
-
-	if total.GT(sdk.ZeroDec()) {
-		for i := range weights {
-			weights[i] = weights[i].Quo(total)
-		}
-	}
-
-	return weights
-}
-
-// normalizeVector 归一化向量（只考虑活跃元素）
-func (k Keeper) normalizeVector(vec []sdk.Dec, active []bool) []sdk.Dec {
-	total := sdk.ZeroDec()
-	for i, val := range vec {
-		if i < len(active) && active[i] {
-			total = total.Add(val)
-		}
-	}
-
-	if total.GT(sdk.ZeroDec()) {
-		for i := range vec {
-			if i < len(active) && active[i] {
-				vec[i] = vec[i].Quo(total)
-			}
-		}
-	}
-
-	return vec
-}
-
-// powerApproximation 幂函数的近似实现
-func (k Keeper) powerApproximation(base, exponent sdk.Dec) sdk.Dec {
-	if base.IsZero() || exponent.IsZero() {
-		return sdk.ZeroDec()
-	}
-	if exponent.Equal(sdk.OneDec()) {
-		return base
-	}
-
-	// 简化实现：使用泰勒级数近似
-	// 这里可以根据需要实现更精确的算法
-	return base.Mul(exponent.Add(sdk.OneDec()))
-}
-
-// squareRoot 平方根的近似实现
-func (k Keeper) squareRoot(x sdk.Dec) sdk.Dec {
-	if x.IsZero() {
-		return sdk.ZeroDec()
-	}
-
-	// 使用牛顿法近似
-	guess := x.Quo(sdk.NewDec(2))
-
-	for i := 0; i < 10; i++ { // 10次迭代应该足够精确
-		newGuess := guess.Add(x.Quo(guess)).Quo(sdk.NewDec(2))
-		if newGuess.Sub(guess).Abs().LT(sdk.NewDecWithPrec(1, 10)) {
-			break
-		}
-		guess = newGuess
-	}
-
-	return guess
-}
-
-// 存储访问辅助函数
-
-// GetLastEpochBlock 获取最后一次epoch执行的区块
-func (k Keeper) GetLastEpochBlock(ctx sdk.Context, netuid uint16) uint16 {
+// getLastEpochBlock 获取最后 epoch 区块
+func (k Keeper) getLastEpochBlock(ctx sdk.Context, netuid uint16) uint64 {
 	store := ctx.KVStore(k.storeKey)
-	key := types.GetLastEpochBlockKey(netuid)
+	key := []byte("last_epoch_" + strconv.FormatUint(uint64(netuid), 10))
 
 	bz := store.Get(key)
 	if bz == nil {
 		return 0
 	}
 
-	var lastBlock uint16
-	k.cdc.MustUnmarshal(bz, &lastBlock)
+	// 简单的字节转换
+	var lastBlock uint64
+	for i, b := range bz {
+		if i < 8 {
+			lastBlock |= uint64(b) << (i * 8)
+		}
+	}
 	return lastBlock
 }
 
-// SetLastEpochBlock 设置最后一次epoch执行的区块
-func (k Keeper) SetLastEpochBlock(ctx sdk.Context, netuid uint16, blockHeight uint16) {
+// setLastEpochBlock 设置最后 epoch 区块
+func (k Keeper) setLastEpochBlock(ctx sdk.Context, netuid uint16, blockHeight uint64) {
 	store := ctx.KVStore(k.storeKey)
-	key := types.GetLastEpochBlockKey(netuid)
+	key := []byte("last_epoch_" + strconv.FormatUint(uint64(netuid), 10))
 
-	bz := k.cdc.MustMarshal(&blockHeight)
+	// 简单的字节转换
+	bz := make([]byte, 8)
+	for i := 0; i < 8; i++ {
+		bz[i] = byte(blockHeight >> (i * 8))
+	}
+
 	store.Set(key, bz)
-}
-
-// GetLastWeightsUpdate 获取最后一次权重更新的区块
-func (k Keeper) GetLastWeightsUpdate(ctx sdk.Context, netuid uint16, uid uint16) uint64 {
-	store := ctx.KVStore(k.storeKey)
-	key := types.GetLastWeightsUpdateKey(netuid, uid)
-
-	bz := store.Get(key)
-	if bz == nil {
-		return 0
-	}
-
-	var lastUpdate uint64
-	k.cdc.MustUnmarshal(bz, &lastUpdate)
-	return lastUpdate
-}
-
-// GetNeuronWeights 获取神经元权重
-func (k Keeper) GetNeuronWeights(ctx sdk.Context, netuid uint16, uid uint16) []sdk.Dec {
-	neuron, found := k.GetNeuronInfo(ctx, netuid, uid)
-	if !found || len(neuron.Weights) == 0 {
-		return []sdk.Dec{}
-	}
-
-	// 转换权重数据
-	weights := make([]sdk.Dec, len(neuron.Weights[0]))
-	for i, weight := range neuron.Weights[0] {
-		weights[i] = sdk.NewDec(int64(weight)).Quo(sdk.NewDec(65536)) // 归一化
-	}
-
-	return weights
-}
-
-// GetSubnetEmission 获取子网发行量
-func (k Keeper) GetSubnetEmission(ctx sdk.Context, netuid uint16) sdk.Dec {
-	// 这里应该根据实际的发行机制来计算
-	// 暂时返回一个固定值
-	return sdk.NewDec(1000000) // 1M tokens per epoch
-}
-
-// GetAllNeurons 获取所有神经元
-func (k Keeper) GetAllNeurons(ctx sdk.Context, netuid uint16) []types.NeuronInfo {
-	var neurons []types.NeuronInfo
-
-	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.GetNeuronInfoPrefix(netuid))
-	defer iterator.Close()
-
-	for ; iterator.Valid(); iterator.Next() {
-		var neuron types.NeuronInfo
-		k.cdc.MustUnmarshal(iterator.Value(), &neuron)
-		neurons = append(neurons, neuron)
-	}
-
-	return neurons
 }
