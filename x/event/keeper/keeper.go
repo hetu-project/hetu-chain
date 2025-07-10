@@ -4,11 +4,12 @@
 package keeper
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/big"
-	"strings"
 
 	"cosmossdk.io/log"
+	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,191 +18,385 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
-	eventabi "github.com/hetu-project/hetu/v1/x/event/abi"
+
 	"github.com/hetu-project/hetu/v1/x/event/types"
-	evmmodulekeeper "github.com/hetu-project/hetu/v1/x/evm/keeper"
 )
 
-// 事件 topic hash 常量（需与合约事件签名一致）
+// ----------- 事件 topic 常量 -----------
 var (
-	SubnetRegisteredTopic        = crypto.Keccak256Hash([]byte("SubnetRegistered(uint16,address,string,string,string,string,string,uint256,uint256,uint256,uint256,uint256,uint256)")).Hex()
-	SubnetRegisteredTopic2       = crypto.Keccak256Hash([]byte("SubnetRegistered(uint16,address,string,string,string,string,string,string,string,string,string,string,string)")).Hex()
-	SubnetMultiParamUpdatedTopic = crypto.Keccak256Hash([]byte("SubnetMultiParamUpdated(uint16,string[],uint256[])")).Hex()
-	TaoStakedTopic               = crypto.Keccak256Hash([]byte("TaoStaked(uint16,address,uint256)")).Hex()
-	TaoUnstakedTopic             = crypto.Keccak256Hash([]byte("TaoUnstaked(uint16,address,uint256)")).Hex()
+	SubnetRegisteredTopic  = crypto.Keccak256Hash([]byte("SubnetRegistered(address,uint16,uint256,uint256,address,string)")).Hex()
+	StakedSelfTopic        = crypto.Keccak256Hash([]byte("Staked(uint16,address,uint256)")).Hex()
+	UnstakedSelfTopic      = crypto.Keccak256Hash([]byte("Unstaked(uint16,address,uint256)")).Hex()
+	StakedDelegatedTopic   = crypto.Keccak256Hash([]byte("Staked(uint16,address,address,uint256)")).Hex()
+	UnstakedDelegatedTopic = crypto.Keccak256Hash([]byte("Unstaked(uint16,address,address,uint256)")).Hex()
+	WeightsSetTopic        = crypto.Keccak256Hash([]byte("WeightsSet(uint16,address,(address,uint256)[])")).Hex()
 )
 
-var (
-	subnetRegistryABI     abi.ABI
-	subnetParamManagerABI abi.ABI
-	taoStakingABI         abi.ABI
-)
-
-func init() {
-	var err error
-	subnetRegistryABI, err = abi.JSON(strings.NewReader(string(eventabi.SubnetRegistryABI)))
-	if err != nil {
-		panic(err)
-	}
-	subnetParamManagerABI, err = abi.JSON(strings.NewReader(string(eventabi.SubnetParamManagerABI)))
-	if err != nil {
-		panic(err)
-	}
-	taoStakingABI, err = abi.JSON(strings.NewReader(string(eventabi.TaoStakingABI)))
-	if err != nil {
-		panic(err)
-	}
-}
-
-// 解析 SubnetRegistered 事件
-func parseSubnetRegistered(log ethTypes.Log) (types.SubnetInfo, error) {
-	var event struct {
-		Netuid                uint16
-		Owner                 common.Address
-		Name                  string
-		Github                string
-		Discord               string
-		Website               string
-		Description           string
-		Kappa                 *big.Int
-		BondsPenalty          *big.Int
-		BondsMovingAverage    *big.Int
-		AlphaLow              *big.Int
-		AlphaHigh             *big.Int
-		AlphaSigmoidSteepness *big.Int
-	}
-	err := subnetRegistryABI.UnpackIntoInterface(&event, "SubnetRegistered", log.Data)
-	if err != nil {
-		return types.SubnetInfo{}, err
-	}
-	return types.SubnetInfo{
-		Netuid:                event.Netuid,
-		Owner:                 event.Owner.Hex(),
-		Name:                  event.Name,
-		Github:                event.Github,
-		Discord:               event.Discord,
-		Website:               event.Website,
-		Description:           event.Description,
-		Kappa:                 event.Kappa.String(),
-		BondsPenalty:          event.BondsPenalty.String(),
-		BondsMovingAverage:    event.BondsMovingAverage.String(),
-		AlphaLow:              event.AlphaLow.String(),
-		AlphaHigh:             event.AlphaHigh.String(),
-		AlphaSigmoidSteepness: event.AlphaSigmoidSteepness.String(),
-	}, nil
-}
-
-// 解析 SubnetMultiParamUpdated 事件
-func parseSubnetMultiParamUpdated(log ethTypes.Log) (uint16, []string, []string, error) {
-	var event struct {
-		Netuid uint16
-		Params []string
-		Values []*big.Int
-	}
-	err := subnetParamManagerABI.UnpackIntoInterface(&event, "SubnetMultiParamUpdated", log.Data)
-	if err != nil {
-		return 0, nil, nil, err
-	}
-	values := make([]string, len(event.Values))
-	for i, v := range event.Values {
-		values[i] = v.String()
-	}
-	return event.Netuid, event.Params, values, nil
-}
-
-// 解析 TaoStaked 事件
-func parseTaoStaked(log ethTypes.Log) (uint16, string, string, error) {
-	var event struct {
-		Netuid uint16
-		Staker common.Address
-		Amount *big.Int
-	}
-	err := taoStakingABI.UnpackIntoInterface(&event, "TaoStaked", log.Data)
-	if err != nil {
-		return 0, "", "", err
-	}
-	return event.Netuid, event.Staker.Hex(), event.Amount.String(), nil
-}
-
-// 解析 TaoUnstaked 事件
-func parseTaoUnstaked(log ethTypes.Log) (uint16, string, string, error) {
-	var event struct {
-		Netuid uint16
-		Staker common.Address
-		Amount *big.Int
-	}
-	err := taoStakingABI.UnpackIntoInterface(&event, "TaoUnstaked", log.Data)
-	if err != nil {
-		return 0, "", "", err
-	}
-	return event.Netuid, event.Staker.Hex(), event.Amount.String(), nil
-}
-
-// Keeper of this module maintains collections of events.
+// ----------- Keeper 结构体 -----------
 type Keeper struct {
-	cdc       codec.Codec
-	storeKey  storetypes.StoreKey
-	evmKeeper *evmmodulekeeper.Keeper
+	cdc      codec.Codec
+	storeKey storetypes.StoreKey
+
+	// 合约 ABI
+	subnetRegistryABI   abi.ABI
+	stakingSelfABI      abi.ABI
+	stakingDelegatedABI abi.ABI
+	weightsABI          abi.ABI
 }
 
-// NewKeeper returns a new instance of event Keeper
-func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, evmKeeper *evmmodulekeeper.Keeper) *Keeper {
+// ----------- Keeper 初始化 -----------
+func NewKeeper(
+	cdc codec.Codec,
+	storeKey storetypes.StoreKey,
+	subnetRegistryABI abi.ABI,
+	stakingSelfABI abi.ABI,
+	stakingDelegatedABI abi.ABI,
+	weightsABI abi.ABI,
+) *Keeper {
 	return &Keeper{
-		cdc:       cdc,
-		storeKey:  storeKey,
-		evmKeeper: evmKeeper,
+		cdc:                 cdc,
+		storeKey:            storeKey,
+		subnetRegistryABI:   subnetRegistryABI,
+		stakingSelfABI:      stakingSelfABI,
+		stakingDelegatedABI: stakingDelegatedABI,
+		weightsABI:          weightsABI,
 	}
 }
 
-// Logger returns a module-specific logger.
+// ----------- Logger -----------
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/event")
 }
 
-// HandleEvmLogs 处理 EVM 日志并更新业务表
+// ----------- HandleEvmLogs 集成所有事件 -----------
 func (k *Keeper) HandleEvmLogs(ctx sdk.Context, logs []ethTypes.Log) {
 	for _, log := range logs {
 		if len(log.Topics) == 0 {
 			continue
 		}
 		topic := log.Topics[0].Hex()
-		fmt.Printf("解析事件topic: %s\n", topic)
-		fmt.Printf("解析事件SubnetRegisteredTopic: %s\n", SubnetRegisteredTopic)
-		fmt.Printf("解析事件SubnetRegisteredTopic2: %s\n", SubnetRegisteredTopic2)
-		sig := "SubnetRegistered(uint16,address,string,string,string,string,string,string,string,string,string,string,string)"
-		fmt.Println(crypto.Keccak256Hash([]byte(sig)).Hex())
 		switch topic {
-		case SubnetRegisteredTopic2:
-			fmt.Printf("解析子网创建事件\n")
-			info, err := parseSubnetRegistered(log)
-			if err != nil {
-				ctx.Logger().Error("parseSubnetRegistered failed", "err", err)
-				continue
-			}
-			k.SetSubnetInfo(ctx, info)
-		case SubnetMultiParamUpdatedTopic:
-			netuid, params, values, err := parseSubnetMultiParamUpdated(log)
-			if err != nil {
-				ctx.Logger().Error("parseSubnetMultiParamUpdated failed", "err", err)
-				continue
-			}
-			for i, param := range params {
-				k.UpdateSubnetParam(ctx, netuid, param, values[i])
-			}
-		case TaoStakedTopic:
-			netuid, staker, amount, err := parseTaoStaked(log)
-			if err != nil {
-				ctx.Logger().Error("parseTaoStaked failed", "err", err)
-				continue
-			}
-			k.SetStake(ctx, netuid, staker, amount)
-		case TaoUnstakedTopic:
-			netuid, staker, amount, err := parseTaoUnstaked(log)
-			if err != nil {
-				ctx.Logger().Error("parseTaoUnstaked failed", "err", err)
-				continue
-			}
-			k.SetStake(ctx, netuid, staker, amount)
+		case SubnetRegisteredTopic:
+			k.handleSubnetRegistered(ctx, log)
+		case StakedSelfTopic:
+			k.handleStaked(ctx, log)
+		case UnstakedSelfTopic:
+			k.handleUnstaked(ctx, log)
+		case StakedDelegatedTopic:
+			k.handleDelegatedStaked(ctx, log)
+		case UnstakedDelegatedTopic:
+			k.handleDelegatedUnstaked(ctx, log)
+		case WeightsSetTopic:
+			k.handleWeightsSet(ctx, log)
+		default:
+			fmt.Printf("未识别的EVM事件topic: %s\n", topic)
 		}
 	}
+}
+
+// ----------- 事件处理方法 -----------
+
+// 子网注册
+func (k Keeper) handleSubnetRegistered(ctx sdk.Context, log ethTypes.Log) {
+	var event struct {
+		Owner      common.Address
+		Netuid     uint16
+		LockAmount *big.Int
+		BurnedTao  *big.Int
+		Pool       common.Address
+		Param      string
+	}
+	if err := k.subnetRegistryABI.UnpackIntoInterface(&event, "SubnetRegistered", log.Data); err != nil {
+		k.Logger(ctx).Error("parse SubnetRegistered failed", "err", err)
+		return
+	}
+	params := types.DefaultParamsMap() // 你需在 types 实现 DefaultParamsMap
+	userParams := map[string]string{}
+	_ = json.Unmarshal([]byte(event.Param), &userParams)
+	for k, v := range userParams {
+		params[k] = v
+	}
+	subnet := types.Subnet{
+		Netuid:     event.Netuid,
+		Owner:      event.Owner.Hex(),
+		LockAmount: event.LockAmount.String(),
+		BurnedTao:  event.BurnedTao.String(),
+		Pool:       event.Pool.Hex(),
+		Params:     params,
+	}
+	k.SetSubnet(ctx, subnet)
+}
+
+// validator自质押
+func (k Keeper) handleStaked(ctx sdk.Context, log ethTypes.Log) {
+	var event struct {
+		Netuid    uint16
+		Validator common.Address
+		Amount    *big.Int
+	}
+	if err := k.stakingSelfABI.UnpackIntoInterface(&event, "Staked", log.Data); err != nil {
+		k.Logger(ctx).Error("parse Staked failed", "err", err)
+		return
+	}
+	stake, _ := k.GetValidatorStake(ctx, event.Netuid, event.Validator.Hex())
+	if stake.Netuid == 0 {
+		stake = types.ValidatorStake{Netuid: event.Netuid, Validator: event.Validator.Hex(), Amount: "0"}
+	}
+	stake.Amount = types.AddBigIntString(stake.Amount, event.Amount.String())
+	k.SetValidatorStake(ctx, stake)
+}
+
+// validator自解质押
+func (k Keeper) handleUnstaked(ctx sdk.Context, log ethTypes.Log) {
+	var event struct {
+		Netuid    uint16
+		Validator common.Address
+		Amount    *big.Int
+	}
+	if err := k.stakingSelfABI.UnpackIntoInterface(&event, "Unstaked", log.Data); err != nil {
+		k.Logger(ctx).Error("parse Unstaked failed", "err", err)
+		return
+	}
+	stake, _ := k.GetValidatorStake(ctx, event.Netuid, event.Validator.Hex())
+	if stake.Netuid == 0 {
+		return
+	}
+	stake.Amount = types.SubBigIntString(stake.Amount, event.Amount.String())
+	k.SetValidatorStake(ctx, stake)
+}
+
+// 委托质押
+func (k Keeper) handleDelegatedStaked(ctx sdk.Context, log ethTypes.Log) {
+	var event struct {
+		Netuid    uint16
+		Validator common.Address
+		Staker    common.Address
+		Amount    *big.Int
+	}
+	if err := k.stakingDelegatedABI.UnpackIntoInterface(&event, "Staked", log.Data); err != nil {
+		k.Logger(ctx).Error("parse DelegatedStaked failed", "err", err)
+		return
+	}
+	deleg, _ := k.GetDelegation(ctx, event.Netuid, event.Validator.Hex(), event.Staker.Hex())
+	if deleg.Netuid == 0 {
+		deleg = types.Delegation{Netuid: event.Netuid, Validator: event.Validator.Hex(), Staker: event.Staker.Hex(), Amount: "0"}
+	}
+	deleg.Amount = types.AddBigIntString(deleg.Amount, event.Amount.String())
+	k.SetDelegation(ctx, deleg)
+}
+
+// 委托解质押
+func (k Keeper) handleDelegatedUnstaked(ctx sdk.Context, log ethTypes.Log) {
+	var event struct {
+		Netuid    uint16
+		Validator common.Address
+		Staker    common.Address
+		Amount    *big.Int
+	}
+	if err := k.stakingDelegatedABI.UnpackIntoInterface(&event, "Unstaked", log.Data); err != nil {
+		k.Logger(ctx).Error("parse DelegatedUnstaked failed", "err", err)
+		return
+	}
+	deleg, _ := k.GetDelegation(ctx, event.Netuid, event.Validator.Hex(), event.Staker.Hex())
+	if deleg.Netuid == 0 {
+		return
+	}
+	deleg.Amount = types.SubBigIntString(deleg.Amount, event.Amount.String())
+	k.SetDelegation(ctx, deleg)
+}
+
+// 权重矩阵
+func (k Keeper) handleWeightsSet(ctx sdk.Context, log ethTypes.Log) {
+	var event struct {
+		Netuid    uint16
+		Validator common.Address
+		Weights   []struct {
+			Dest   common.Address
+			Weight *big.Int
+		}
+	}
+	if err := k.weightsABI.UnpackIntoInterface(&event, "WeightsSet", log.Data); err != nil {
+		k.Logger(ctx).Error("parse WeightsSet failed", "err", err)
+		return
+	}
+	weights := make(map[string]uint64)
+	for _, w := range event.Weights {
+		weights[w.Dest.Hex()] = w.Weight.Uint64()
+	}
+	k.SetValidatorWeight(ctx, event.Netuid, event.Validator.Hex(), weights)
+}
+
+// ----------- 工具函数 -----------
+func uint16ToBytes(u uint16) []byte {
+	return []byte{byte(u >> 8), byte(u)}
+}
+
+// ----------- 存储/查询方法 -----------
+
+// ---------------- 子网 ----------------
+func (k Keeper) SetSubnet(ctx sdk.Context, subnet types.Subnet) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("subnet:"))
+	bz, _ := json.Marshal(subnet)
+	store.Set(uint16ToBytes(subnet.Netuid), bz)
+}
+
+func (k Keeper) GetSubnet(ctx sdk.Context, netuid uint16) (types.Subnet, bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("subnet:"))
+	bz := store.Get(uint16ToBytes(netuid))
+	if bz == nil {
+		return types.Subnet{}, false
+	}
+	var subnet types.Subnet
+	_ = json.Unmarshal(bz, &subnet)
+	return subnet, true
+}
+
+func (k Keeper) GetAllSubnets(ctx sdk.Context) []types.Subnet {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("subnet:"))
+	iterator := storetypes.KVStorePrefixIterator(store, nil)
+	defer iterator.Close()
+	var subnets []types.Subnet
+	for ; iterator.Valid(); iterator.Next() {
+		var subnet types.Subnet
+		_ = json.Unmarshal(iterator.Value(), &subnet)
+		subnets = append(subnets, subnet)
+	}
+	return subnets
+}
+
+// ---------------- 质押 ----------------
+func (k Keeper) SetValidatorStake(ctx sdk.Context, stake types.ValidatorStake) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("stake:"))
+	key := append(uint16ToBytes(stake.Netuid), []byte(":"+stake.Validator)...)
+	bz, _ := json.Marshal(stake)
+	store.Set(key, bz)
+}
+
+func (k Keeper) GetValidatorStake(ctx sdk.Context, netuid uint16, validator string) (types.ValidatorStake, bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("stake:"))
+	key := append(uint16ToBytes(netuid), []byte(":"+validator)...)
+	bz := store.Get(key)
+	if bz == nil {
+		return types.ValidatorStake{}, false
+	}
+	var stake types.ValidatorStake
+	_ = json.Unmarshal(bz, &stake)
+	return stake, true
+}
+
+func (k Keeper) GetAllValidatorStakesByNetuid(ctx sdk.Context, netuid uint16) []types.ValidatorStake {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("stake:"))
+	prefixKey := uint16ToBytes(netuid)
+	iterator := storetypes.KVStorePrefixIterator(store, prefixKey)
+	defer iterator.Close()
+	var stakes []types.ValidatorStake
+	for ; iterator.Valid(); iterator.Next() {
+		var stake types.ValidatorStake
+		_ = json.Unmarshal(iterator.Value(), &stake)
+		stakes = append(stakes, stake)
+	}
+	return stakes
+}
+
+func (k Keeper) GetAllValidatorStakesByValidator(ctx sdk.Context, validator string) []types.ValidatorStake {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("stake:"))
+	iterator := storetypes.KVStorePrefixIterator(store, nil)
+	defer iterator.Close()
+	var stakes []types.ValidatorStake
+	for ; iterator.Valid(); iterator.Next() {
+		var stake types.ValidatorStake
+		_ = json.Unmarshal(iterator.Value(), &stake)
+		if stake.Validator == validator {
+			stakes = append(stakes, stake)
+		}
+	}
+	return stakes
+}
+
+// ---------------- 委托 ----------------
+func (k Keeper) SetDelegation(ctx sdk.Context, deleg types.Delegation) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("delegation:"))
+	key := append(uint16ToBytes(deleg.Netuid), []byte(":"+deleg.Validator+":"+deleg.Staker)...)
+	bz, _ := json.Marshal(deleg)
+	store.Set(key, bz)
+}
+
+func (k Keeper) GetDelegation(ctx sdk.Context, netuid uint16, validator, staker string) (types.Delegation, bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("delegation:"))
+	key := append(uint16ToBytes(netuid), []byte(":"+validator+":"+staker)...)
+	bz := store.Get(key)
+	if bz == nil {
+		return types.Delegation{}, false
+	}
+	var deleg types.Delegation
+	_ = json.Unmarshal(bz, &deleg)
+	return deleg, true
+}
+
+func (k Keeper) GetDelegationsByStaker(ctx sdk.Context, staker string) []types.Delegation {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("delegation:"))
+	iterator := storetypes.KVStorePrefixIterator(store, nil)
+	defer iterator.Close()
+	var delegs []types.Delegation
+	for ; iterator.Valid(); iterator.Next() {
+		var deleg types.Delegation
+		_ = json.Unmarshal(iterator.Value(), &deleg)
+		if deleg.Staker == staker {
+			delegs = append(delegs, deleg)
+		}
+	}
+	return delegs
+}
+
+func (k Keeper) GetDelegationsByValidator(ctx sdk.Context, netuid uint16, validator string) []types.Delegation {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("delegation:"))
+	prefixKey := append(uint16ToBytes(netuid), []byte(":"+validator)...)
+	iterator := storetypes.KVStorePrefixIterator(store, prefixKey)
+	defer iterator.Close()
+	var delegs []types.Delegation
+	for ; iterator.Valid(); iterator.Next() {
+		var deleg types.Delegation
+		_ = json.Unmarshal(iterator.Value(), &deleg)
+		delegs = append(delegs, deleg)
+	}
+	return delegs
+}
+
+// ---------------- 权重 ----------------
+func (k Keeper) SetValidatorWeight(ctx sdk.Context, netuid uint16, validator string, weights map[string]uint64) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("weight:"))
+	key := append(uint16ToBytes(netuid), []byte(":"+validator)...)
+	valWeight := types.ValidatorWeight{
+		Netuid:    netuid,
+		Validator: validator,
+		Weights:   weights,
+	}
+	bz, _ := json.Marshal(valWeight)
+	store.Set(key, bz)
+}
+
+func (k Keeper) GetValidatorWeight(ctx sdk.Context, netuid uint16, validator string) (types.ValidatorWeight, bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("weight:"))
+	key := append(uint16ToBytes(netuid), []byte(":"+validator)...)
+	bz := store.Get(key)
+	if bz == nil {
+		return types.ValidatorWeight{}, false
+	}
+	var valWeight types.ValidatorWeight
+	_ = json.Unmarshal(bz, &valWeight)
+	return valWeight, true
+}
+
+// ---------------- 质押量聚合 ----------------
+func (k Keeper) GetAllValidatorStakesAmount(ctx sdk.Context, netuid uint16) map[string]string {
+	result := make(map[string]string)
+	for _, stake := range k.GetAllValidatorStakesByNetuid(ctx, netuid) {
+		result[stake.Validator] = stake.Amount
+	}
+	for _, stake := range k.GetAllValidatorStakesByNetuid(ctx, netuid) {
+		for _, deleg := range k.GetDelegationsByValidator(ctx, netuid, stake.Validator) {
+			result[stake.Validator] = types.AddBigIntString(result[stake.Validator], deleg.Amount)
+		}
+	}
+	return result
 }
