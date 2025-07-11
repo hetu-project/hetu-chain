@@ -151,6 +151,9 @@ import (
 	"github.com/hetu-project/hetu/v1/x/feemarket"
 	feemarketkeeper "github.com/hetu-project/hetu/v1/x/feemarket/keeper"
 	feemarkettypes "github.com/hetu-project/hetu/v1/x/feemarket/types"
+	"github.com/hetu-project/hetu/v1/x/yuma"
+	yumakeeper "github.com/hetu-project/hetu/v1/x/yuma/keeper"
+	yumatypes "github.com/hetu-project/hetu/v1/x/yuma/types"
 
 	// unnamed import of statik for swagger UI support
 	_ "github.com/hetu-project/hetu/v1/client/docs/statik"
@@ -330,6 +333,7 @@ type Evmos struct {
 	Erc20Keeper     erc20keeper.Keeper
 	EpochsKeeper    epochskeeper.Keeper
 	VestingKeeper   vestingkeeper.Keeper
+	YumaKeeper      yumakeeper.Keeper
 
 	// the module manager
 	mm                 *module.Manager
@@ -416,6 +420,7 @@ func NewEvmos(
 		epochstypes.StoreKey, vestingtypes.StoreKey,
 		// event keys
 		"event",
+		"yuma",
 	)
 
 	// Add the EVM transient store key
@@ -789,6 +794,7 @@ func NewEvmos(
 			app.GetSubspace(erc20types.ModuleName)),
 		epochs.NewAppModule(appCodec, app.EpochsKeeper),
 		vesting.NewAppModule(app.VestingKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
+		yuma.NewAppModule(appCodec, app.YumaKeeper),
 	)
 
 	// BasicModuleManager defines the module BasicManager which is in charge of setting up basic,
@@ -852,6 +858,7 @@ func NewEvmos(
 		vestingtypes.ModuleName,
 		inflationtypes.ModuleName,
 		erc20types.ModuleName,
+		yumatypes.ModuleName,
 	)
 
 	// NOTE: fee market module must go last in order to retrieve the block gas used.
@@ -883,6 +890,7 @@ func NewEvmos(
 		vestingtypes.ModuleName,
 		inflationtypes.ModuleName,
 		erc20types.ModuleName,
+		yumatypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -925,6 +933,7 @@ func NewEvmos(
 		ratelimittypes.ModuleName,
 		// NOTE: crisis module must go at the end to check for invariants on each module
 		crisistypes.ModuleName,
+		yumatypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
@@ -1012,6 +1021,13 @@ func NewEvmos(
 		stakingSelfABI,
 		stakingDelegatedABI,
 		weightsABI,
+	)
+
+	// 初始化 YumaKeeper
+	app.YumaKeeper = yumakeeper.NewKeeper(
+		appCodec,
+		keys["yuma"],
+		app.EventKeeper,
 	)
 
 	// 设置 EventKeeper 作为 EVM 的事件处理器
