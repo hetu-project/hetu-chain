@@ -1,22 +1,24 @@
 # Yuma Module
 
-Yuma 是一个简化的共识模块，专注于实现 Bittensor 的 epoch 算法。该模块完全基于 event 模块的数据，为每个子网提供独立的参数配置和奖励分配。
+Yuma 是一个实现 Bittensor epoch 算法的共识模块，专注于实现完整的 Bittensor 网络共识机制。该模块完全基于 event 模块的数据，为每个子网提供独立的参数配置和奖励分配。
 
 ## 概述
 
 Yuma 模块实现了 Bittensor 网络的核心共识机制，包括：
 
 - **加权中位数共识**：基于验证者权重和质押的共识计算
-- **EMA Bonds 更新**：历史权重的指数移动平均
+- **动态 Alpha 计算**：支持 LiquidAlpha 的动态权重更新
 - **权重裁剪**：防止异常权重的机制
-- **奖励分配**：基于共识分数的 token 分配
+- **激励计算**：基于 rho 参数的激励分配
+- **奖励分配**：结合 incentive 和 dividends 的 token 分配
 
 ## 核心特性
 
-### 1. 完全依赖 Event 模块
-- 所有数据都从 event 模块获取
-- 子网参数通过 `Subnet.Params` 配置
-- 验证者信息和权重从 event 模块读取
+### 1. 完整的 Bittensor Epoch 算法
+- 支持动态 alpha 计算（LiquidAlpha）
+- 支持固定 alpha 计算（传统模式）
+- 实现激励机制（incentive）
+- 实现分红机制（dividends）
 
 ### 2. 每个子网独立参数
 每个子网可以配置自己的参数：
@@ -32,14 +34,25 @@ Yuma 模块实现了 Bittensor 网络的核心共识机制，包括：
   "weights_set_rate_limit": "100",   // 权重设置速率限制
   "tempo": "100",                    // epoch 运行频率
   "bonds_penalty": "0.1",            // bonds 惩罚
-  "bonds_moving_average": "0.9"      // bonds 移动平均
+  "bonds_moving_average": "0.9",     // bonds 移动平均
+  "rho": "0.5",                      // 激励参数
+  "liquid_alpha_enabled": "false",   // 是否启用动态 alpha
+  "alpha_sigmoid_steepness": "10.0", // sigmoid 陡峭度
+  "alpha_low": "0.01",               // alpha 下限
+  "alpha_high": "0.99"               // alpha 上限
 }
 ```
 
-### 3. 简化的存储
-- 最小化状态存储
-- 主要存储 bonds 历史数据
-- 简单的 epoch 时间记录
+### 3. 动态 Alpha 计算
+当启用 `liquid_alpha_enabled` 时：
+- 使用 sigmoid 函数计算动态 alpha
+- 基于权重与共识的差异调整更新速度
+- 支持买入/卖出差异的智能调整
+
+### 4. 激励机制
+- 使用 rho 参数控制激励强度
+- 结合权重矩阵和质押权重计算激励
+- 与分红机制结合进行最终分配
 
 ## 算法流程
 
@@ -65,11 +78,16 @@ Yuma 模块实现了 Bittensor 网络的核心共识机制，包括：
    - 归一化质押权重
    - 计算加权中位数共识
    - 裁剪异常权重
+   - 计算动态或固定 alpha
    - 更新 EMA bonds
 
-6. **分配奖励**
+6. **计算激励和分红**
+   - 计算激励（incentive）
    - 计算分红（dividends）
-   - 归一化分红
+   - 归一化分配
+
+7. **分配奖励**
+   - 结合激励和分红
    - 分配 emission
 
 ## 核心函数
@@ -83,16 +101,19 @@ func (k Keeper) RunEpoch(ctx sdk.Context, netuid uint16, raoEmission uint64) (*t
 - 账户地址列表
 - 每个账户的 emission 分配
 - 每个账户的 dividend 分配
+- 每个账户的 incentive 分配
 - bonds 矩阵
 - 共识分数
 
-### 辅助函数
+### 新增的辅助函数
 
-- `weightedMedianCol`: 加权中位数计算
-- `clipWeights`: 权重裁剪
-- `computeBonds`: EMA bonds 更新
-- `computeDividends`: 分红计算
-- `distributeEmission`: 奖励分配
+- `computeLiquidAlphaValues`: 动态 alpha 矩阵计算
+- `alphaSigmoid`: sigmoid alpha 计算
+- `computeBondsWithDynamicAlpha`: 动态 alpha bonds 更新
+- `computeIncentive`: 激励计算
+- `matMul`: 矩阵乘法
+- `normalize`: 数组归一化
+- `clamp`: 值范围限制
 
 ## 模块结构
 
@@ -104,7 +125,8 @@ x/yuma/
 │   └── module.go         # 模块基本类型
 ├── keeper/
 │   ├── keeper.go         # 简化的 keeper
-│   └── epoch.go          # 核心算法实现
+│   ├── epoch.go          # 核心算法实现
+│   └── epoch_test.go     # 测试文件
 ├── module.go             # 模块定义
 ├── abci.go              # ABCI 接口
 └── README.md            # 本文档
@@ -122,6 +144,8 @@ if err != nil {
 
 // 查看结果
 fmt.Printf("Epoch result: %+v\n", result)
+fmt.Printf("Incentive: %v\n", result.Incentive)
+fmt.Printf("Dividend: %v\n", result.Dividend)
 ```
 
 ### 配置子网参数
@@ -132,6 +156,9 @@ subnet.Params = map[string]string{
     "alpha": "0.1",
     "delta": "1.0",
     "tempo": "100",
+    "rho": "0.5",
+    "liquid_alpha_enabled": "true",
+    "alpha_sigmoid_steepness": "10.0",
 }
 ```
 
@@ -148,14 +175,16 @@ subnet.Params = map[string]string{
 2. **错误处理**: 模块会优雅地处理各种错误情况
 3. **性能优化**: 算法经过优化，支持大规模验证者网络
 4. **可扩展性**: 模块设计支持未来功能扩展
+5. **动态 Alpha**: 需要谨慎配置 sigmoid 参数以获得最佳效果
 
 ## 开发计划
 
-- [ ] 添加更复杂的活跃性检查
-- [ ] 实现 bonds 持久化存储
-- [ ] 添加更多的参数验证
+- [ ] 实现真正的活跃性检查逻辑
+- [ ] 添加 bonds 持久化存储
+- [ ] 实现更多的参数验证
 - [ ] 优化算法性能
-- [ ] 添加测试覆盖
+- [ ] 添加更完整的测试覆盖
+- [ ] 实现 RPC 查询接口
 
 ## 贡献
 

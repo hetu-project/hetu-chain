@@ -10,6 +10,7 @@ type EpochResult struct {
 	Accounts  []string    `json:"accounts"`
 	Emission  []uint64    `json:"emission"`
 	Dividend  []uint64    `json:"dividend"`
+	Incentive []uint64    `json:"incentive"` // 新增：激励分配
 	Bonds     [][]float64 `json:"bonds"`
 	Consensus []float64   `json:"consensus"`
 }
@@ -34,22 +35,34 @@ type EpochParams struct {
 	Tempo              uint64  `json:"tempo"`                // epoch 运行频率
 	BondsPenalty       float64 `json:"bonds_penalty"`        // bonds 惩罚
 	BondsMovingAverage float64 `json:"bonds_moving_average"` // bonds 移动平均
+
+	// 新增参数
+	Rho                   float64 `json:"rho"`                     // 激励参数
+	LiquidAlphaEnabled    bool    `json:"liquid_alpha_enabled"`    // 是否启用动态 alpha
+	AlphaSigmoidSteepness float64 `json:"alpha_sigmoid_steepness"` // sigmoid 陡峭度
+	AlphaLow              float64 `json:"alpha_low"`               // alpha 下限
+	AlphaHigh             float64 `json:"alpha_high"`              // alpha 上限
 }
 
 // DefaultEpochParams 默认参数
 func DefaultEpochParams() EpochParams {
 	return EpochParams{
-		Kappa:               0.5,
-		Alpha:               0.1,
-		Delta:               1.0,
-		ActivityCutoff:      5000,
-		ImmunityPeriod:      4096,
-		MaxWeightsLimit:     1000,
-		MinAllowedWeights:   8,
-		WeightsSetRateLimit: 100,
-		Tempo:               100,
-		BondsPenalty:        0.1,
-		BondsMovingAverage:  0.9,
+		Kappa:                 0.5,
+		Alpha:                 0.1,
+		Delta:                 1.0,
+		ActivityCutoff:        5000,
+		ImmunityPeriod:        4096,
+		MaxWeightsLimit:       1000,
+		MinAllowedWeights:     8,
+		WeightsSetRateLimit:   100,
+		Tempo:                 100,
+		BondsPenalty:          0.1,
+		BondsMovingAverage:    0.9,
+		Rho:                   0.5,
+		LiquidAlphaEnabled:    false,
+		AlphaSigmoidSteepness: 10.0,
+		AlphaLow:              0.01,
+		AlphaHigh:             0.99,
 	}
 }
 
@@ -121,6 +134,37 @@ func ParseEpochParams(params map[string]string) EpochParams {
 	if val, ok := params["bonds_moving_average"]; ok {
 		if f, err := strconv.ParseFloat(val, 64); err == nil {
 			epochParams.BondsMovingAverage = f
+		}
+	}
+
+	// 解析新增参数
+	if val, ok := params["rho"]; ok {
+		if f, err := strconv.ParseFloat(val, 64); err == nil {
+			epochParams.Rho = f
+		}
+	}
+
+	if val, ok := params["liquid_alpha_enabled"]; ok {
+		if b, err := strconv.ParseBool(val); err == nil {
+			epochParams.LiquidAlphaEnabled = b
+		}
+	}
+
+	if val, ok := params["alpha_sigmoid_steepness"]; ok {
+		if f, err := strconv.ParseFloat(val, 64); err == nil {
+			epochParams.AlphaSigmoidSteepness = f
+		}
+	}
+
+	if val, ok := params["alpha_low"]; ok {
+		if f, err := strconv.ParseFloat(val, 64); err == nil {
+			epochParams.AlphaLow = f
+		}
+	}
+
+	if val, ok := params["alpha_high"]; ok {
+		if f, err := strconv.ParseFloat(val, 64); err == nil {
+			epochParams.AlphaHigh = f
 		}
 	}
 
