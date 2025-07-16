@@ -8,7 +8,7 @@ import (
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/hetu-project/hetu/v1/x/yuma/types"
+	"github.com/hetu-project/hetu/v1/x/stakework/types"
 )
 
 // 错误定义

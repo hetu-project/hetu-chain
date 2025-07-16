@@ -1,4 +1,4 @@
-package yuma
+package stakework
 
 import (
 	"encoding/json"
@@ -7,14 +7,14 @@ import (
 	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	"github.com/hetu-project/hetu/v1/x/yuma/keeper"
-	"github.com/hetu-project/hetu/v1/x/yuma/types"
+	"github.com/hetu-project/hetu/v1/x/stakework/keeper"
+	"github.com/hetu-project/hetu/v1/x/stakework/types"
 )
 
 var (
@@ -37,7 +37,7 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
 
 // RegisterInterfaces 注册接口
-func (AppModuleBasic) RegisterInterfaces(reg cdctypes.InterfaceRegistry) {
+func (AppModuleBasic) RegisterInterfaces(reg codectypes.InterfaceRegistry) {
 	// 简化的模块，暂时不需要注册接口
 }
 

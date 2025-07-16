@@ -3,7 +3,8 @@ package keeper
 import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/hetu-project/hetu/v1/x/yuma/types"
+
+	"github.com/hetu-project/hetu/v1/x/stakework/types"
 )
 
 // Keeper 简化的 yuma keeper
