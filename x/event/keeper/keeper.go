@@ -406,3 +406,47 @@ func (k Keeper) GetSubnetCount(ctx sdk.Context) uint64 {
 	subnets := k.GetAllSubnets(ctx)
 	return uint64(len(subnets))
 }
+
+// GetAllSubnetNetuids returns all subnet netuids (excluding root subnet 0)
+func (k Keeper) GetAllSubnetNetuids(ctx sdk.Context) []uint16 {
+	subnets := k.GetAllSubnets(ctx)
+	var netuids []uint16
+	for _, subnet := range subnets {
+		if subnet.Netuid != 0 { // 过滤掉根子网
+			netuids = append(netuids, subnet.Netuid)
+		}
+	}
+	return netuids
+}
+
+// GetSubnetsToEmitTo returns subnets that have first emission block number set
+func (k Keeper) GetSubnetsToEmitTo(ctx sdk.Context) []uint16 {
+	subnets := k.GetAllSubnets(ctx)
+	var emitSubnets []uint16
+	for _, subnet := range subnets {
+		if subnet.Netuid != 0 && subnet.FirstEmissionBlock > 0 { // 过滤掉根子网和未设置首次排放区块的子网
+			emitSubnets = append(emitSubnets, subnet.Netuid)
+		}
+	}
+	return emitSubnets
+}
+
+// SetSubnetFirstEmissionBlock sets the first emission block number for a subnet
+func (k Keeper) SetSubnetFirstEmissionBlock(ctx sdk.Context, netuid uint16, blockNumber uint64) {
+	subnet, exists := k.GetSubnet(ctx, netuid)
+	if !exists {
+		k.Logger(ctx).Error("subnet not found", "netuid", netuid)
+		return
+	}
+	subnet.FirstEmissionBlock = blockNumber
+	k.SetSubnet(ctx, subnet)
+}
+
+// GetSubnetFirstEmissionBlock gets the first emission block number for a subnet
+func (k Keeper) GetSubnetFirstEmissionBlock(ctx sdk.Context, netuid uint16) (uint64, bool) {
+	subnet, exists := k.GetSubnet(ctx, netuid)
+	if !exists {
+		return 0, false
+	}
+	return subnet.FirstEmissionBlock, true
+}

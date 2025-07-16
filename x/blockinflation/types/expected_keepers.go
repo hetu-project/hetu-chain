@@ -25,4 +25,7 @@ type BankKeeper interface {
 // EventKeeper defines the expected event keeper for getting subnet count
 type EventKeeper interface {
 	GetSubnetCount(ctx sdk.Context) uint64
+	GetAllSubnetNetuids(ctx sdk.Context) []uint16
+	GetSubnetsToEmitTo(ctx sdk.Context) []uint16
+	GetSubnetFirstEmissionBlock(ctx sdk.Context, netuid uint16) (uint64, bool)
 }

@@ -117,6 +117,12 @@ func (k Keeper) MintAndAllocateBlockInflation(ctx sdk.Context) error {
 			Amount: subnetRewardAmount,
 		}
 		k.AddToPendingSubnetRewards(ctx, subnetRewardCoin)
+
+		// Execute coinbase logic to distribute rewards to subnets
+		if err := k.RunCoinbase(ctx, subnetRewardAmount); err != nil {
+			k.Logger(ctx).Error("failed to execute coinbase", "error", err)
+			// Don't return error here to avoid blocking inflation
+		}
 	}
 
 	// Send remaining amount to fee collector
