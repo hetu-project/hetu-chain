@@ -87,6 +87,18 @@ func (k Keeper) MintAndAllocateBlockInflation(ctx sdk.Context) error {
 		return nil
 	}
 
+	// Get subnet count for reward calculation
+	subnetCount := k.eventKeeper.GetSubnetCount(ctx)
+
+	// Calculate subnet reward ratio
+	subnetRewardRatio := types.CalculateSubnetRewardRatio(params, subnetCount)
+
+	// Calculate subnet reward amount
+	subnetRewardAmount := math.LegacyNewDecFromInt(blockEmission).Mul(subnetRewardRatio).TruncateInt()
+
+	// Calculate remaining amount for fee collector
+	feeCollectorAmount := blockEmission.Sub(subnetRewardAmount)
+
 	// Create minted coin
 	mintedCoin := sdk.Coin{
 		Denom:  params.MintDenom,
@@ -98,14 +110,29 @@ func (k Keeper) MintAndAllocateBlockInflation(ctx sdk.Context) error {
 		return fmt.Errorf("failed to mint coins: %w", err)
 	}
 
-	// Send to fee collector
-	if err := k.bankKeeper.SendCoinsFromModuleToModule(
-		ctx,
-		types.ModuleName,
-		k.feeCollectorName,
-		sdk.Coins{mintedCoin},
-	); err != nil {
-		return fmt.Errorf("failed to send coins to fee collector: %w", err)
+	// Add subnet reward to pending pool
+	if subnetRewardAmount.IsPositive() {
+		subnetRewardCoin := sdk.Coin{
+			Denom:  params.MintDenom,
+			Amount: subnetRewardAmount,
+		}
+		k.AddToPendingSubnetRewards(ctx, subnetRewardCoin)
+	}
+
+	// Send remaining amount to fee collector
+	if feeCollectorAmount.IsPositive() {
+		feeCollectorCoin := sdk.Coin{
+			Denom:  params.MintDenom,
+			Amount: feeCollectorAmount,
+		}
+		if err := k.bankKeeper.SendCoinsFromModuleToModule(
+			ctx,
+			types.ModuleName,
+			k.feeCollectorName,
+			sdk.Coins{feeCollectorCoin},
+		); err != nil {
+			return fmt.Errorf("failed to send coins to fee collector: %w", err)
+		}
 	}
 
 	// Update total issuance
@@ -116,6 +143,10 @@ func (k Keeper) MintAndAllocateBlockInflation(ctx sdk.Context) error {
 	k.Logger(ctx).Info("minted and allocated block inflation",
 		"block_height", ctx.BlockHeight(),
 		"minted_amount", mintedCoin.String(),
+		"subnet_count", subnetCount,
+		"subnet_reward_ratio", subnetRewardRatio.String(),
+		"subnet_reward_amount", subnetRewardAmount.String(),
+		"fee_collector_amount", feeCollectorAmount.String(),
 		"total_issuance", newIssuance.String(),
 	)
 
@@ -126,6 +157,10 @@ func (k Keeper) MintAndAllocateBlockInflation(ctx sdk.Context) error {
 			sdk.NewAttribute("block_height", fmt.Sprintf("%d", ctx.BlockHeight())),
 			sdk.NewAttribute("minted_amount", mintedCoin.Amount.String()),
 			sdk.NewAttribute("mint_denom", mintedCoin.Denom),
+			sdk.NewAttribute("subnet_count", fmt.Sprintf("%d", subnetCount)),
+			sdk.NewAttribute("subnet_reward_ratio", subnetRewardRatio.String()),
+			sdk.NewAttribute("subnet_reward_amount", subnetRewardAmount.String()),
+			sdk.NewAttribute("fee_collector_amount", feeCollectorAmount.String()),
 			sdk.NewAttribute("total_issuance", newIssuance.Amount.String()),
 		),
 	)

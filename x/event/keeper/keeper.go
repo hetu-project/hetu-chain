@@ -400,3 +400,9 @@ func (k Keeper) GetAllValidatorStakesAmount(ctx sdk.Context, netuid uint16) map[
 	}
 	return result
 }
+
+// GetSubnetCount returns the total number of subnets
+func (k Keeper) GetSubnetCount(ctx sdk.Context) uint64 {
+	subnets := k.GetAllSubnets(ctx)
+	return uint64(len(subnets))
+}

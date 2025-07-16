@@ -13,14 +13,17 @@ type GenesisState struct {
 	TotalIssuance sdk.Coin `json:"total_issuance" yaml:"total_issuance"`
 	// TotalBurned defines the total burned tokens at genesis
 	TotalBurned sdk.Coin `json:"total_burned" yaml:"total_burned"`
+	// PendingSubnetRewards defines the pending subnet rewards pool
+	PendingSubnetRewards sdk.Coin `json:"pending_subnet_rewards" yaml:"pending_subnet_rewards"`
 }
 
 // DefaultGenesisState returns default genesis state
 func DefaultGenesisState() *GenesisState {
 	return &GenesisState{
-		Params:        DefaultParams(),
-		TotalIssuance: sdk.NewCoin("ahetu", math.ZeroInt()),
-		TotalBurned:   sdk.NewCoin("ahetu", math.ZeroInt()),
+		Params:               DefaultParams(),
+		TotalIssuance:        sdk.NewCoin("ahetu", math.ZeroInt()),
+		TotalBurned:          sdk.NewCoin("ahetu", math.ZeroInt()),
+		PendingSubnetRewards: sdk.NewCoin("ahetu", math.ZeroInt()),
 	}
 }
 
@@ -37,6 +40,11 @@ func (gs GenesisState) Validate() error {
 
 	// Validate total burned
 	if err := gs.TotalBurned.Validate(); err != nil {
+		return err
+	}
+
+	// Validate pending subnet rewards
+	if err := gs.PendingSubnetRewards.Validate(); err != nil {
 		return err
 	}
 

@@ -16,6 +16,7 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 
+	"github.com/hetu-project/hetu/v1/x/blockinflation/client/cli"
 	"github.com/hetu-project/hetu/v1/x/blockinflation/keeper"
 	"github.com/hetu-project/hetu/v1/x/blockinflation/types"
 )
@@ -76,7 +77,7 @@ func (AppModuleBasic) GetTxCmd() *cobra.Command {
 
 // GetQueryCmd returns the root query command for the blockinflation module.
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return nil
+	return cli.GetQueryCmd()
 }
 
 // AppModule implements an application module for the blockinflation module.

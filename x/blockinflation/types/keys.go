@@ -23,4 +23,7 @@ var (
 
 	// TotalBurnedKey defines the key for total burned tokens
 	TotalBurnedKey = []byte{0x02}
+
+	// PendingSubnetRewardsKey defines the key for pending subnet rewards
+	PendingSubnetRewardsKey = []byte{0x03}
 )

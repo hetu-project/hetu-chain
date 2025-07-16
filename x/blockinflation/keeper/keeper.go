@@ -24,6 +24,7 @@ type (
 		// keepers
 		accountKeeper    types.AccountKeeper
 		bankKeeper       types.BankKeeper
+		eventKeeper      types.EventKeeper
 		feeCollectorName string
 	}
 )
@@ -35,6 +36,7 @@ func NewKeeper(
 	ps paramstypes.Subspace,
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
+	ek types.EventKeeper,
 	feeCollectorName string,
 ) *Keeper {
 	// set KeyTable if it has not already been set
@@ -49,6 +51,7 @@ func NewKeeper(
 		paramstore:       ps,
 		accountKeeper:    ak,
 		bankKeeper:       bk,
+		eventKeeper:      ek,
 		feeCollectorName: feeCollectorName,
 	}
 }
@@ -106,6 +109,49 @@ func (k Keeper) SetTotalBurned(ctx sdk.Context, totalBurned sdk.Coin) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&totalBurned)
 	store.Set(types.TotalBurnedKey, bz)
+}
+
+// GetPendingSubnetRewards returns the pending subnet rewards
+func (k Keeper) GetPendingSubnetRewards(ctx sdk.Context) sdk.Coin {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.PendingSubnetRewardsKey)
+	if bz == nil {
+		return sdk.NewCoin(k.GetParams(ctx).MintDenom, math.ZeroInt())
+	}
+
+	var pendingRewards sdk.Coin
+	k.cdc.MustUnmarshal(bz, &pendingRewards)
+	return pendingRewards
+}
+
+// SetPendingSubnetRewards sets the pending subnet rewards
+func (k Keeper) SetPendingSubnetRewards(ctx sdk.Context, pendingRewards sdk.Coin) {
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshal(&pendingRewards)
+	store.Set(types.PendingSubnetRewardsKey, bz)
+}
+
+// AddToPendingSubnetRewards adds tokens to the pending subnet rewards pool
+func (k Keeper) AddToPendingSubnetRewards(ctx sdk.Context, amount sdk.Coin) {
+	params := k.GetParams(ctx)
+
+	// Validate denom
+	if amount.Denom != params.MintDenom {
+		k.Logger(ctx).Error("invalid denom for pending subnet rewards",
+			"expected", params.MintDenom,
+			"got", amount.Denom,
+		)
+		return
+	}
+
+	currentPending := k.GetPendingSubnetRewards(ctx)
+	newPending := currentPending.Add(amount)
+	k.SetPendingSubnetRewards(ctx, newPending)
+
+	k.Logger(ctx).Info("added to pending subnet rewards",
+		"amount", amount.String(),
+		"total_pending", newPending.String(),
+	)
 }
 
 // BurnTokens burns tokens and updates total burned

@@ -1048,6 +1048,7 @@ func NewEvmos(
 		app.GetSubspace(blockinflationtypes.ModuleName),
 		app.AccountKeeper,
 		app.BankKeeper,
+		app.EventKeeper,
 		authtypes.FeeCollectorName,
 	)
 

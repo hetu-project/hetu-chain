@@ -22,9 +22,15 @@ func (k Keeper) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data *types.Ge
 		k.SetTotalBurned(ctx, data.TotalBurned)
 	}
 
+	// Set pending subnet rewards
+	if !data.PendingSubnetRewards.Amount.IsNil() {
+		k.SetPendingSubnetRewards(ctx, data.PendingSubnetRewards)
+	}
+
 	k.Logger(ctx).Info("initialized blockinflation genesis state",
 		"total_issuance", data.TotalIssuance.String(),
 		"total_burned", data.TotalBurned.String(),
+		"pending_subnet_rewards", data.PendingSubnetRewards.String(),
 	)
 }
 
@@ -34,6 +40,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) *types.Genes
 	genesis.Params = k.GetParams(ctx)
 	genesis.TotalIssuance = k.GetTotalIssuance(ctx)
 	genesis.TotalBurned = k.GetTotalBurned(ctx)
+	genesis.PendingSubnetRewards = k.GetPendingSubnetRewards(ctx)
 
 	return genesis
 }
