@@ -21,3 +21,8 @@ type BankKeeper interface {
 	GetAllBalances(ctx context.Context, addr sdk.AccAddress) sdk.Coins
 	GetSupply(ctx context.Context, denom string) sdk.Coin
 }
+
+// EventKeeper defines the expected event keeper for getting subnet count
+type EventKeeper interface {
+	GetSubnetCount(ctx sdk.Context) uint64
+}

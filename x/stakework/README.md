@@ -180,13 +180,6 @@ active := k.calculateActive(ctx, netuid, validators, params)
 go test ./x/stakework/...
 ```
 
-## 注意事项
-
-1. **性能考虑**: Epoch 计算可能比较耗时，建议在测试网络中验证性能
-2. **参数调优**: 不同子网可能需要不同的参数配置
-3. **数据一致性**: 确保 event 模块提供的数据是最新的
-4. **错误处理**: 所有外部调用都有适当的错误处理
-
 ## 贡献
 
 欢迎提交 Issue 和 Pull Request 来改进这个模块。
