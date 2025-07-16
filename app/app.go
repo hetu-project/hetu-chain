@@ -145,6 +145,8 @@ import (
 	"github.com/hetu-project/hetu/v1/ethereum/eip712"
 	srvflags "github.com/hetu-project/hetu/v1/server/flags"
 	evmostypes "github.com/hetu-project/hetu/v1/types"
+	"github.com/hetu-project/hetu/v1/x/blockinflation"
+	blockinflationkeeper "github.com/hetu-project/hetu/v1/x/blockinflation/keeper"
 	"github.com/hetu-project/hetu/v1/x/evm"
 	evmkeeper "github.com/hetu-project/hetu/v1/x/evm/keeper"
 	evmtypes "github.com/hetu-project/hetu/v1/x/evm/types"
@@ -189,6 +191,7 @@ import (
 	"strings"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	blockinflationtypes "github.com/hetu-project/hetu/v1/x/blockinflation/types"
 	eventabi "github.com/hetu-project/hetu/v1/x/event/abi"
 	eventkeeper "github.com/hetu-project/hetu/v1/x/event/keeper"
 )
@@ -265,6 +268,7 @@ var (
 		inflationtypes.ModuleName:      {authtypes.Minter},
 		erc20types.ModuleName:          {authtypes.Minter, authtypes.Burner},
 		ratelimittypes.ModuleName:      nil,
+		blockinflationtypes.ModuleName: {authtypes.Minter, authtypes.Burner},
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -329,11 +333,12 @@ type Evmos struct {
 	FeeMarketKeeper feemarketkeeper.Keeper
 
 	// Evmos keepers
-	InflationKeeper inflationkeeper.Keeper
-	Erc20Keeper     erc20keeper.Keeper
-	EpochsKeeper    epochskeeper.Keeper
-	VestingKeeper   vestingkeeper.Keeper
-	YumaKeeper      yumakeeper.Keeper
+	InflationKeeper      inflationkeeper.Keeper
+	Erc20Keeper          erc20keeper.Keeper
+	EpochsKeeper         epochskeeper.Keeper
+	VestingKeeper        vestingkeeper.Keeper
+	YumaKeeper           yumakeeper.Keeper
+	BlockInflationKeeper *blockinflationkeeper.Keeper
 
 	// the module manager
 	mm                 *module.Manager
@@ -421,6 +426,7 @@ func NewEvmos(
 		// event keys
 		"event",
 		"yuma",
+		blockinflationtypes.StoreKey,
 	)
 
 	// Add the EVM transient store key
@@ -795,6 +801,7 @@ func NewEvmos(
 		epochs.NewAppModule(appCodec, app.EpochsKeeper),
 		vesting.NewAppModule(app.VestingKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
 		yuma.NewAppModule(appCodec, app.YumaKeeper),
+		blockinflation.NewAppModule(appCodec, *app.BlockInflationKeeper),
 	)
 
 	// BasicModuleManager defines the module BasicManager which is in charge of setting up basic,
@@ -839,6 +846,7 @@ func NewEvmos(
 		feemarkettypes.ModuleName,
 		evmtypes.ModuleName,
 		// minttypes.ModuleName,
+		blockinflationtypes.ModuleName, // Block inflation before distribution
 		distrtypes.ModuleName,
 		slashingtypes.ModuleName,
 		evidencetypes.ModuleName,
@@ -890,6 +898,7 @@ func NewEvmos(
 		vestingtypes.ModuleName,
 		inflationtypes.ModuleName,
 		erc20types.ModuleName,
+		blockinflationtypes.ModuleName, // Block inflation module
 		yumatypes.ModuleName,
 	)
 
@@ -931,6 +940,7 @@ func NewEvmos(
 		erc20types.ModuleName,
 		epochstypes.ModuleName,
 		ratelimittypes.ModuleName,
+		blockinflationtypes.ModuleName, // Block inflation module
 		// NOTE: crisis module must go at the end to check for invariants on each module
 		crisistypes.ModuleName,
 		yumatypes.ModuleName,
@@ -1028,6 +1038,17 @@ func NewEvmos(
 		appCodec,
 		keys["yuma"],
 		app.EventKeeper,
+	)
+
+	// 初始化 BlockInflationKeeper
+	app.BlockInflationKeeper = blockinflationkeeper.NewKeeper(
+		appCodec,
+		keys[blockinflationtypes.StoreKey],
+		memKeys[blockinflationtypes.MemStoreKey],
+		app.GetSubspace(blockinflationtypes.ModuleName),
+		app.AccountKeeper,
+		app.BankKeeper,
+		authtypes.FeeCollectorName,
 	)
 
 	// 设置 EventKeeper 作为 EVM 的事件处理器
@@ -1370,6 +1391,7 @@ func initParamsKeeper(
 	// evmos subspaces
 	paramsKeeper.Subspace(inflationtypes.ModuleName)
 	paramsKeeper.Subspace(erc20types.ModuleName)
+	paramsKeeper.Subspace(blockinflationtypes.ModuleName)
 	return paramsKeeper
 }
 
