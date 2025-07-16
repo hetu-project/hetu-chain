@@ -1,4 +1,4 @@
-package yuma
+package stakework
 
 import (
 	abci "github.com/cometbft/cometbft/abci/types"

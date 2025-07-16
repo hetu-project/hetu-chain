@@ -153,9 +153,9 @@ import (
 	"github.com/hetu-project/hetu/v1/x/feemarket"
 	feemarketkeeper "github.com/hetu-project/hetu/v1/x/feemarket/keeper"
 	feemarkettypes "github.com/hetu-project/hetu/v1/x/feemarket/types"
-	"github.com/hetu-project/hetu/v1/x/yuma"
-	yumakeeper "github.com/hetu-project/hetu/v1/x/yuma/keeper"
-	yumatypes "github.com/hetu-project/hetu/v1/x/yuma/types"
+	"github.com/hetu-project/hetu/v1/x/stakework"
+	stakeworkkeeper "github.com/hetu-project/hetu/v1/x/stakework/keeper"
+	stakeworktypes "github.com/hetu-project/hetu/v1/x/stakework/types"
 
 	// unnamed import of statik for swagger UI support
 	_ "github.com/hetu-project/hetu/v1/client/docs/statik"
@@ -337,7 +337,7 @@ type Evmos struct {
 	Erc20Keeper          erc20keeper.Keeper
 	EpochsKeeper         epochskeeper.Keeper
 	VestingKeeper        vestingkeeper.Keeper
-	YumaKeeper           yumakeeper.Keeper
+	StakeworkKeeper      stakeworkkeeper.Keeper
 	BlockInflationKeeper *blockinflationkeeper.Keeper
 
 	// the module manager
@@ -425,7 +425,7 @@ func NewEvmos(
 		epochstypes.StoreKey, vestingtypes.StoreKey,
 		// event keys
 		"event",
-		"yuma",
+		"stakework",
 		blockinflationtypes.StoreKey,
 	)
 
@@ -800,7 +800,7 @@ func NewEvmos(
 			app.GetSubspace(erc20types.ModuleName)),
 		epochs.NewAppModule(appCodec, app.EpochsKeeper),
 		vesting.NewAppModule(app.VestingKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
-		yuma.NewAppModule(appCodec, app.YumaKeeper),
+		stakework.NewAppModule(appCodec, app.StakeworkKeeper),
 		blockinflation.NewAppModule(appCodec, *app.BlockInflationKeeper),
 	)
 
@@ -866,7 +866,7 @@ func NewEvmos(
 		vestingtypes.ModuleName,
 		inflationtypes.ModuleName,
 		erc20types.ModuleName,
-		yumatypes.ModuleName,
+		stakeworktypes.ModuleName,
 	)
 
 	// NOTE: fee market module must go last in order to retrieve the block gas used.
@@ -899,7 +899,7 @@ func NewEvmos(
 		inflationtypes.ModuleName,
 		erc20types.ModuleName,
 		blockinflationtypes.ModuleName, // Block inflation module
-		yumatypes.ModuleName,
+		stakeworktypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -943,7 +943,7 @@ func NewEvmos(
 		blockinflationtypes.ModuleName, // Block inflation module
 		// NOTE: crisis module must go at the end to check for invariants on each module
 		crisistypes.ModuleName,
-		yumatypes.ModuleName,
+		stakeworktypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
@@ -1033,10 +1033,10 @@ func NewEvmos(
 		weightsABI,
 	)
 
-	// 初始化 YumaKeeper
-	app.YumaKeeper = yumakeeper.NewKeeper(
+	// 初始化 StakeworkKeeper
+	app.StakeworkKeeper = stakeworkkeeper.NewKeeper(
 		appCodec,
-		keys["yuma"],
+		keys["stakework"],
 		app.EventKeeper,
 	)
 
