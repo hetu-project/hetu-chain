@@ -2,11 +2,13 @@ package keeper
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"math/big"
 	"sort"
 	"strconv"
 
+	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/hetu-project/hetu/v1/x/stakework/types"
 )
@@ -113,16 +115,21 @@ func (k Keeper) RunEpoch(ctx sdk.Context, netuid uint16, raoEmission uint64) (*t
 	k.saveBonds(ctx, netuid, validators, bonds)
 
 	// 18. 更新最后 epoch 时间
-	k.setLastEpochBlock(ctx, netuid, uint64(ctx.BlockHeight()))
+	// k.setLastEpochTime(ctx, netuid, ctx.BlockTime()) // 删除不再需要的函数
 
 	return result, nil
 }
 
 // shouldRunEpoch 检查是否应该运行 epoch
+// 按照 Bittensor 的真实实现：基于区块号的公式
+// (block_number + netuid + 1) % (tempo + 1) == 0
 func (k Keeper) shouldRunEpoch(ctx sdk.Context, netuid uint16, tempo uint64) bool {
-	lastEpoch := k.getLastEpochBlock(ctx, netuid)
 	currentBlock := uint64(ctx.BlockHeight())
-	return (currentBlock - lastEpoch) >= tempo
+
+	// Bittensor 的 epoch 公式：
+	// (block_number + netuid + 1) % (tempo + 1) == 0
+	result := (currentBlock + uint64(netuid) + 1) % (tempo + 1)
+	return result == 0
 }
 
 // getSubnetValidators 获取子网的所有验证者
@@ -451,54 +458,60 @@ func (k Keeper) distributeEmission(normIncentive, normDividends []float64, raoEm
 func (k Keeper) getPrevBonds(ctx sdk.Context, netuid uint16, validators []types.ValidatorInfo) [][]float64 {
 	n := len(validators)
 	bonds := make([][]float64, n)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("bonds:"))
 
-	// TODO: 从存储中获取历史 bonds
-	// 暂时返回零矩阵
+	// 从存储中获取历史 bonds
 	for i := 0; i < n; i++ {
 		bonds[i] = make([]float64, n)
+		for j := 0; j < n; j++ {
+			// 创建键：netuid:validator_i:validator_j
+			key := fmt.Sprintf("%d:%s:%s", netuid, validators[i].Address, validators[j].Address)
+
+			// 从存储中读取 bonds 值
+			bz := store.Get([]byte(key))
+			if bz != nil {
+				// 将字符串转换回 float64
+				if bondStr := string(bz); bondStr != "" {
+					if bondValue, err := strconv.ParseFloat(bondStr, 64); err == nil {
+						bonds[i][j] = bondValue
+					}
+				}
+			}
+			// 如果没有找到历史数据，默认为 0.0
+		}
 	}
+
+	k.Logger(ctx).Debug("Retrieved previous bonds matrix",
+		"netuid", netuid,
+		"validators_count", n,
+		"bonds_matrix_size", fmt.Sprintf("%dx%d", n, n),
+	)
 
 	return bonds
 }
 
 // saveBonds 保存 bonds 到存储
+// bonds 是历史权重的指数移动平均（EMA），用于下一轮 epoch 计算
 func (k Keeper) saveBonds(ctx sdk.Context, netuid uint16, validators []types.ValidatorInfo, bonds [][]float64) {
-	// TODO: 保存 bonds 到存储
-	// 这里可以保存到 KVStore 中
-}
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("bonds:"))
 
-// getLastEpochBlock 获取最后 epoch 区块
-func (k Keeper) getLastEpochBlock(ctx sdk.Context, netuid uint16) uint64 {
-	store := ctx.KVStore(k.storeKey)
-	key := []byte("last_epoch_" + strconv.FormatUint(uint64(netuid), 10))
+	// 为每个验证者保存 bonds 数据
+	for i, validator := range validators {
+		for j, bondValue := range bonds[i] {
+			// 创建键：netuid:validator_i:validator_j
+			key := fmt.Sprintf("%d:%s:%s", netuid, validator.Address, validators[j].Address)
 
-	bz := store.Get(key)
-	if bz == nil {
-		return 0
-	}
-
-	// 简单的字节转换
-	var lastBlock uint64
-	for i, b := range bz {
-		if i < 8 {
-			lastBlock |= uint64(b) << (i * 8)
+			// 将 float64 转换为字符串存储
+			bondStr := fmt.Sprintf("%.10f", bondValue)
+			store.Set([]byte(key), []byte(bondStr))
 		}
 	}
-	return lastBlock
-}
 
-// setLastEpochBlock 设置最后 epoch 区块
-func (k Keeper) setLastEpochBlock(ctx sdk.Context, netuid uint16, blockHeight uint64) {
-	store := ctx.KVStore(k.storeKey)
-	key := []byte("last_epoch_" + strconv.FormatUint(uint64(netuid), 10))
-
-	// 简单的字节转换
-	bz := make([]byte, 8)
-	for i := 0; i < 8; i++ {
-		bz[i] = byte(blockHeight >> (i * 8))
-	}
-
-	store.Set(key, bz)
+	k.Logger(ctx).Debug("Saved bonds matrix",
+		"netuid", netuid,
+		"validators_count", len(validators),
+		"bonds_matrix_size", fmt.Sprintf("%dx%d", len(bonds), len(bonds[0])),
+	)
 }
 
 // computeLiquidAlphaValues 计算动态 alpha 矩阵

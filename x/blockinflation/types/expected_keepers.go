@@ -3,7 +3,11 @@ package types
 import (
 	"context"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	eventtypes "github.com/hetu-project/hetu/v1/x/event/types"
+	stakeworktypes "github.com/hetu-project/hetu/v1/x/stakework/types"
 )
 
 // AccountKeeper defines the expected account keeper
@@ -28,4 +32,44 @@ type EventKeeper interface {
 	GetAllSubnetNetuids(ctx sdk.Context) []uint16
 	GetSubnetsToEmitTo(ctx sdk.Context) []uint16
 	GetSubnetFirstEmissionBlock(ctx sdk.Context, netuid uint16) (uint64, bool)
+	GetAlphaPrice(ctx sdk.Context, netuid uint16) math.LegacyDec
+	GetMovingAlphaPrice(ctx sdk.Context, netuid uint16) math.LegacyDec
+	UpdateMovingPrice(ctx sdk.Context, netuid uint16, movingAlpha math.LegacyDec, halvingBlocks uint64)
+	GetSubnet(ctx sdk.Context, netuid uint16) (eventtypes.Subnet, bool)
+	GetSubnetAlphaIn(ctx sdk.Context, netuid uint16) math.Int
+	GetSubnetAlphaOut(ctx sdk.Context, netuid uint16) math.Int
+	GetSubnetTAO(ctx sdk.Context, netuid uint16) math.Int
+	GetAllValidatorStakesByNetuid(ctx sdk.Context, netuid uint16) []eventtypes.ValidatorStake
+	AddSubnetAlphaIn(ctx sdk.Context, netuid uint16, amount math.Int)
+	AddSubnetAlphaOut(ctx sdk.Context, netuid uint16, amount math.Int)
+	SetSubnetAlphaOut(ctx sdk.Context, netuid uint16, amount math.Int)
+	AddSubnetTAO(ctx sdk.Context, netuid uint16, amount math.Int)
+	GetSubnetAlphaInEmission(ctx sdk.Context, netuid uint16) math.Int
+	GetSubnetAlphaOutEmission(ctx sdk.Context, netuid uint16) math.Int
+	GetSubnetTaoInEmission(ctx sdk.Context, netuid uint16) math.Int
+	AddSubnetAlphaInEmission(ctx sdk.Context, netuid uint16, amount math.Int)
+	AddSubnetAlphaOutEmission(ctx sdk.Context, netuid uint16, amount math.Int)
+	AddSubnetTaoInEmission(ctx sdk.Context, netuid uint16, amount math.Int)
+	GetPendingOwnerCut(ctx sdk.Context, netuid uint16) math.Int
+	SetPendingOwnerCut(ctx sdk.Context, netuid uint16, amount math.Int)
+	AddPendingOwnerCut(ctx sdk.Context, netuid uint16, amount math.Int)
+	AddPendingEmission(ctx sdk.Context, netuid uint16, amount math.Int)
+	SetBlocksSinceLastStep(ctx sdk.Context, netuid uint16, value uint64)
+	GetBlocksSinceLastStep(ctx sdk.Context, netuid uint16) uint64
+	SetLastMechanismStepBlock(ctx sdk.Context, netuid uint16, blockHeight int64)
+	GetLastMechanismStepBlock(ctx sdk.Context, netuid uint16) int64
+	SetPendingEmission(ctx sdk.Context, netuid uint16, amount math.Int)
+	GetPendingEmission(ctx sdk.Context, netuid uint16) math.Int
+}
+
+// StakeworkKeeper defines the expected stakework keeper for epoch logic
+// 只声明需要用到的方法
+// 注意：ctx 为 sdk.Context
+// RunEpoch 返回 *types.EpochResult, error
+// shouldRunEpoch 返回 bool
+// 你可以根据 stakework keeper 实现补充方法
+
+type StakeworkKeeper interface {
+	ShouldRunEpoch(ctx sdk.Context, netuid uint16, tempo uint64) bool
+	RunEpoch(ctx sdk.Context, netuid uint16, raoEmission uint64) (*stakeworktypes.EpochResult, error)
 }

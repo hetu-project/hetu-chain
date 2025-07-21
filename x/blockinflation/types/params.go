@@ -16,6 +16,8 @@ var (
 	KeySubnetRewardBase     = []byte("SubnetRewardBase")
 	KeySubnetRewardK        = []byte("SubnetRewardK")
 	KeySubnetRewardMaxRatio = []byte("SubnetRewardMaxRatio")
+	KeySubnetMovingAlpha    = []byte("SubnetMovingAlpha")
+	KeySubnetOwnerCut       = []byte("SubnetOwnerCut")
 )
 
 // ParamKeyTable returns the parameter key table.
@@ -39,10 +41,14 @@ type Params struct {
 	SubnetRewardK math.LegacyDec `json:"subnet_reward_k" yaml:"subnet_reward_k"`
 	// SubnetRewardMaxRatio defines the maximum subnet reward ratio (e.g., 0.5)
 	SubnetRewardMaxRatio math.LegacyDec `json:"subnet_reward_max_ratio" yaml:"subnet_reward_max_ratio"`
+	// SubnetMovingAlpha defines the moving average coefficient for subnet reward
+	SubnetMovingAlpha math.LegacyDec `json:"subnet_moving_alpha" yaml:"subnet_moving_alpha"`
+	// SubnetOwnerCut defines the percentage of alpha_out that goes to subnet owners (e.g., 0.18 = 18%)
+	SubnetOwnerCut math.LegacyDec `json:"subnet_owner_cut" yaml:"subnet_owner_cut"`
 }
 
 // NewParams creates a new Params instance
-func NewParams(enableBlockInflation bool, mintDenom string, totalSupply, defaultBlockEmission math.Int, subnetRewardBase, subnetRewardK, subnetRewardMaxRatio math.LegacyDec) Params {
+func NewParams(enableBlockInflation bool, mintDenom string, totalSupply, defaultBlockEmission math.Int, subnetRewardBase, subnetRewardK, subnetRewardMaxRatio, subnetMovingAlpha, subnetOwnerCut math.LegacyDec) Params {
 	return Params{
 		EnableBlockInflation: enableBlockInflation,
 		MintDenom:            mintDenom,
@@ -51,6 +57,8 @@ func NewParams(enableBlockInflation bool, mintDenom string, totalSupply, default
 		SubnetRewardBase:     subnetRewardBase,
 		SubnetRewardK:        subnetRewardK,
 		SubnetRewardMaxRatio: subnetRewardMaxRatio,
+		SubnetMovingAlpha:    subnetMovingAlpha,
+		SubnetOwnerCut:       subnetOwnerCut,
 	}
 }
 
@@ -64,6 +72,8 @@ func DefaultParams() Params {
 		math.LegacyNewDecWithPrec(10, 2),    // Default SubnetRewardBase (0.10)
 		math.LegacyNewDecWithPrec(10, 2),    // Default SubnetRewardK (0.10)
 		math.LegacyNewDecWithPrec(50, 2),    // Default SubnetRewardMaxRatio (0.50)
+		math.LegacyNewDecWithPrec(3, 6),     // Default SubnetMovingAlpha (0.000003)
+		math.LegacyNewDecWithPrec(18, 2),    // Default SubnetOwnerCut (0.18)
 	)
 }
 
@@ -77,6 +87,8 @@ func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 		paramstypes.NewParamSetPair(KeySubnetRewardBase, &p.SubnetRewardBase, validateSubnetRewardBase),
 		paramstypes.NewParamSetPair(KeySubnetRewardK, &p.SubnetRewardK, validateSubnetRewardK),
 		paramstypes.NewParamSetPair(KeySubnetRewardMaxRatio, &p.SubnetRewardMaxRatio, validateSubnetRewardMaxRatio),
+		paramstypes.NewParamSetPair(KeySubnetMovingAlpha, &p.SubnetMovingAlpha, validateSubnetMovingAlpha),
+		paramstypes.NewParamSetPair(KeySubnetOwnerCut, &p.SubnetOwnerCut, validateSubnetOwnerCut),
 	}
 }
 
@@ -101,6 +113,12 @@ func (p Params) Validate() error {
 		return err
 	}
 	if err := validateSubnetRewardMaxRatio(p.SubnetRewardMaxRatio); err != nil {
+		return err
+	}
+	if err := validateSubnetMovingAlpha(p.SubnetMovingAlpha); err != nil {
+		return err
+	}
+	if err := validateSubnetOwnerCut(p.SubnetOwnerCut); err != nil {
 		return err
 	}
 	return nil
@@ -182,6 +200,34 @@ func validateSubnetRewardMaxRatio(i interface{}) error {
 	}
 	if v.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("subnet reward max ratio cannot be greater than 1")
+	}
+	return nil
+}
+
+func validateSubnetMovingAlpha(i interface{}) error {
+	v, ok := i.(math.LegacyDec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	if v.IsNegative() {
+		return fmt.Errorf("subnet moving alpha cannot be negative")
+	}
+	if v.GT(math.LegacyOneDec()) {
+		return fmt.Errorf("subnet moving alpha cannot be greater than 1")
+	}
+	return nil
+}
+
+func validateSubnetOwnerCut(i interface{}) error {
+	v, ok := i.(math.LegacyDec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	if v.IsNegative() {
+		return fmt.Errorf("subnet owner cut cannot be negative")
+	}
+	if v.GT(math.LegacyOneDec()) {
+		return fmt.Errorf("subnet owner cut cannot be greater than 1")
 	}
 	return nil
 }

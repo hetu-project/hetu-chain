@@ -1,8 +1,10 @@
 package keeper
 
 import (
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/hetu-project/hetu/v1/x/stakework/types"
 )
@@ -25,6 +27,11 @@ func NewKeeper(
 		storeKey:    storeKey,
 		eventKeeper: eventKeeper,
 	}
+}
+
+// Logger 返回模块的 logger
+func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+	return ctx.Logger().With("module", "x/stakework")
 }
 
 // GetEventKeeper 获取 event keeper

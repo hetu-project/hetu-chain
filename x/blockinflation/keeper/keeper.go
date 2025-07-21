@@ -25,6 +25,7 @@ type (
 		accountKeeper    types.AccountKeeper
 		bankKeeper       types.BankKeeper
 		eventKeeper      types.EventKeeper
+		stakeworkKeeper  types.StakeworkKeeper
 		feeCollectorName string
 	}
 )
@@ -37,6 +38,7 @@ func NewKeeper(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	ek types.EventKeeper,
+	stakeworkKeeper types.StakeworkKeeper,
 	feeCollectorName string,
 ) *Keeper {
 	// set KeyTable if it has not already been set
@@ -52,6 +54,7 @@ func NewKeeper(
 		accountKeeper:    ak,
 		bankKeeper:       bk,
 		eventKeeper:      ek,
+		stakeworkKeeper:  stakeworkKeeper,
 		feeCollectorName: feeCollectorName,
 	}
 }

@@ -4,11 +4,13 @@
 package keeper
 
 import (
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"math/big"
 
 	"cosmossdk.io/log"
+	"cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -117,12 +119,14 @@ func (k Keeper) handleSubnetRegistered(ctx sdk.Context, log ethTypes.Log) {
 		params[k] = v
 	}
 	subnet := types.Subnet{
-		Netuid:     event.Netuid,
-		Owner:      event.Owner.Hex(),
-		LockAmount: event.LockAmount.String(),
-		BurnedTao:  event.BurnedTao.String(),
-		Pool:       event.Pool.Hex(),
-		Params:     params,
+		Netuid:                event.Netuid,
+		Owner:                 event.Owner.Hex(),
+		LockAmount:            event.LockAmount.String(),
+		BurnedTao:             event.BurnedTao.String(),
+		Pool:                  event.Pool.Hex(),
+		Params:                params,
+		Mechanism:             1,      // 默认动态机制
+		EMAPriceHalvingBlocks: 201600, // 默认4周 (201600块)
 	}
 	k.SetSubnet(ctx, subnet)
 }
@@ -449,4 +453,495 @@ func (k Keeper) GetSubnetFirstEmissionBlock(ctx sdk.Context, netuid uint16) (uin
 		return 0, false
 	}
 	return subnet.FirstEmissionBlock, true
+}
+
+// ---------------- 价格相关存储 ----------------
+
+// SetSubnetMovingPrice sets the moving price for a subnet
+func (k Keeper) SetSubnetMovingPrice(ctx sdk.Context, netuid uint16, price math.LegacyDec) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("moving_price:"))
+	priceBytes := []byte(price.String())
+	store.Set(uint16ToBytes(netuid), priceBytes)
+}
+
+// GetSubnetMovingPrice gets the moving price for a subnet
+func (k Keeper) GetSubnetMovingPrice(ctx sdk.Context, netuid uint16) math.LegacyDec {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("moving_price:"))
+	bz := store.Get(uint16ToBytes(netuid))
+	if bz == nil {
+		return math.LegacyNewDec(1) // Default to 1.0
+	}
+	price, err := math.LegacyNewDecFromStr(string(bz))
+	if err != nil {
+		return math.LegacyNewDec(1) // Default to 1.0 on error
+	}
+	return price
+}
+
+// SetSubnetTAO sets the TAO amount for a subnet
+func (k Keeper) SetSubnetTAO(ctx sdk.Context, netuid uint16, amount math.Int) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("subnet_tao:"))
+	amountBytes := []byte(amount.String())
+	store.Set(uint16ToBytes(netuid), amountBytes)
+}
+
+// GetSubnetTAO gets the TAO amount for a subnet
+func (k Keeper) GetSubnetTAO(ctx sdk.Context, netuid uint16) math.Int {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("subnet_tao:"))
+	bz := store.Get(uint16ToBytes(netuid))
+	if bz == nil {
+		return math.ZeroInt()
+	}
+	amount, ok := math.NewIntFromString(string(bz))
+	if !ok {
+		return math.ZeroInt()
+	}
+	return amount
+}
+
+// SetSubnetAlphaIn sets the Alpha in amount for a subnet
+func (k Keeper) SetSubnetAlphaIn(ctx sdk.Context, netuid uint16, amount math.Int) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("subnet_alpha_in:"))
+	amountBytes := []byte(amount.String())
+	store.Set(uint16ToBytes(netuid), amountBytes)
+}
+
+// GetSubnetAlphaIn gets the Alpha in amount for a subnet
+func (k Keeper) GetSubnetAlphaIn(ctx sdk.Context, netuid uint16) math.Int {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("subnet_alpha_in:"))
+	bz := store.Get(uint16ToBytes(netuid))
+	if bz == nil {
+		return math.ZeroInt()
+	}
+	amount, ok := math.NewIntFromString(string(bz))
+	if !ok {
+		return math.ZeroInt()
+	}
+	return amount
+}
+
+// SetSubnetAlphaOut sets the Alpha out amount for a subnet
+func (k Keeper) SetSubnetAlphaOut(ctx sdk.Context, netuid uint16, amount math.Int) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("subnet_alpha_out:"))
+	amountBytes := []byte(amount.String())
+	store.Set(uint16ToBytes(netuid), amountBytes)
+}
+
+// GetSubnetAlphaOut gets the Alpha out amount for a subnet
+func (k Keeper) GetSubnetAlphaOut(ctx sdk.Context, netuid uint16) math.Int {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("subnet_alpha_out:"))
+	bz := store.Get(uint16ToBytes(netuid))
+	if bz == nil {
+		return math.ZeroInt()
+	}
+	amount, ok := math.NewIntFromString(string(bz))
+	if !ok {
+		return math.ZeroInt()
+	}
+	return amount
+}
+
+// SetSubnetVolume sets the volume for a subnet
+func (k Keeper) SetSubnetVolume(ctx sdk.Context, netuid uint16, volume math.Int) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("subnet_volume:"))
+	volumeBytes := []byte(volume.String())
+	store.Set(uint16ToBytes(netuid), volumeBytes)
+}
+
+// GetSubnetVolume gets the volume for a subnet
+func (k Keeper) GetSubnetVolume(ctx sdk.Context, netuid uint16) math.Int {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("subnet_volume:"))
+	bz := store.Get(uint16ToBytes(netuid))
+	if bz == nil {
+		return math.ZeroInt()
+	}
+	volume, ok := math.NewIntFromString(string(bz))
+	if !ok {
+		return math.ZeroInt()
+	}
+	return volume
+}
+
+// SetSubnetEmissionData sets emission data for a subnet
+func (k Keeper) SetSubnetEmissionData(ctx sdk.Context, netuid uint16, data types.SubnetEmissionData) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("subnet_emission:"))
+	bz, _ := json.Marshal(data)
+	store.Set(uint16ToBytes(netuid), bz)
+}
+
+// GetSubnetEmissionData gets emission data for a subnet
+func (k Keeper) GetSubnetEmissionData(ctx sdk.Context, netuid uint16) (types.SubnetEmissionData, bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("subnet_emission:"))
+	bz := store.Get(uint16ToBytes(netuid))
+	if bz == nil {
+		return types.SubnetEmissionData{}, false
+	}
+	var data types.SubnetEmissionData
+	_ = json.Unmarshal(bz, &data)
+	return data, true
+}
+
+// ---------------- 价格计算函数 ----------------
+
+// GetAlphaPrice calculates the alpha price for a subnet
+func (k Keeper) GetAlphaPrice(ctx sdk.Context, netuid uint16) math.LegacyDec {
+	// Root subnet always has price 1.0
+	if netuid == 0 {
+		return math.LegacyNewDec(1)
+	}
+
+	// Get subnet mechanism
+	subnet, exists := k.GetSubnet(ctx, netuid)
+	if !exists {
+		return math.LegacyNewDec(1) // Default to 1.0
+	}
+
+	// Stable mechanism (0) always has price 1.0
+	if subnet.Mechanism == 0 {
+		return math.LegacyNewDec(1)
+	}
+
+	// Dynamic mechanism: price = TAO / AlphaIn
+	subnetTAO := k.GetSubnetTAO(ctx, netuid)
+	subnetAlphaIn := k.GetSubnetAlphaIn(ctx, netuid)
+
+	if subnetAlphaIn.IsZero() {
+		return math.LegacyZeroDec()
+	}
+
+	// Convert to LegacyDec for division
+	taoDec := math.LegacyNewDecFromInt(subnetTAO)
+	alphaInDec := math.LegacyNewDecFromInt(subnetAlphaIn)
+
+	return taoDec.Quo(alphaInDec)
+}
+
+// GetMovingAlphaPrice gets the moving alpha price for a subnet
+func (k Keeper) GetMovingAlphaPrice(ctx sdk.Context, netuid uint16) math.LegacyDec {
+	// Root subnet always has price 1.0
+	if netuid == 0 {
+		return math.LegacyNewDec(1)
+	}
+
+	// Get subnet mechanism
+	subnet, exists := k.GetSubnet(ctx, netuid)
+	if !exists {
+		return math.LegacyNewDec(1) // Default to 1.0
+	}
+
+	// Stable mechanism (0) always has price 1.0
+	if subnet.Mechanism == 0 {
+		return math.LegacyNewDec(1)
+	}
+
+	// Dynamic mechanism: return moving price
+	return k.GetSubnetMovingPrice(ctx, netuid)
+}
+
+// UpdateMovingPrice updates the moving price for a subnet
+func (k Keeper) UpdateMovingPrice(ctx sdk.Context, netuid uint16, movingAlpha math.LegacyDec, halvingBlocks uint64) {
+	// Get first emission block
+	firstEmissionBlock, exists := k.GetSubnetFirstEmissionBlock(ctx, netuid)
+	if !exists {
+		k.Logger(ctx).Error("subnet first emission block not found", "netuid", netuid)
+		return
+	}
+
+	currentBlock := ctx.BlockHeight()
+
+	// Calculate blocks since start call
+	startCallBlock := int64(firstEmissionBlock) - 1
+	if startCallBlock < 0 {
+		startCallBlock = 0
+	}
+
+	blocksSinceStartCall := currentBlock - startCallBlock
+	if blocksSinceStartCall < 0 {
+		blocksSinceStartCall = 0
+	}
+
+	// Convert to LegacyDec
+	blocksSinceStartCallDec := math.LegacyNewDec(blocksSinceStartCall)
+	halvingTimeDec := math.LegacyNewDec(int64(halvingBlocks))
+
+	// Calculate alpha: alpha = moving_alpha * (blocks_since_start / (blocks_since_start + halving_time))
+	denominator := blocksSinceStartCallDec.Add(halvingTimeDec)
+	if denominator.IsZero() {
+		denominator = math.LegacyNewDec(1)
+	}
+
+	alpha := movingAlpha.Mul(blocksSinceStartCallDec.Quo(denominator))
+
+	// Calculate 1 - alpha
+	oneMinusAlpha := math.LegacyNewDec(1).Sub(alpha)
+
+	// Get current price (capped at 1.0)
+	currentPrice := k.GetAlphaPrice(ctx, netuid)
+	if currentPrice.GT(math.LegacyNewDec(1)) {
+		currentPrice = math.LegacyNewDec(1)
+	}
+
+	// Get current moving price
+	currentMoving := k.GetMovingAlphaPrice(ctx, netuid)
+
+	// Calculate new moving price: new_moving = alpha * current_price + (1 - alpha) * current_moving
+	newMoving := alpha.Mul(currentPrice).Add(oneMinusAlpha.Mul(currentMoving))
+
+	// Set new moving price
+	k.SetSubnetMovingPrice(ctx, netuid, newMoving)
+
+	k.Logger(ctx).Debug("Updated moving price",
+		"netuid", netuid,
+		"current_price", currentPrice.String(),
+		"current_moving", currentMoving.String(),
+		"new_moving", newMoving.String(),
+		"alpha", alpha.String(),
+		"moving_alpha", movingAlpha.String(),
+		"halving_blocks", halvingBlocks,
+	)
+}
+
+// AddSubnetAlphaIn adds amount to the Alpha in amount for a subnet
+func (k Keeper) AddSubnetAlphaIn(ctx sdk.Context, netuid uint16, amount math.Int) {
+	currentAmount := k.GetSubnetAlphaIn(ctx, netuid)
+	newAmount := currentAmount.Add(amount)
+	k.SetSubnetAlphaIn(ctx, netuid, newAmount)
+
+	k.Logger(ctx).Debug("Added to subnet Alpha in",
+		"netuid", netuid,
+		"added_amount", amount.String(),
+		"new_total", newAmount.String(),
+	)
+}
+
+// AddSubnetAlphaOut adds amount to the Alpha out amount for a subnet
+func (k Keeper) AddSubnetAlphaOut(ctx sdk.Context, netuid uint16, amount math.Int) {
+	currentAmount := k.GetSubnetAlphaOut(ctx, netuid)
+	newAmount := currentAmount.Add(amount)
+	k.SetSubnetAlphaOut(ctx, netuid, newAmount)
+
+	k.Logger(ctx).Debug("Added to subnet Alpha out",
+		"netuid", netuid,
+		"added_amount", amount.String(),
+		"new_total", newAmount.String(),
+	)
+}
+
+// AddSubnetTAO adds amount to the TAO amount for a subnet
+func (k Keeper) AddSubnetTAO(ctx sdk.Context, netuid uint16, amount math.Int) {
+	currentAmount := k.GetSubnetTAO(ctx, netuid)
+	newAmount := currentAmount.Add(amount)
+	k.SetSubnetTAO(ctx, netuid, newAmount)
+
+	k.Logger(ctx).Debug("Added to subnet TAO",
+		"netuid", netuid,
+		"added_amount", amount.String(),
+		"new_total", newAmount.String(),
+	)
+}
+
+// SetSubnetAlphaInEmission sets the cumulative Alpha in emission for a subnet
+func (k Keeper) SetSubnetAlphaInEmission(ctx sdk.Context, netuid uint16, amount math.Int) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("subnet_alpha_in_emission:"))
+	amountBytes := []byte(amount.String())
+	store.Set(uint16ToBytes(netuid), amountBytes)
+}
+
+// GetSubnetAlphaInEmission gets the cumulative Alpha in emission for a subnet
+func (k Keeper) GetSubnetAlphaInEmission(ctx sdk.Context, netuid uint16) math.Int {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("subnet_alpha_in_emission:"))
+	bz := store.Get(uint16ToBytes(netuid))
+	if bz == nil {
+		return math.ZeroInt()
+	}
+	amount, ok := math.NewIntFromString(string(bz))
+	if !ok {
+		return math.ZeroInt()
+	}
+	return amount
+}
+
+// AddSubnetAlphaInEmission adds to the cumulative Alpha in emission for a subnet
+func (k Keeper) AddSubnetAlphaInEmission(ctx sdk.Context, netuid uint16, amount math.Int) {
+	currentAmount := k.GetSubnetAlphaInEmission(ctx, netuid)
+	newAmount := currentAmount.Add(amount)
+	k.SetSubnetAlphaInEmission(ctx, netuid, newAmount)
+
+	k.Logger(ctx).Debug("Added to subnet Alpha in emission",
+		"netuid", netuid,
+		"added_amount", amount.String(),
+		"new_total", newAmount.String(),
+	)
+}
+
+// SetSubnetAlphaOutEmission sets the cumulative Alpha out emission for a subnet
+func (k Keeper) SetSubnetAlphaOutEmission(ctx sdk.Context, netuid uint16, amount math.Int) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("subnet_alpha_out_emission:"))
+	amountBytes := []byte(amount.String())
+	store.Set(uint16ToBytes(netuid), amountBytes)
+}
+
+// GetSubnetAlphaOutEmission gets the cumulative Alpha out emission for a subnet
+func (k Keeper) GetSubnetAlphaOutEmission(ctx sdk.Context, netuid uint16) math.Int {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("subnet_alpha_out_emission:"))
+	bz := store.Get(uint16ToBytes(netuid))
+	if bz == nil {
+		return math.ZeroInt()
+	}
+	amount, ok := math.NewIntFromString(string(bz))
+	if !ok {
+		return math.ZeroInt()
+	}
+	return amount
+}
+
+// AddSubnetAlphaOutEmission adds to the cumulative Alpha out emission for a subnet
+func (k Keeper) AddSubnetAlphaOutEmission(ctx sdk.Context, netuid uint16, amount math.Int) {
+	currentAmount := k.GetSubnetAlphaOutEmission(ctx, netuid)
+	newAmount := currentAmount.Add(amount)
+	k.SetSubnetAlphaOutEmission(ctx, netuid, newAmount)
+
+	k.Logger(ctx).Debug("Added to subnet Alpha out emission",
+		"netuid", netuid,
+		"added_amount", amount.String(),
+		"new_total", newAmount.String(),
+	)
+}
+
+// SetSubnetTaoInEmission sets the cumulative TAO in emission for a subnet
+func (k Keeper) SetSubnetTaoInEmission(ctx sdk.Context, netuid uint16, amount math.Int) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("subnet_tao_in_emission:"))
+	amountBytes := []byte(amount.String())
+	store.Set(uint16ToBytes(netuid), amountBytes)
+}
+
+// GetSubnetTaoInEmission gets the cumulative TAO in emission for a subnet
+func (k Keeper) GetSubnetTaoInEmission(ctx sdk.Context, netuid uint16) math.Int {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("subnet_tao_in_emission:"))
+	bz := store.Get(uint16ToBytes(netuid))
+	if bz == nil {
+		return math.ZeroInt()
+	}
+	amount, ok := math.NewIntFromString(string(bz))
+	if !ok {
+		return math.ZeroInt()
+	}
+	return amount
+}
+
+// AddSubnetTaoInEmission adds to the cumulative TAO in emission for a subnet
+func (k Keeper) AddSubnetTaoInEmission(ctx sdk.Context, netuid uint16, amount math.Int) {
+	currentAmount := k.GetSubnetTaoInEmission(ctx, netuid)
+	newAmount := currentAmount.Add(amount)
+	k.SetSubnetTaoInEmission(ctx, netuid, newAmount)
+
+	k.Logger(ctx).Debug("Added to subnet TAO in emission",
+		"netuid", netuid,
+		"added_amount", amount.String(),
+		"new_total", newAmount.String(),
+	)
+}
+
+// SetPendingOwnerCut sets the pending owner cut for a subnet
+func (k Keeper) SetPendingOwnerCut(ctx sdk.Context, netuid uint16, amount math.Int) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("pending_owner_cut:"))
+	amountBytes := []byte(amount.String())
+	store.Set(uint16ToBytes(netuid), amountBytes)
+}
+
+// GetPendingOwnerCut gets the pending owner cut for a subnet
+func (k Keeper) GetPendingOwnerCut(ctx sdk.Context, netuid uint16) math.Int {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("pending_owner_cut:"))
+	bz := store.Get(uint16ToBytes(netuid))
+	if bz == nil {
+		return math.ZeroInt()
+	}
+	amount, ok := math.NewIntFromString(string(bz))
+	if !ok {
+		return math.ZeroInt()
+	}
+	return amount
+}
+
+// AddPendingOwnerCut adds to the pending owner cut for a subnet
+func (k Keeper) AddPendingOwnerCut(ctx sdk.Context, netuid uint16, amount math.Int) {
+	currentAmount := k.GetPendingOwnerCut(ctx, netuid)
+	newAmount := currentAmount.Add(amount)
+	k.SetPendingOwnerCut(ctx, netuid, newAmount)
+
+	k.Logger(ctx).Debug("Added to pending owner cut",
+		"netuid", netuid,
+		"added_amount", amount.String(),
+		"new_total", newAmount.String(),
+	)
+}
+
+// SetPendingEmission sets the pending emission for a subnet
+func (k Keeper) SetPendingEmission(ctx sdk.Context, netuid uint16, amount math.Int) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("pending_emission:"))
+	amountBytes := []byte(amount.String())
+	store.Set(uint16ToBytes(netuid), amountBytes)
+}
+
+// GetPendingEmission gets the pending emission for a subnet
+func (k Keeper) GetPendingEmission(ctx sdk.Context, netuid uint16) math.Int {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("pending_emission:"))
+	bz := store.Get(uint16ToBytes(netuid))
+	if bz == nil {
+		return math.ZeroInt()
+	}
+	amount, ok := math.NewIntFromString(string(bz))
+	if !ok {
+		return math.ZeroInt()
+	}
+	return amount
+}
+
+// AddPendingEmission adds to the pending emission for a subnet
+func (k Keeper) AddPendingEmission(ctx sdk.Context, netuid uint16, amount math.Int) {
+	currentAmount := k.GetPendingEmission(ctx, netuid)
+	newAmount := currentAmount.Add(amount)
+	k.SetPendingEmission(ctx, netuid, newAmount)
+
+	k.Logger(ctx).Debug("Added to pending emission",
+		"netuid", netuid,
+		"added_amount", amount.String(),
+		"new_total", newAmount.String(),
+	)
+}
+
+// SetBlocksSinceLastStep 设置自上次epoch以来的区块计数器
+func (k Keeper) SetBlocksSinceLastStep(ctx sdk.Context, netuid uint16, value uint64) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("blocks_since_last_step:"))
+	bz := make([]byte, 8)
+	binary.BigEndian.PutUint64(bz, value)
+	store.Set(uint16ToBytes(netuid), bz)
+}
+
+// GetBlocksSinceLastStep 获取自上次epoch以来的区块计数器
+func (k Keeper) GetBlocksSinceLastStep(ctx sdk.Context, netuid uint16) uint64 {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("blocks_since_last_step:"))
+	bz := store.Get(uint16ToBytes(netuid))
+	if bz == nil || len(bz) != 8 {
+		return 0
+	}
+	return binary.BigEndian.Uint64(bz)
+}
+
+// SetLastMechanismStepBlock 设置上次epoch运行的区块号
+func (k Keeper) SetLastMechanismStepBlock(ctx sdk.Context, netuid uint16, blockHeight int64) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("last_mechanism_step_block:"))
+	bz := make([]byte, 8)
+	binary.BigEndian.PutUint64(bz, uint64(blockHeight))
+	store.Set(uint16ToBytes(netuid), bz)
+}
+
+// GetLastMechanismStepBlock 获取上次epoch运行的区块号
+func (k Keeper) GetLastMechanismStepBlock(ctx sdk.Context, netuid uint16) int64 {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("last_mechanism_step_block:"))
+	bz := store.Get(uint16ToBytes(netuid))
+	if bz == nil || len(bz) != 8 {
+		return 0
+	}
+	return int64(binary.BigEndian.Uint64(bz))
 }
