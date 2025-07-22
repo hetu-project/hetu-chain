@@ -669,6 +669,20 @@ func NewEvmos(
 		runtime.ProvideCometInfoService(),
 	)
 	app.EvidenceKeeper = *evidenceKeeper
+
+	app.BlockInflationKeeper = blockinflationkeeper.NewKeeper(
+		appCodec,
+		keys[blockinflationtypes.StoreKey],
+		memKeys[blockinflationtypes.MemStoreKey],
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.EventKeeper,
+		app.StakeworkKeeper,
+		authtypes.FeeCollectorName,
+	)
+	if app.BlockInflationKeeper == nil {
+		panic("app.BlockInflationKeeper is nil after NewKeeper")
+	}
 	/****  Module Options ****/
 
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
@@ -926,19 +940,6 @@ func NewEvmos(
 		keys["stakework"],
 		app.EventKeeper,
 	)
-	app.BlockInflationKeeper = blockinflationkeeper.NewKeeper(
-		appCodec,
-		keys[blockinflationtypes.StoreKey],
-		memKeys[blockinflationtypes.MemStoreKey],
-		app.AccountKeeper,
-		app.BankKeeper,
-		app.EventKeeper,
-		app.StakeworkKeeper,
-		authtypes.FeeCollectorName,
-	)
-	if app.BlockInflationKeeper == nil {
-		panic("app.BlockInflationKeeper is nil after NewKeeper")
-	}
 
 	// 设置 EventKeeper 作为 EVM 的事件处理器
 	app.EvmKeeper.SetEventHandler(app.EventKeeper)
