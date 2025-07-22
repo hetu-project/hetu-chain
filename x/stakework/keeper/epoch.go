@@ -134,6 +134,16 @@ func (k Keeper) shouldRunEpoch(ctx sdk.Context, netuid uint16, tempo uint64) boo
 
 // ShouldRunEpoch 导出方法，满足 blockinflation/types.StakeworkKeeper 接口
 func (k Keeper) ShouldRunEpoch(ctx sdk.Context, netuid uint16, tempo uint64) bool {
+	// Add debug information
+	if k.eventKeeper == nil {
+		k.Logger(ctx).Error("ShouldRunEpoch: eventKeeper is nil")
+		return false
+	}
+
+	// Add debug information for the calculation
+	currentBlock := uint64(ctx.BlockHeight())
+	k.Logger(ctx).Debug("ShouldRunEpoch calculation", "netuid", netuid, "tempo", tempo, "currentBlock", currentBlock)
+
 	return k.shouldRunEpoch(ctx, netuid, tempo)
 }
 

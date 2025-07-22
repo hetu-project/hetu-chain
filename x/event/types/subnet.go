@@ -1,6 +1,8 @@
 package types
 
 import (
+	"encoding/json"
+
 	"cosmossdk.io/math"
 )
 
@@ -15,6 +17,30 @@ type Subnet struct {
 	FirstEmissionBlock    uint64            `json:"first_emission_block" yaml:"first_emission_block"`         // 首次排放区块号
 	Mechanism             uint8             `json:"mechanism" yaml:"mechanism"`                               // 子网机制 (0=稳定, 1=动态)
 	EMAPriceHalvingBlocks uint64            `json:"ema_price_halving_blocks" yaml:"ema_price_halving_blocks"` // EMA价格减半区块数 (默认201600=4周)
+}
+
+// MarshalJSON implements json.Marshaler
+func (s Subnet) MarshalJSON() ([]byte, error) {
+	type Alias Subnet
+	return json.Marshal(&struct {
+		*Alias
+	}{
+		Alias: (*Alias)(&s),
+	})
+}
+
+// UnmarshalJSON implements json.Unmarshaler
+func (s *Subnet) UnmarshalJSON(data []byte) error {
+	type Alias Subnet
+	aux := &struct {
+		*Alias
+	}{
+		Alias: (*Alias)(s),
+	}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	return nil
 }
 
 // SubnetPriceData represents price-related data for a subnet

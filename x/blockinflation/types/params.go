@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 
-	"cosmossdk.io/math"
+	math "cosmossdk.io/math"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 

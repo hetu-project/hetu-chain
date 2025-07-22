@@ -190,6 +190,8 @@ import (
 
 	"strings"
 
+	"reflect"
+
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	blockinflationtypes "github.com/hetu-project/hetu/v1/x/blockinflation/types"
 	eventabi "github.com/hetu-project/hetu/v1/x/event/abi"
@@ -253,6 +255,7 @@ var (
 		inflation.AppModuleBasic{},
 		erc20.AppModuleBasic{},
 		epochs.AppModuleBasic{},
+		blockinflation.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -670,6 +673,34 @@ func NewEvmos(
 	)
 	app.EvidenceKeeper = *evidenceKeeper
 
+	// 初始化 EventKeeper (必须在 BlockInflationKeeper 之前)
+	subnetRegistryABI, err := abi.JSON(strings.NewReader(string(eventabi.SubnetRegistryABI)))
+	if err != nil {
+		panic(fmt.Sprintf("failed to parse SubnetRegistry ABI: %v", err))
+	}
+	stakingSelfABI, err := abi.JSON(strings.NewReader(string(eventabi.StakingSelfABI)))
+	if err != nil {
+		panic(fmt.Sprintf("failed to parse StakingSelf ABI: %v", err))
+	}
+	stakingDelegatedABI, err := abi.JSON(strings.NewReader(string(eventabi.StakingDelegatedABI)))
+	if err != nil {
+		panic(fmt.Sprintf("failed to parse StakingDelegated ABI: %v", err))
+	}
+	weightsABI, err := abi.JSON(strings.NewReader(string(eventabi.WeightsABI)))
+	if err != nil {
+		panic(fmt.Sprintf("failed to parse Weights ABI: %v", err))
+	}
+	app.EventKeeper = eventkeeper.NewKeeper(
+		appCodec,
+		keys["event"],
+		subnetRegistryABI,
+		stakingSelfABI,
+		stakingDelegatedABI,
+		weightsABI,
+	)
+
+	subspace := app.GetSubspace(blockinflationtypes.ModuleName)
+	fmt.Printf("DEBUG: blockinflation subspace is zero? %v, hasKeyTable? %v\n", reflect.ValueOf(subspace).IsZero(), subspace.HasKeyTable())
 	app.BlockInflationKeeper = blockinflationkeeper.NewKeeper(
 		appCodec,
 		keys[blockinflationtypes.StoreKey],
@@ -679,6 +710,7 @@ func NewEvmos(
 		app.EventKeeper,
 		app.StakeworkKeeper,
 		authtypes.FeeCollectorName,
+		subspace,
 	)
 	if app.BlockInflationKeeper == nil {
 		panic("app.BlockInflationKeeper is nil after NewKeeper")
@@ -725,7 +757,7 @@ func NewEvmos(
 		epochs.NewAppModule(appCodec, app.EpochsKeeper),
 		vesting.NewAppModule(app.VestingKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
 		stakework.NewAppModule(appCodec, app.StakeworkKeeper),
-		blockinflation.NewAppModule(appCodec, *app.BlockInflationKeeper, app.ParamsKeeper),
+		blockinflation.NewAppModule(*app.BlockInflationKeeper),
 	)
 	// BasicModuleManager defines the module BasicManager which is in charge of setting up basic,
 	// non-dependant module elements, such as codec registration and genesis verification.
@@ -909,32 +941,8 @@ func NewEvmos(
 		// so we have to ignore this error explicitly.
 		_ = app.tpsCounter.start(context.Background())
 	}()
-	// keeper 初始化处添加 event keeper 初始化
-	// 加载 ABI
-	subnetRegistryABI, err := abi.JSON(strings.NewReader(string(eventabi.SubnetRegistryABI)))
-	if err != nil {
-		panic(fmt.Sprintf("failed to parse SubnetRegistry ABI: %v", err))
-	}
-	stakingSelfABI, err := abi.JSON(strings.NewReader(string(eventabi.StakingSelfABI)))
-	if err != nil {
-		panic(fmt.Sprintf("failed to parse StakingSelf ABI: %v", err))
-	}
-	stakingDelegatedABI, err := abi.JSON(strings.NewReader(string(eventabi.StakingDelegatedABI)))
-	if err != nil {
-		panic(fmt.Sprintf("failed to parse StakingDelegated ABI: %v", err))
-	}
-	weightsABI, err := abi.JSON(strings.NewReader(string(eventabi.WeightsABI)))
-	if err != nil {
-		panic(fmt.Sprintf("failed to parse Weights ABI: %v", err))
-	}
-	app.EventKeeper = eventkeeper.NewKeeper(
-		appCodec,
-		keys["event"],
-		subnetRegistryABI,
-		stakingSelfABI,
-		stakingDelegatedABI,
-		weightsABI,
-	)
+
+	// 初始化 StakeworkKeeper (必须在 EventKeeper 之后)
 	app.StakeworkKeeper = stakeworkkeeper.NewKeeper(
 		appCodec,
 		keys["stakework"],

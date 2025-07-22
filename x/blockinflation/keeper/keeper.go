@@ -4,29 +4,27 @@ import (
 	"fmt"
 
 	"cosmossdk.io/log"
+	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/hetu-project/hetu/v1/x/blockinflation/types"
 	blockinflationtypes "github.com/hetu-project/hetu/v1/x/blockinflation/types"
 )
 
 type (
 	Keeper struct {
-		cdc      codec.BinaryCodec
-		storeKey storetypes.StoreKey
-		memKey   storetypes.StoreKey
-		// paramstore paramstypes.Subspace // 移除
-
-		// keepers
+		cdc              codec.BinaryCodec
+		storeKey         storetypes.StoreKey
+		memKey           storetypes.StoreKey
 		accountKeeper    blockinflationtypes.AccountKeeper
 		bankKeeper       blockinflationtypes.BankKeeper
 		eventKeeper      blockinflationtypes.EventKeeper
 		stakeworkKeeper  blockinflationtypes.StakeworkKeeper
 		feeCollectorName string
+		subspace         paramstypes.Subspace
 	}
 )
 
@@ -34,11 +32,12 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
 	memKey storetypes.StoreKey,
-	ak types.AccountKeeper,
-	bk types.BankKeeper,
-	ek types.EventKeeper,
-	stakeworkKeeper types.StakeworkKeeper,
+	ak blockinflationtypes.AccountKeeper,
+	bk blockinflationtypes.BankKeeper,
+	ek blockinflationtypes.EventKeeper,
+	stakeworkKeeper blockinflationtypes.StakeworkKeeper,
 	feeCollectorName string,
+	subspace paramstypes.Subspace,
 ) *Keeper {
 	return &Keeper{
 		cdc:              cdc,
@@ -49,6 +48,7 @@ func NewKeeper(
 		eventKeeper:      ek,
 		stakeworkKeeper:  stakeworkKeeper,
 		feeCollectorName: feeCollectorName,
+		subspace:         subspace,
 	}
 }
 
@@ -57,14 +57,24 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // GetParams returns the current blockinflation module parameters
-func (k Keeper) GetParams(ctx sdk.Context, subspace paramstypes.Subspace) (params blockinflationtypes.Params) {
-	subspace.GetParamSet(ctx, &params)
+func (k Keeper) GetParams(ctx sdk.Context) blockinflationtypes.Params {
+	var params blockinflationtypes.Params
+
+	defer func() {
+		if r := recover(); r != nil {
+			k.Logger(ctx).Warn("Panic in GetParamSet, writing default params", "panic", r)
+			// 写入默认参数到 KVStore
+			k.SetParams(ctx, blockinflationtypes.DefaultParams())
+			params = blockinflationtypes.DefaultParams()
+		}
+	}()
+	k.subspace.GetParamSet(ctx, &params)
 	return params
 }
 
 // SetParams sets the blockinflation module parameters
-func (k Keeper) SetParams(ctx sdk.Context, subspace paramstypes.Subspace, params blockinflationtypes.Params) {
-	subspace.SetParamSet(ctx, &params)
+func (k Keeper) SetParams(ctx sdk.Context, params blockinflationtypes.Params) {
+	k.subspace.SetParamSet(ctx, &params)
 }
 
 // GetTotalIssuance returns the total issuance
@@ -72,7 +82,8 @@ func (k Keeper) GetTotalIssuance(ctx sdk.Context) sdk.Coin {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(blockinflationtypes.TotalIssuanceKey)
 	if bz == nil {
-		panic("GetTotalIssuance: must provide subspace for params")
+		// Return zero coin if not found
+		return sdk.NewCoin("ahetu", math.ZeroInt())
 	}
 
 	var totalIssuance sdk.Coin
@@ -92,7 +103,8 @@ func (k Keeper) GetTotalBurned(ctx sdk.Context) sdk.Coin {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(blockinflationtypes.TotalBurnedKey)
 	if bz == nil {
-		panic("GetTotalBurned: must provide subspace for params")
+		// Return zero coin if not found
+		return sdk.NewCoin("ahetu", math.ZeroInt())
 	}
 
 	var totalBurned sdk.Coin
@@ -112,7 +124,8 @@ func (k Keeper) GetPendingSubnetRewards(ctx sdk.Context) sdk.Coin {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(blockinflationtypes.PendingSubnetRewardsKey)
 	if bz == nil {
-		panic("GetPendingSubnetRewards: must provide subspace for params")
+		// Return zero coin if not found
+		return sdk.NewCoin("ahetu", math.ZeroInt())
 	}
 
 	var pendingRewards sdk.Coin
@@ -128,8 +141,8 @@ func (k Keeper) SetPendingSubnetRewards(ctx sdk.Context, pendingRewards sdk.Coin
 }
 
 // AddToPendingSubnetRewards adds tokens to the pending subnet rewards pool
-func (k Keeper) AddToPendingSubnetRewards(ctx sdk.Context, subspace paramstypes.Subspace, amount sdk.Coin) {
-	params := k.GetParams(ctx, subspace)
+func (k Keeper) AddToPendingSubnetRewards(ctx sdk.Context, amount sdk.Coin) {
+	params := k.GetParams(ctx)
 
 	// Validate denom
 	if amount.Denom != params.MintDenom {
@@ -151,8 +164,8 @@ func (k Keeper) AddToPendingSubnetRewards(ctx sdk.Context, subspace paramstypes.
 }
 
 // BurnTokens burns tokens and updates total burned
-func (k Keeper) BurnTokens(ctx sdk.Context, subspace paramstypes.Subspace, amount sdk.Coin) error {
-	params := k.GetParams(ctx, subspace)
+func (k Keeper) BurnTokens(ctx sdk.Context, amount sdk.Coin) error {
+	params := k.GetParams(ctx)
 
 	// Validate denom
 	if amount.Denom != params.MintDenom {

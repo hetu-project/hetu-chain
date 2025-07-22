@@ -5,7 +5,6 @@ import (
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	eventtypes "github.com/hetu-project/hetu/v1/x/event/types"
 	stakeworktypes "github.com/hetu-project/hetu/v1/x/stakework/types"
 )

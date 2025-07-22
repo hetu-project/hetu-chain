@@ -33,8 +33,7 @@ func TestCalculateBlockEmission_HalvingMechanism(t *testing.T) {
 	params := blockinflationtypes.DefaultParams()
 	params.TotalSupply = totalSupply
 	params.DefaultBlockEmission = defaultBlockEmission
-	subspace := createTestSubspace()
-	k.SetParams(ctx, subspace, params)
+	k.SetParams(ctx, params)
 
 	// 测试用例：不同总发行量下的区块奖励
 	testCases := []struct {
@@ -102,7 +101,7 @@ func TestCalculateBlockEmission_HalvingMechanism(t *testing.T) {
 			})
 
 			// 计算区块奖励
-			emission, err := k.CalculateBlockEmission(ctx, subspace)
+			emission, err := k.CalculateBlockEmission(ctx)
 			require.NoError(t, err)
 
 			// 验证结果
@@ -132,8 +131,7 @@ func TestCalculateBlockEmission_HalvingCycle(t *testing.T) {
 	params := blockinflationtypes.DefaultParams()
 	params.TotalSupply = totalSupply
 	params.DefaultBlockEmission = defaultBlockEmission
-	subspace := createTestSubspace()
-	k.SetParams(ctx, subspace, params)
+	k.SetParams(ctx, params)
 
 	t.Logf("=== 减半周期分析 ===")
 	t.Logf("总供应量: %s aHETU (%.0f HETU)", totalSupply.String(), totalSupply.ToLegacyDec().Quo(math.LegacyNewDec(1e18)).MustFloat64())
@@ -174,7 +172,7 @@ func TestCalculateBlockEmission_HalvingCycle(t *testing.T) {
 		})
 
 		// 计算区块奖励
-		emission, err := k.CalculateBlockEmission(ctx, createTestSubspace())
+		emission, err := k.CalculateBlockEmission(ctx)
 		require.NoError(t, err)
 
 		// 计算实际奖励比例
@@ -224,8 +222,7 @@ func TestCalculateBlockEmission_ProgressiveAnalysis(t *testing.T) {
 	params := blockinflationtypes.DefaultParams()
 	params.TotalSupply = totalSupply
 	params.DefaultBlockEmission = defaultBlockEmission
-	subspace := createTestSubspace()
-	k.SetParams(ctx, subspace, params)
+	k.SetParams(ctx, params)
 
 	t.Logf("=== 渐进式减半分析 ===")
 	t.Logf("分析从0%%到100%%发行量的奖励变化")
@@ -254,7 +251,7 @@ func TestCalculateBlockEmission_ProgressiveAnalysis(t *testing.T) {
 		})
 
 		// 计算区块奖励
-		emission, err := k.CalculateBlockEmission(ctx, createTestSubspace())
+		emission, err := k.CalculateBlockEmission(ctx)
 		require.NoError(t, err)
 
 		// 计算奖励比例
@@ -318,8 +315,7 @@ func TestCalculateBlockEmission_EdgeCases(t *testing.T) {
 
 	// 设置参数
 	params := blockinflationtypes.DefaultParams()
-	subspace := createTestSubspace()
-	k.SetParams(ctx, subspace, params)
+	k.SetParams(ctx, params)
 
 	// 测试边界情况
 	testCases := []struct {
@@ -375,7 +371,7 @@ func TestCalculateBlockEmission_EdgeCases(t *testing.T) {
 			})
 
 			// 计算区块奖励
-			emission, err := k.CalculateBlockEmission(ctx, createTestSubspace())
+			emission, err := k.CalculateBlockEmission(ctx)
 			require.NoError(t, err)
 
 			if tc.shouldBeZero {

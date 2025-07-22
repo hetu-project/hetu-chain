@@ -6,14 +6,13 @@ import (
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	blockinflationtypes "github.com/hetu-project/hetu/v1/x/blockinflation/types"
 )
 
 // CalculateBlockEmission calculates the block emission based on Bittensor's algorithm
 // Improved version with high-precision calculations to avoid floating-point precision issues
-func (k Keeper) CalculateBlockEmission(ctx sdk.Context, subspace paramstypes.Subspace) (math.Int, error) {
-	params := k.GetParams(ctx, subspace)
+func (k Keeper) CalculateBlockEmission(ctx sdk.Context) (math.Int, error) {
+	params := k.GetParams(ctx)
 	totalIssuance := k.GetTotalIssuance(ctx)
 
 	// Check if we've reached total supply
@@ -79,8 +78,8 @@ func (k Keeper) CalculateBlockEmission(ctx sdk.Context, subspace paramstypes.Sub
 }
 
 // MintAndAllocateBlockInflation mints coins and allocates them to fee collector
-func (k Keeper) MintAndAllocateBlockInflation(ctx sdk.Context, subspace paramstypes.Subspace) error {
-	params := k.GetParams(ctx, subspace)
+func (k Keeper) MintAndAllocateBlockInflation(ctx sdk.Context) error {
+	params := k.GetParams(ctx)
 
 	// Skip if inflation is disabled
 	if !params.EnableBlockInflation {
@@ -88,7 +87,7 @@ func (k Keeper) MintAndAllocateBlockInflation(ctx sdk.Context, subspace paramsty
 	}
 
 	// Calculate block emission
-	blockEmission, err := k.CalculateBlockEmission(ctx, subspace)
+	blockEmission, err := k.CalculateBlockEmission(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to calculate block emission: %w", err)
 	}
@@ -127,10 +126,10 @@ func (k Keeper) MintAndAllocateBlockInflation(ctx sdk.Context, subspace paramsty
 			Denom:  params.MintDenom,
 			Amount: subnetRewardAmount,
 		}
-		k.AddToPendingSubnetRewards(ctx, subspace, subnetRewardCoin)
+		k.AddToPendingSubnetRewards(ctx, subnetRewardCoin)
 
 		// Execute coinbase logic to distribute rewards to subnets
-		if err := k.RunCoinbase(ctx, subspace, subnetRewardAmount); err != nil {
+		if err := k.RunCoinbase(ctx, subnetRewardAmount); err != nil {
 			k.Logger(ctx).Error("failed to execute coinbase", "error", err)
 			// Don't return error here to avoid blocking inflation
 		}

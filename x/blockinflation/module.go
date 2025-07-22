@@ -15,7 +15,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/core/appmodule"
-	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 
 	"github.com/hetu-project/hetu/v1/x/blockinflation/client/cli"
 	"github.com/hetu-project/hetu/v1/x/blockinflation/keeper"
@@ -84,16 +83,14 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 // AppModule implements an application module for the blockinflation module.
 type AppModule struct {
 	AppModuleBasic
-	keeper       keeper.Keeper
-	paramsKeeper paramskeeper.Keeper
+	keeper keeper.Keeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, paramsKeeper paramskeeper.Keeper) AppModule {
+func NewAppModule(k keeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
-		keeper:         keeper,
-		paramsKeeper:   paramsKeeper,
+		keeper:         k,
 	}
 }
 
@@ -120,22 +117,14 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.
 	if err := json.Unmarshal(data, &genesisState); err != nil {
 		panic(err)
 	}
-	subspace, found := am.paramsKeeper.GetSubspace(types.ModuleName)
-	if !found {
-		panic("blockinflation subspace not found, check initParamsKeeper registration")
-	}
-	am.keeper.InitGenesis(ctx, subspace, cdc, &genesisState)
+	am.keeper.InitGenesis(ctx, cdc, &genesisState)
 	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the blockinflation
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	subspace, found := am.paramsKeeper.GetSubspace(types.ModuleName)
-	if !found {
-		panic("blockinflation subspace not found, check initParamsKeeper registration")
-	}
-	gs := am.keeper.ExportGenesis(ctx, subspace, cdc)
+	gs := am.keeper.ExportGenesis(ctx, cdc)
 	bz, err := json.Marshal(gs)
 	if err != nil {
 		panic(err)
@@ -149,11 +138,7 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 // BeginBlock returns the begin blocker for the blockinflation module.
 func (am AppModule) BeginBlock(ctx context.Context) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	subspace, found := am.paramsKeeper.GetSubspace(types.ModuleName)
-	if !found {
-		panic("blockinflation subspace not found, check initParamsKeeper registration")
-	}
-	return am.keeper.BeginBlocker(sdkCtx, subspace)
+	return am.keeper.BeginBlocker(sdkCtx)
 }
 
 // IsAppModule implements the appmodule.AppModule interface.

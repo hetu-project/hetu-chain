@@ -38,6 +38,10 @@ jq ".app_state[\"crisis\"][\"constant_fee\"][\"denom\"]=\"ahetu\"" "$GENESIS" > 
 jq ".app_state[\"gov\"][\"params\"][\"min_deposit\"][0][\"denom\"]=\"ahetu\"" "$GENESIS" > "$TMPGENESIS" && mv "$TMPGENESIS" "$GENESIS"
 jq ".app_state[\"mint\"][\"params\"][\"mint_denom\"]=\"ahetu\"" "$GENESIS" > "$TMPGENESIS" && mv "$TMPGENESIS" "$GENESIS"
 
+# 注意：以下模块现在会自动使用 DefaultGenesisState() 中的默认值
+# - blockinflation 模块：自动使用 DefaultParams() 和零值状态
+# - event 模块：自动使用空数组作为默认状态 (subnets: [], validator_stakes: [], delegations: [], validator_weights: [])
+
 # Increase block time
 jq ".consensus_params[\"block\"][\"time_iota_ms\"]=\"30000\"" "$GENESIS" > "$TMPGENESIS" && mv "$TMPGENESIS" "$GENESIS"
 

@@ -256,13 +256,29 @@ func (k Keeper) GetSubnet(ctx sdk.Context, netuid uint16) (types.Subnet, bool) {
 }
 
 func (k Keeper) GetAllSubnets(ctx sdk.Context) []types.Subnet {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("subnet:"))
-	iterator := storetypes.KVStorePrefixIterator(store, nil)
+	// Add debug information
+	if k.storeKey == nil {
+		k.Logger(ctx).Error("GetAllSubnets: storeKey is nil")
+		return []types.Subnet{}
+	}
+
+	store := ctx.KVStore(k.storeKey)
+	if store == nil {
+		k.Logger(ctx).Error("GetAllSubnets: KVStore is nil")
+		return []types.Subnet{}
+	}
+
+	prefixStore := prefix.NewStore(store, []byte("subnet:"))
+	iterator := storetypes.KVStorePrefixIterator(prefixStore, nil)
 	defer iterator.Close()
 	var subnets []types.Subnet
 	for ; iterator.Valid(); iterator.Next() {
 		var subnet types.Subnet
-		_ = json.Unmarshal(iterator.Value(), &subnet)
+		err := json.Unmarshal(iterator.Value(), &subnet)
+		if err != nil {
+			k.Logger(ctx).Error("GetAllSubnets: failed to unmarshal subnet", "error", err, "value", string(iterator.Value()))
+			continue
+		}
 		subnets = append(subnets, subnet)
 	}
 	return subnets
@@ -407,6 +423,18 @@ func (k Keeper) GetAllValidatorStakesAmount(ctx sdk.Context, netuid uint16) map[
 
 // GetSubnetCount returns the total number of subnets
 func (k Keeper) GetSubnetCount(ctx sdk.Context) uint64 {
+	// Add debug information
+	if k.storeKey == nil {
+		k.Logger(ctx).Error("GetSubnetCount: storeKey is nil")
+		return 0
+	}
+
+	store := ctx.KVStore(k.storeKey)
+	if store == nil {
+		k.Logger(ctx).Error("GetSubnetCount: KVStore is nil")
+		return 0
+	}
+
 	subnets := k.GetAllSubnets(ctx)
 	return uint64(len(subnets))
 }
