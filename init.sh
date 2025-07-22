@@ -26,11 +26,13 @@ rm -rf "$HETUD_HOME"
 # hetud config keyring-backend "$KEYRING"
 # hetud config chain-id "$CHAINID"
 
+# Initialize the node
+hetud init "$MONIKER" --chain-id "$CHAINID" --home "$HETUD_HOME"
+
 # Add a key
 hetud keys add "$KEY" --keyring-backend "$KEYRING" --algo "$KEYALGO" --home "$HETUD_HOME"
 
-# Initialize the node
-hetud init "$MONIKER" --chain-id "$CHAINID" --home "$HETUD_HOME"
+
 
 # Modify parameters in the genesis file
 jq ".app_state[\"staking\"][\"params\"][\"bond_denom\"]=\"ahetu\"" "$GENESIS" > "$TMPGENESIS" && mv "$TMPGENESIS" "$GENESIS"

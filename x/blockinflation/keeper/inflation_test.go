@@ -665,6 +665,66 @@ func calculateBlockEmissionDirect(totalIssuance, totalSupply, defaultEmission ma
 	return blockEmission.TruncateInt()
 }
 
+// TestYumaSubnetRewardRatioAndDistribution 测试Yuma链奖励分配和子网奖励比例
+func TestYumaSubnetRewardRatioAndDistribution(t *testing.T) {
+	// 测试参数
+	defaultBlockEmission, _ := math.NewIntFromString("1000000000000000000") // 1 HETU
+	halfBlockEmission := defaultBlockEmission.QuoRaw(2)                     // 0.5 HETU
+
+	// 子网奖励参数
+	testParams := []struct {
+		base      float64
+		k         float64
+		maxRatio  float64
+		subnetCnt int
+	}{
+		{0.10, 0.10, 0.5, 1},
+		{0.10, 0.10, 0.5, 2},
+		{0.10, 0.10, 0.5, 5},
+		{0.10, 0.10, 0.5, 10},
+		{0.10, 0.10, 0.5, 20},
+		{0.10, 0.10, 0.5, 50},
+		{0.10, 0.10, 0.5, 100},
+		{0.10, 0.20, 0.5, 10}, // k变大
+		{0.20, 0.10, 0.5, 10}, // base变大
+		{0.10, 0.10, 0.3, 10}, // maxRatio变小
+	}
+
+	t.Logf("=== 子网奖励比例(subnet_reward_ratio)测试 ===")
+	for _, p := range testParams {
+		ratio := p.base + p.k*stdmath.Log(1+float64(p.subnetCnt))
+		if ratio > p.maxRatio {
+			ratio = p.maxRatio
+		}
+		t.Logf("base=%.2f, k=%.2f, max=%.2f, subnet_count=%d => subnet_reward_ratio=%.4f",
+			p.base, p.k, p.maxRatio, p.subnetCnt, ratio)
+	}
+
+	t.Logf("\n=== 区块奖励分配明细测试 ===")
+	for _, emission := range []math.Int{defaultBlockEmission, halfBlockEmission} {
+		for _, p := range testParams[:3] { // 只取前3组做明细演示
+			ratio := p.base + p.k*stdmath.Log(1+float64(p.subnetCnt))
+			if ratio > p.maxRatio {
+				ratio = p.maxRatio
+			}
+			subnetReward := emission.ToLegacyDec().Mul(math.LegacyNewDecWithPrec(int64(ratio*10000), 4)).TruncateInt()
+			feeCollector := emission.Sub(subnetReward)
+			t.Logf("[区块奖励=%s HETU, subnet_count=%d] subnet_reward_ratio=%.4f, subnet_reward=%s, fee_collector=%s",
+				emission.ToLegacyDec().Quo(math.LegacyNewDec(1e18)).String(), p.subnetCnt, ratio,
+				subnetReward.ToLegacyDec().Quo(math.LegacyNewDec(1e18)).String(),
+				feeCollector.ToLegacyDec().Quo(math.LegacyNewDec(1e18)).String())
+		}
+	}
+
+	t.Logf("\n=== Cosmos原生奖励分配CLI命令及说明 ===")
+	t.Logf("1. 查询分配参数: hetud q distribution params")
+	t.Logf("2. 查询社区池余额: hetud q distribution community-pool")
+	t.Logf("3. 查询某验证人奖励: hetud q distribution rewards <validator-address>")
+	t.Logf("4. 查询某delegator奖励: hetud q distribution rewards <delegator-address>")
+	t.Logf("5. 查询proposer奖励: 先查区块proposer (hetud q block <height>)，再查奖励 (hetud q distribution rewards <proposer-address>)")
+	t.Logf("\nCosmos奖励分配方案说明：\n- proposer奖励：1%%（固定）+ 4%%（额外奖励，和投票相关）\n- validator奖励：剩余奖励按投票权分配\n- 社区池：部分奖励\n- 实际比例以 hetud q distribution params 查询为准")
+}
+
 // 辅助函数：创建测试 keeper
 func createTestKeeper(t *testing.T) Keeper {
 	// 创建一个功能完整的测试 keeper
