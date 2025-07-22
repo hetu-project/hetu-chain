@@ -4,28 +4,28 @@ import (
 	"fmt"
 
 	"cosmossdk.io/log"
-	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/hetu-project/hetu/v1/x/blockinflation/types"
+	blockinflationtypes "github.com/hetu-project/hetu/v1/x/blockinflation/types"
 )
 
 type (
 	Keeper struct {
-		cdc        codec.BinaryCodec
-		storeKey   storetypes.StoreKey
-		memKey     storetypes.StoreKey
-		paramstore paramstypes.Subspace
+		cdc      codec.BinaryCodec
+		storeKey storetypes.StoreKey
+		memKey   storetypes.StoreKey
+		// paramstore paramstypes.Subspace // 移除
 
 		// keepers
-		accountKeeper    types.AccountKeeper
-		bankKeeper       types.BankKeeper
-		eventKeeper      types.EventKeeper
-		stakeworkKeeper  types.StakeworkKeeper
+		accountKeeper    blockinflationtypes.AccountKeeper
+		bankKeeper       blockinflationtypes.BankKeeper
+		eventKeeper      blockinflationtypes.EventKeeper
+		stakeworkKeeper  blockinflationtypes.StakeworkKeeper
 		feeCollectorName string
 	}
 )
@@ -34,23 +34,16 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
 	memKey storetypes.StoreKey,
-	ps paramstypes.Subspace,
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	ek types.EventKeeper,
 	stakeworkKeeper types.StakeworkKeeper,
 	feeCollectorName string,
 ) *Keeper {
-	// set KeyTable if it has not already been set
-	if !ps.HasKeyTable() {
-		ps = ps.WithKeyTable(types.ParamKeyTable())
-	}
-
 	return &Keeper{
 		cdc:              cdc,
 		storeKey:         storeKey,
 		memKey:           memKey,
-		paramstore:       ps,
 		accountKeeper:    ak,
 		bankKeeper:       bk,
 		eventKeeper:      ek,
@@ -60,26 +53,26 @@ func NewKeeper(
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+	return ctx.Logger().With("module", fmt.Sprintf("x/%s", blockinflationtypes.ModuleName))
 }
 
 // GetParams returns the current blockinflation module parameters
-func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
-	k.paramstore.GetParamSet(ctx, &params)
+func (k Keeper) GetParams(ctx sdk.Context, subspace paramstypes.Subspace) (params blockinflationtypes.Params) {
+	subspace.GetParamSet(ctx, &params)
 	return params
 }
 
 // SetParams sets the blockinflation module parameters
-func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
-	k.paramstore.SetParamSet(ctx, &params)
+func (k Keeper) SetParams(ctx sdk.Context, subspace paramstypes.Subspace, params blockinflationtypes.Params) {
+	subspace.SetParamSet(ctx, &params)
 }
 
 // GetTotalIssuance returns the total issuance
 func (k Keeper) GetTotalIssuance(ctx sdk.Context) sdk.Coin {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.TotalIssuanceKey)
+	bz := store.Get(blockinflationtypes.TotalIssuanceKey)
 	if bz == nil {
-		return sdk.NewCoin(k.GetParams(ctx).MintDenom, math.ZeroInt())
+		panic("GetTotalIssuance: must provide subspace for params")
 	}
 
 	var totalIssuance sdk.Coin
@@ -91,15 +84,15 @@ func (k Keeper) GetTotalIssuance(ctx sdk.Context) sdk.Coin {
 func (k Keeper) SetTotalIssuance(ctx sdk.Context, totalIssuance sdk.Coin) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&totalIssuance)
-	store.Set(types.TotalIssuanceKey, bz)
+	store.Set(blockinflationtypes.TotalIssuanceKey, bz)
 }
 
 // GetTotalBurned returns the total burned tokens
 func (k Keeper) GetTotalBurned(ctx sdk.Context) sdk.Coin {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.TotalBurnedKey)
+	bz := store.Get(blockinflationtypes.TotalBurnedKey)
 	if bz == nil {
-		return sdk.NewCoin(k.GetParams(ctx).MintDenom, math.ZeroInt())
+		panic("GetTotalBurned: must provide subspace for params")
 	}
 
 	var totalBurned sdk.Coin
@@ -111,15 +104,15 @@ func (k Keeper) GetTotalBurned(ctx sdk.Context) sdk.Coin {
 func (k Keeper) SetTotalBurned(ctx sdk.Context, totalBurned sdk.Coin) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&totalBurned)
-	store.Set(types.TotalBurnedKey, bz)
+	store.Set(blockinflationtypes.TotalBurnedKey, bz)
 }
 
 // GetPendingSubnetRewards returns the pending subnet rewards
 func (k Keeper) GetPendingSubnetRewards(ctx sdk.Context) sdk.Coin {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.PendingSubnetRewardsKey)
+	bz := store.Get(blockinflationtypes.PendingSubnetRewardsKey)
 	if bz == nil {
-		return sdk.NewCoin(k.GetParams(ctx).MintDenom, math.ZeroInt())
+		panic("GetPendingSubnetRewards: must provide subspace for params")
 	}
 
 	var pendingRewards sdk.Coin
@@ -131,12 +124,12 @@ func (k Keeper) GetPendingSubnetRewards(ctx sdk.Context) sdk.Coin {
 func (k Keeper) SetPendingSubnetRewards(ctx sdk.Context, pendingRewards sdk.Coin) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&pendingRewards)
-	store.Set(types.PendingSubnetRewardsKey, bz)
+	store.Set(blockinflationtypes.PendingSubnetRewardsKey, bz)
 }
 
 // AddToPendingSubnetRewards adds tokens to the pending subnet rewards pool
-func (k Keeper) AddToPendingSubnetRewards(ctx sdk.Context, amount sdk.Coin) {
-	params := k.GetParams(ctx)
+func (k Keeper) AddToPendingSubnetRewards(ctx sdk.Context, subspace paramstypes.Subspace, amount sdk.Coin) {
+	params := k.GetParams(ctx, subspace)
 
 	// Validate denom
 	if amount.Denom != params.MintDenom {
@@ -158,8 +151,8 @@ func (k Keeper) AddToPendingSubnetRewards(ctx sdk.Context, amount sdk.Coin) {
 }
 
 // BurnTokens burns tokens and updates total burned
-func (k Keeper) BurnTokens(ctx sdk.Context, amount sdk.Coin) error {
-	params := k.GetParams(ctx)
+func (k Keeper) BurnTokens(ctx sdk.Context, subspace paramstypes.Subspace, amount sdk.Coin) error {
+	params := k.GetParams(ctx, subspace)
 
 	// Validate denom
 	if amount.Denom != params.MintDenom {
@@ -167,7 +160,7 @@ func (k Keeper) BurnTokens(ctx sdk.Context, amount sdk.Coin) error {
 	}
 
 	// Burn tokens from module account
-	if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.Coins{amount}); err != nil {
+	if err := k.bankKeeper.BurnCoins(ctx, blockinflationtypes.ModuleName, sdk.Coins{amount}); err != nil {
 		return err
 	}
 

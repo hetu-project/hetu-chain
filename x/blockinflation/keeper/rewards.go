@@ -3,6 +3,7 @@ package keeper
 import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // SubnetRewards represents the calculated rewards for a subnet
@@ -15,7 +16,7 @@ type SubnetRewards struct {
 }
 
 // CalculateSubnetRewards calculates rewards for all subnets participating in emission
-func (k Keeper) CalculateSubnetRewards(ctx sdk.Context, blockEmission math.Int, subnetsToEmitTo []uint16) (map[uint16]SubnetRewards, error) {
+func (k Keeper) CalculateSubnetRewards(ctx sdk.Context, subspace paramstypes.Subspace, blockEmission math.Int, subnetsToEmitTo []uint16) (map[uint16]SubnetRewards, error) {
 	rewards := make(map[uint16]SubnetRewards)
 
 	// Step 1: Calculate total moving prices
@@ -43,7 +44,7 @@ func (k Keeper) CalculateSubnetRewards(ctx sdk.Context, blockEmission math.Int, 
 		}
 
 		// Calculate Alpha emission
-		alphaEmission, err := k.CalculateAlphaEmission(ctx, netuid)
+		alphaEmission, err := k.CalculateAlphaEmission(ctx, subspace, netuid)
 		if err != nil {
 			k.Logger(ctx).Error("failed to calculate Alpha emission", "netuid", netuid, "error", err)
 			alphaEmission = math.ZeroInt()
@@ -124,8 +125,8 @@ func (k Keeper) ApplySubnetRewards(ctx sdk.Context, rewards map[uint16]SubnetRew
 
 // CalculateOwnerCuts calculates owner cuts for all subnets and updates alpha_out
 // This implements step 5 of the coinbase logic: owner cuts
-func (k Keeper) CalculateOwnerCuts(ctx sdk.Context, rewards map[uint16]SubnetRewards) error {
-	params := k.GetParams(ctx)
+func (k Keeper) CalculateOwnerCuts(ctx sdk.Context, subspace paramstypes.Subspace, rewards map[uint16]SubnetRewards) error {
+	params := k.GetParams(ctx, subspace)
 	cutPercent := params.SubnetOwnerCut
 
 	k.Logger(ctx).Debug("Calculating owner cuts", "cut_percent", cutPercent.String())

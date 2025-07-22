@@ -6,14 +6,14 @@ import (
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/hetu-project/hetu/v1/x/blockinflation/types"
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	blockinflationtypes "github.com/hetu-project/hetu/v1/x/blockinflation/types"
 )
 
 // CalculateBlockEmission calculates the block emission based on Bittensor's algorithm
 // Improved version with high-precision calculations to avoid floating-point precision issues
-func (k Keeper) CalculateBlockEmission(ctx sdk.Context) (math.Int, error) {
-	params := k.GetParams(ctx)
+func (k Keeper) CalculateBlockEmission(ctx sdk.Context, subspace paramstypes.Subspace) (math.Int, error) {
+	params := k.GetParams(ctx, subspace)
 	totalIssuance := k.GetTotalIssuance(ctx)
 
 	// Check if we've reached total supply
@@ -79,8 +79,8 @@ func (k Keeper) CalculateBlockEmission(ctx sdk.Context) (math.Int, error) {
 }
 
 // MintAndAllocateBlockInflation mints coins and allocates them to fee collector
-func (k Keeper) MintAndAllocateBlockInflation(ctx sdk.Context) error {
-	params := k.GetParams(ctx)
+func (k Keeper) MintAndAllocateBlockInflation(ctx sdk.Context, subspace paramstypes.Subspace) error {
+	params := k.GetParams(ctx, subspace)
 
 	// Skip if inflation is disabled
 	if !params.EnableBlockInflation {
@@ -88,7 +88,7 @@ func (k Keeper) MintAndAllocateBlockInflation(ctx sdk.Context) error {
 	}
 
 	// Calculate block emission
-	blockEmission, err := k.CalculateBlockEmission(ctx)
+	blockEmission, err := k.CalculateBlockEmission(ctx, subspace)
 	if err != nil {
 		return fmt.Errorf("failed to calculate block emission: %w", err)
 	}
@@ -102,7 +102,7 @@ func (k Keeper) MintAndAllocateBlockInflation(ctx sdk.Context) error {
 	subnetCount := k.eventKeeper.GetSubnetCount(ctx)
 
 	// Calculate subnet reward ratio
-	subnetRewardRatio := types.CalculateSubnetRewardRatio(params, subnetCount)
+	subnetRewardRatio := blockinflationtypes.CalculateSubnetRewardRatio(params, subnetCount)
 
 	// Calculate subnet reward amount
 	subnetRewardAmount := math.LegacyNewDecFromInt(blockEmission).Mul(subnetRewardRatio).TruncateInt()
@@ -117,7 +117,7 @@ func (k Keeper) MintAndAllocateBlockInflation(ctx sdk.Context) error {
 	}
 
 	// Mint coins
-	if err := k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.Coins{mintedCoin}); err != nil {
+	if err := k.bankKeeper.MintCoins(ctx, blockinflationtypes.ModuleName, sdk.Coins{mintedCoin}); err != nil {
 		return fmt.Errorf("failed to mint coins: %w", err)
 	}
 
@@ -127,10 +127,10 @@ func (k Keeper) MintAndAllocateBlockInflation(ctx sdk.Context) error {
 			Denom:  params.MintDenom,
 			Amount: subnetRewardAmount,
 		}
-		k.AddToPendingSubnetRewards(ctx, subnetRewardCoin)
+		k.AddToPendingSubnetRewards(ctx, subspace, subnetRewardCoin)
 
 		// Execute coinbase logic to distribute rewards to subnets
-		if err := k.RunCoinbase(ctx, subnetRewardAmount); err != nil {
+		if err := k.RunCoinbase(ctx, subspace, subnetRewardAmount); err != nil {
 			k.Logger(ctx).Error("failed to execute coinbase", "error", err)
 			// Don't return error here to avoid blocking inflation
 		}
@@ -144,7 +144,7 @@ func (k Keeper) MintAndAllocateBlockInflation(ctx sdk.Context) error {
 		}
 		if err := k.bankKeeper.SendCoinsFromModuleToModule(
 			ctx,
-			types.ModuleName,
+			blockinflationtypes.ModuleName,
 			k.feeCollectorName,
 			sdk.Coins{feeCollectorCoin},
 		); err != nil {

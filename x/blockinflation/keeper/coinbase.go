@@ -10,15 +10,16 @@ import (
 
 	"math/big"
 
-	"github.com/hetu-project/hetu/v1/x/blockinflation/types"
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	blockinflationtypes "github.com/hetu-project/hetu/v1/x/blockinflation/types"
 	stakeworktypes "github.com/hetu-project/hetu/v1/x/stakework/types"
 )
 
 // CalculateAlphaEmission calculates the Alpha emission for a subnet based on its Alpha issuance
 // This uses the same logarithmic decay algorithm as CalculateBlockEmission
 // Improved version with high-precision calculations to avoid floating-point precision issues
-func (k Keeper) CalculateAlphaEmission(ctx sdk.Context, netuid uint16) (math.Int, error) {
-	params := k.GetParams(ctx)
+func (k Keeper) CalculateAlphaEmission(ctx sdk.Context, subspace paramstypes.Subspace, netuid uint16) (math.Int, error) {
+	params := k.GetParams(ctx, subspace)
 
 	// Get subnet Alpha issuance: SubnetAlphaIn + SubnetAlphaOut
 	subnetAlphaIn := k.eventKeeper.GetSubnetAlphaIn(ctx, netuid)
@@ -91,7 +92,7 @@ func (k Keeper) CalculateAlphaEmission(ctx sdk.Context, netuid uint16) (math.Int
 
 // RunCoinbase executes the coinbase logic for distributing rewards to subnets
 // This is equivalent to the run_coinbase.rs function
-func (k Keeper) RunCoinbase(ctx sdk.Context, blockEmission math.Int) error {
+func (k Keeper) RunCoinbase(ctx sdk.Context, subspace paramstypes.Subspace, blockEmission math.Int) error {
 	// --- 0. Get current block
 	currentBlock := ctx.BlockHeight()
 	k.Logger(ctx).Debug("Current block", "block", currentBlock)
@@ -126,7 +127,7 @@ func (k Keeper) RunCoinbase(ctx sdk.Context, blockEmission math.Int) error {
 	k.Logger(ctx).Debug("Total moving prices", "total", totalMovingPrices)
 
 	// --- 3. Calculate subnet terms (tao_in, alpha_in, alpha_out)
-	rewards, err := k.CalculateSubnetRewards(ctx, blockEmission, subnetsToEmitTo)
+	rewards, err := k.CalculateSubnetRewards(ctx, subspace, blockEmission, subnetsToEmitTo)
 	if err != nil {
 		k.Logger(ctx).Error("failed to calculate subnet rewards", "error", err)
 		return err
@@ -141,7 +142,7 @@ func (k Keeper) RunCoinbase(ctx sdk.Context, blockEmission math.Int) error {
 
 	// --- 5. Calculate owner cuts and update alpha_out
 	// Calculate owner cuts and subtract from alpha_out
-	if err := k.CalculateOwnerCuts(ctx, rewards); err != nil {
+	if err := k.CalculateOwnerCuts(ctx, subspace, rewards); err != nil {
 		k.Logger(ctx).Error("failed to calculate owner cuts", "error", err)
 		return err
 	}
@@ -164,7 +165,7 @@ func (k Keeper) RunCoinbase(ctx sdk.Context, blockEmission math.Int) error {
 		}
 
 		// Get moving alpha from blockinflation params
-		params := k.GetParams(ctx)
+		params := k.GetParams(ctx, subspace)
 		movingAlpha := params.SubnetMovingAlpha
 		halvingBlocks := subnet.EMAPriceHalvingBlocks
 
@@ -316,31 +317,31 @@ func (k Keeper) getStakeMap(ctx sdk.Context, netuid uint16, accounts []string) m
 
 // GetSubnetEmissionData returns emission data for a specific subnet
 // This is a helper function for testing and debugging
-func (k Keeper) GetSubnetEmissionData(ctx sdk.Context, netuid uint16) (types.SubnetEmissionData, error) {
+func (k Keeper) GetSubnetEmissionData(ctx sdk.Context, subspace paramstypes.Subspace, netuid uint16) (blockinflationtypes.SubnetEmissionData, error) {
 	// Check if subnet exists
 	_, exists := k.eventKeeper.GetSubnetFirstEmissionBlock(ctx, netuid)
 	if !exists {
-		return types.SubnetEmissionData{}, fmt.Errorf("subnet %d not found", netuid)
+		return blockinflationtypes.SubnetEmissionData{}, fmt.Errorf("subnet %d not found", netuid)
 	}
 
 	// Get current block emission for calculation
-	blockEmission, err := k.CalculateBlockEmission(ctx)
+	blockEmission, err := k.CalculateBlockEmission(ctx, subspace)
 	if err != nil {
-		return types.SubnetEmissionData{}, fmt.Errorf("failed to calculate block emission: %w", err)
+		return blockinflationtypes.SubnetEmissionData{}, fmt.Errorf("failed to calculate block emission: %w", err)
 	}
 
 	// Calculate rewards for this specific subnet
-	rewards, err := k.CalculateSubnetRewards(ctx, blockEmission, []uint16{netuid})
+	rewards, err := k.CalculateSubnetRewards(ctx, subspace, blockEmission, []uint16{netuid})
 	if err != nil {
-		return types.SubnetEmissionData{}, fmt.Errorf("failed to calculate rewards: %w", err)
+		return blockinflationtypes.SubnetEmissionData{}, fmt.Errorf("failed to calculate rewards: %w", err)
 	}
 
 	reward, exists := rewards[netuid]
 	if !exists {
-		return types.SubnetEmissionData{}, fmt.Errorf("no reward data for subnet %d", netuid)
+		return blockinflationtypes.SubnetEmissionData{}, fmt.Errorf("no reward data for subnet %d", netuid)
 	}
 
-	return types.SubnetEmissionData{
+	return blockinflationtypes.SubnetEmissionData{
 		Netuid:                 netuid,
 		TaoIn:                  reward.TaoIn,
 		AlphaIn:                reward.AlphaIn,
@@ -354,30 +355,30 @@ func (k Keeper) GetSubnetEmissionData(ctx sdk.Context, netuid uint16) (types.Sub
 }
 
 // GetAllSubnetEmissionData returns emission data for all subnets
-func (k Keeper) GetAllSubnetEmissionData(ctx sdk.Context) []types.SubnetEmissionData {
+func (k Keeper) GetAllSubnetEmissionData(ctx sdk.Context, subspace paramstypes.Subspace) []blockinflationtypes.SubnetEmissionData {
 	subnets := k.eventKeeper.GetSubnetsToEmitTo(ctx)
 	if len(subnets) == 0 {
-		return []types.SubnetEmissionData{}
+		return []blockinflationtypes.SubnetEmissionData{}
 	}
 
 	// Get current block emission for calculation
-	blockEmission, err := k.CalculateBlockEmission(ctx)
+	blockEmission, err := k.CalculateBlockEmission(ctx, subspace)
 	if err != nil {
 		k.Logger(ctx).Error("failed to calculate block emission", "error", err)
-		return []types.SubnetEmissionData{}
+		return []blockinflationtypes.SubnetEmissionData{}
 	}
 
 	// Calculate rewards for all subnets
-	rewards, err := k.CalculateSubnetRewards(ctx, blockEmission, subnets)
+	rewards, err := k.CalculateSubnetRewards(ctx, subspace, blockEmission, subnets)
 	if err != nil {
 		k.Logger(ctx).Error("failed to calculate rewards", "error", err)
-		return []types.SubnetEmissionData{}
+		return []blockinflationtypes.SubnetEmissionData{}
 	}
 
-	var data []types.SubnetEmissionData
+	var data []blockinflationtypes.SubnetEmissionData
 	for _, netuid := range subnets {
 		if reward, exists := rewards[netuid]; exists {
-			data = append(data, types.SubnetEmissionData{
+			data = append(data, blockinflationtypes.SubnetEmissionData{
 				Netuid:                 netuid,
 				TaoIn:                  reward.TaoIn,
 				AlphaIn:                reward.AlphaIn,

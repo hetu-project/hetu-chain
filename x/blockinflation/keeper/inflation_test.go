@@ -8,10 +8,15 @@ import (
 	stdmath "math"
 
 	"cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/hetu-project/hetu/v1/x/blockinflation/types"
+	blockinflationtypes "github.com/hetu-project/hetu/v1/x/blockinflation/types"
 )
 
 // TestCalculateBlockEmission_HalvingMechanism 测试区块奖励减半机制
@@ -25,10 +30,11 @@ func TestCalculateBlockEmission_HalvingMechanism(t *testing.T) {
 	ctx := sdk.Context{}
 
 	// 设置参数
-	params := types.DefaultParams()
+	params := blockinflationtypes.DefaultParams()
 	params.TotalSupply = totalSupply
 	params.DefaultBlockEmission = defaultBlockEmission
-	k.SetParams(ctx, params)
+	subspace := createTestSubspace()
+	k.SetParams(ctx, subspace, params)
 
 	// 测试用例：不同总发行量下的区块奖励
 	testCases := []struct {
@@ -96,7 +102,7 @@ func TestCalculateBlockEmission_HalvingMechanism(t *testing.T) {
 			})
 
 			// 计算区块奖励
-			emission, err := k.CalculateBlockEmission(ctx)
+			emission, err := k.CalculateBlockEmission(ctx, subspace)
 			require.NoError(t, err)
 
 			// 验证结果
@@ -123,10 +129,11 @@ func TestCalculateBlockEmission_HalvingCycle(t *testing.T) {
 	ctx := sdk.Context{}
 
 	// 设置参数
-	params := types.DefaultParams()
+	params := blockinflationtypes.DefaultParams()
 	params.TotalSupply = totalSupply
 	params.DefaultBlockEmission = defaultBlockEmission
-	k.SetParams(ctx, params)
+	subspace := createTestSubspace()
+	k.SetParams(ctx, subspace, params)
 
 	t.Logf("=== 减半周期分析 ===")
 	t.Logf("总供应量: %s aHETU (%.0f HETU)", totalSupply.String(), totalSupply.ToLegacyDec().Quo(math.LegacyNewDec(1e18)).MustFloat64())
@@ -167,7 +174,7 @@ func TestCalculateBlockEmission_HalvingCycle(t *testing.T) {
 		})
 
 		// 计算区块奖励
-		emission, err := k.CalculateBlockEmission(ctx)
+		emission, err := k.CalculateBlockEmission(ctx, createTestSubspace())
 		require.NoError(t, err)
 
 		// 计算实际奖励比例
@@ -214,10 +221,11 @@ func TestCalculateBlockEmission_ProgressiveAnalysis(t *testing.T) {
 	ctx := sdk.Context{}
 
 	// 设置参数
-	params := types.DefaultParams()
+	params := blockinflationtypes.DefaultParams()
 	params.TotalSupply = totalSupply
 	params.DefaultBlockEmission = defaultBlockEmission
-	k.SetParams(ctx, params)
+	subspace := createTestSubspace()
+	k.SetParams(ctx, subspace, params)
 
 	t.Logf("=== 渐进式减半分析 ===")
 	t.Logf("分析从0%%到100%%发行量的奖励变化")
@@ -246,7 +254,7 @@ func TestCalculateBlockEmission_ProgressiveAnalysis(t *testing.T) {
 		})
 
 		// 计算区块奖励
-		emission, err := k.CalculateBlockEmission(ctx)
+		emission, err := k.CalculateBlockEmission(ctx, createTestSubspace())
 		require.NoError(t, err)
 
 		// 计算奖励比例
@@ -309,8 +317,9 @@ func TestCalculateBlockEmission_EdgeCases(t *testing.T) {
 	ctx := sdk.Context{}
 
 	// 设置参数
-	params := types.DefaultParams()
-	k.SetParams(ctx, params)
+	params := blockinflationtypes.DefaultParams()
+	subspace := createTestSubspace()
+	k.SetParams(ctx, subspace, params)
 
 	// 测试边界情况
 	testCases := []struct {
@@ -366,7 +375,7 @@ func TestCalculateBlockEmission_EdgeCases(t *testing.T) {
 			})
 
 			// 计算区块奖励
-			emission, err := k.CalculateBlockEmission(ctx)
+			emission, err := k.CalculateBlockEmission(ctx, createTestSubspace())
 			require.NoError(t, err)
 
 			if tc.shouldBeZero {
@@ -692,10 +701,14 @@ func TestYumaSubnetRewardRatioAndDistribution(t *testing.T) {
 
 	t.Logf("=== 子网奖励比例(subnet_reward_ratio)测试 ===")
 	for _, p := range testParams {
-		ratio := p.base + p.k*stdmath.Log(1+float64(p.subnetCnt))
-		if ratio > p.maxRatio {
-			ratio = p.maxRatio
-		}
+		params := blockinflationtypes.NewParams(
+			true, "ahetu", math.ZeroInt(), math.ZeroInt(),
+			math.LegacyNewDecWithPrec(int64(p.base*100), 2),
+			math.LegacyNewDecWithPrec(int64(p.k*100), 2),
+			math.LegacyNewDecWithPrec(int64(p.maxRatio*100), 2),
+			math.LegacyNewDec(0), math.LegacyNewDec(0),
+		)
+		ratio := blockinflationtypes.CalculateSubnetRewardRatio(params, uint64(p.subnetCnt)).MustFloat64()
 		t.Logf("base=%.2f, k=%.2f, max=%.2f, subnet_count=%d => subnet_reward_ratio=%.4f",
 			p.base, p.k, p.maxRatio, p.subnetCnt, ratio)
 	}
@@ -703,10 +716,14 @@ func TestYumaSubnetRewardRatioAndDistribution(t *testing.T) {
 	t.Logf("\n=== 区块奖励分配明细测试 ===")
 	for _, emission := range []math.Int{defaultBlockEmission, halfBlockEmission} {
 		for _, p := range testParams[:3] { // 只取前3组做明细演示
-			ratio := p.base + p.k*stdmath.Log(1+float64(p.subnetCnt))
-			if ratio > p.maxRatio {
-				ratio = p.maxRatio
-			}
+			params := blockinflationtypes.NewParams(
+				true, "ahetu", math.ZeroInt(), math.ZeroInt(),
+				math.LegacyNewDecWithPrec(int64(p.base*100), 2),
+				math.LegacyNewDecWithPrec(int64(p.k*100), 2),
+				math.LegacyNewDecWithPrec(int64(p.maxRatio*100), 2),
+				math.LegacyNewDec(0), math.LegacyNewDec(0),
+			)
+			ratio := blockinflationtypes.CalculateSubnetRewardRatio(params, uint64(p.subnetCnt)).MustFloat64()
 			subnetReward := emission.ToLegacyDec().Mul(math.LegacyNewDecWithPrec(int64(ratio*10000), 4)).TruncateInt()
 			feeCollector := emission.Sub(subnetReward)
 			t.Logf("[区块奖励=%s HETU, subnet_count=%d] subnet_reward_ratio=%.4f, subnet_reward=%s, fee_collector=%s",
@@ -737,4 +754,16 @@ func createTestKeeper(t *testing.T) Keeper {
 	// 注意：这个测试 keeper 主要用于测试算法逻辑
 	// 在实际使用中，你可能需要更完整的 mock 对象
 	return k
+}
+
+// 辅助函数：创建测试 subspace
+func createTestSubspace() paramstypes.Subspace {
+	storeKey := storetypes.NewKVStoreKey("params")
+	tstoreKey := storetypes.NewTransientStoreKey("tparams")
+	interfaceReg := types.NewInterfaceRegistry()
+	protoCdc := codec.NewProtoCodec(interfaceReg)
+	legacyAmino := codec.NewLegacyAmino()
+	paramsKeeper := paramskeeper.NewKeeper(protoCdc, legacyAmino, storeKey, tstoreKey)
+	subspace := paramsKeeper.Subspace("blockinflation").WithKeyTable(blockinflationtypes.ParamKeyTable())
+	return subspace
 }
