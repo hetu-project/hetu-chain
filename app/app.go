@@ -1049,6 +1049,7 @@ func NewEvmos(
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.EventKeeper,
+		app.StakeworkKeeper, // 新增 stakework keeper 参数
 		authtypes.FeeCollectorName,
 	)
 

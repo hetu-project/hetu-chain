@@ -7,6 +7,7 @@ MONIKER="localtestnet"
 KEYRING="test"
 KEYALGO="eth_secp256k1"
 LOGLEVEL="info"
+LOGLEVEL2="debug"
 TRACE=""
 HETUD_HOME="$HOME/.hetud"
 ETHCONFIG="$HETUD_HOME/config/config.toml"
@@ -59,4 +60,4 @@ hetud collect-gentxs
 hetud validate-genesis
 
 # Start the node
-hetud start --pruning=nothing $TRACE --log_level "$LOGLEVEL" --minimum-gas-prices=0.0001ahetu --home "$HETUD_HOME" --chain-id "$CHAINID"
+hetud start --pruning=nothing $TRACE --log_level "$LOGLEVEL2" --minimum-gas-prices=0.0001ahetu --home "$HETUD_HOME" --chain-id "$CHAINID"

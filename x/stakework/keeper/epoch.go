@@ -132,6 +132,11 @@ func (k Keeper) shouldRunEpoch(ctx sdk.Context, netuid uint16, tempo uint64) boo
 	return result == 0
 }
 
+// ShouldRunEpoch 导出方法，满足 blockinflation/types.StakeworkKeeper 接口
+func (k Keeper) ShouldRunEpoch(ctx sdk.Context, netuid uint16, tempo uint64) bool {
+	return k.shouldRunEpoch(ctx, netuid, tempo)
+}
+
 // getSubnetValidators 获取子网的所有验证者
 func (k Keeper) getSubnetValidators(ctx sdk.Context, netuid uint16) []types.ValidatorInfo {
 	// 从 event 模块获取所有质押信息
