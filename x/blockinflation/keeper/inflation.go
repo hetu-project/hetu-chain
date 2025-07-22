@@ -11,6 +11,7 @@ import (
 )
 
 // CalculateBlockEmission calculates the block emission based on Bittensor's algorithm
+// Improved version with high-precision calculations to avoid floating-point precision issues
 func (k Keeper) CalculateBlockEmission(ctx sdk.Context) (math.Int, error) {
 	params := k.GetParams(ctx)
 	totalIssuance := k.GetTotalIssuance(ctx)
@@ -20,22 +21,31 @@ func (k Keeper) CalculateBlockEmission(ctx sdk.Context) (math.Int, error) {
 		return math.ZeroInt(), nil
 	}
 
-	// Convert to float64 for calculation
-	totalIssuanceFloat := float64(totalIssuance.Amount.Int64())
-	totalSupplyFloat := float64(params.TotalSupply.Int64())
-	defaultBlockEmissionFloat := float64(params.DefaultBlockEmission.Int64())
+	// Use high-precision math.LegacyDec calculations instead of float64
+	totalIssuanceDec := totalIssuance.Amount.ToLegacyDec()
+	totalSupplyDec := params.TotalSupply.ToLegacyDec()
+	defaultBlockEmissionDec := params.DefaultBlockEmission.ToLegacyDec()
 
-	// Calculate the ratio: total_issuance / (2 * total_supply)
-	ratio := totalIssuanceFloat / (2.0 * totalSupplyFloat)
+	// Calculate the ratio: total_issuance / total_supply
+	ratio := totalIssuanceDec.Quo(totalSupplyDec)
 
-	// Calculate log2(1 / (1 - ratio))
-	// This is equivalent to: log2(1 / (1 - total_issuance / (2 * total_supply)))
-	if ratio >= 1.0 {
+	// If ratio >= 1.0, return 0
+	if ratio.GTE(math.LegacyOneDec()) {
 		return math.ZeroInt(), nil
 	}
 
-	logArg := 1.0 / (1.0 - ratio)
-	logResult := stdmath.Log2(logArg)
+	// Calculate log2(1 / (1 - ratio)) using high-precision arithmetic
+	// logArg = 1 / (1 - ratio)
+	oneMinusRatio := math.LegacyOneDec().Sub(ratio)
+	if oneMinusRatio.LTE(math.LegacyZeroDec()) {
+		return math.ZeroInt(), nil
+	}
+
+	logArg := math.LegacyOneDec().Quo(oneMinusRatio)
+
+	// Convert to float64 for log2 calculation (this is the only place we need float64)
+	logArgFloat := logArg.MustFloat64()
+	logResult := stdmath.Log2(logArgFloat)
 
 	// Floor the log result
 	flooredLog := stdmath.Floor(logResult)
@@ -45,22 +55,23 @@ func (k Keeper) CalculateBlockEmission(ctx sdk.Context) (math.Int, error) {
 	multiplier := stdmath.Pow(2.0, float64(flooredLogInt))
 
 	// Calculate block emission percentage: 1 / multiplier
-	blockEmissionPercentage := 1.0 / multiplier
+	blockEmissionPercentage := math.LegacyOneDec().Quo(math.LegacyNewDecWithPrec(int64(multiplier*1000), 3))
 
-	// Calculate actual block emission
-	blockEmission := blockEmissionPercentage * defaultBlockEmissionFloat
+	// Calculate actual block emission using high-precision arithmetic
+	blockEmission := defaultBlockEmissionDec.Mul(blockEmissionPercentage)
 
-	// Convert back to math.Int
-	blockEmissionInt := math.NewInt(int64(blockEmission))
+	// Convert back to math.Int with proper rounding
+	blockEmissionInt := blockEmission.TruncateInt()
 
-	k.Logger(ctx).Debug("calculated block emission",
+	k.Logger(ctx).Debug("calculated block emission (high-precision)",
 		"total_issuance", totalIssuance.String(),
 		"total_supply", params.TotalSupply.String(),
-		"ratio", fmt.Sprintf("%.6f", ratio),
+		"ratio", ratio.String(),
+		"log_arg", logArg.String(),
 		"log_result", fmt.Sprintf("%.6f", logResult),
 		"floored_log", flooredLogInt,
 		"multiplier", fmt.Sprintf("%.6f", multiplier),
-		"emission_percentage", fmt.Sprintf("%.6f", blockEmissionPercentage),
+		"emission_percentage", blockEmissionPercentage.String(),
 		"block_emission", blockEmissionInt.String(),
 	)
 

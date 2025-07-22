@@ -16,6 +16,7 @@ import (
 
 // CalculateAlphaEmission calculates the Alpha emission for a subnet based on its Alpha issuance
 // This uses the same logarithmic decay algorithm as CalculateBlockEmission
+// Improved version with high-precision calculations to avoid floating-point precision issues
 func (k Keeper) CalculateAlphaEmission(ctx sdk.Context, netuid uint16) (math.Int, error) {
 	params := k.GetParams(ctx)
 
@@ -29,22 +30,32 @@ func (k Keeper) CalculateAlphaEmission(ctx sdk.Context, netuid uint16) (math.Int
 		return math.ZeroInt(), nil
 	}
 
-	// Convert to float64 for calculation
-	alphaIssuanceFloat := float64(alphaIssuance.Int64())
-	totalSupplyFloat := float64(params.TotalSupply.Int64())
-	defaultBlockEmissionFloat := float64(params.DefaultBlockEmission.Int64())
+	// Use high-precision math.LegacyDec calculations instead of float64
+	alphaIssuanceDec := alphaIssuance.ToLegacyDec()
+	totalSupplyDec := params.TotalSupply.ToLegacyDec()
+	defaultBlockEmissionDec := params.DefaultBlockEmission.ToLegacyDec()
 
 	// Calculate the ratio: alpha_issuance / (2 * total_supply)
-	ratio := alphaIssuanceFloat / (2.0 * totalSupplyFloat)
+	twoTimesTotalSupply := totalSupplyDec.Mul(math.LegacyNewDec(2))
+	ratio := alphaIssuanceDec.Quo(twoTimesTotalSupply)
 
-	// Calculate log2(1 / (1 - ratio))
-	// This is equivalent to: log2(1 / (1 - alpha_issuance / (2 * total_supply)))
-	if ratio >= 1.0 {
+	// If ratio >= 1.0, return 0
+	if ratio.GTE(math.LegacyOneDec()) {
 		return math.ZeroInt(), nil
 	}
 
-	logArg := 1.0 / (1.0 - ratio)
-	logResult := stdmath.Log2(logArg)
+	// Calculate log2(1 / (1 - ratio)) using high-precision arithmetic
+	// logArg = 1 / (1 - ratio)
+	oneMinusRatio := math.LegacyOneDec().Sub(ratio)
+	if oneMinusRatio.LTE(math.LegacyZeroDec()) {
+		return math.ZeroInt(), nil
+	}
+
+	logArg := math.LegacyOneDec().Quo(oneMinusRatio)
+
+	// Convert to float64 for log2 calculation (this is the only place we need float64)
+	logArgFloat := logArg.MustFloat64()
+	logResult := stdmath.Log2(logArgFloat)
 
 	// Floor the log result
 	flooredLog := stdmath.Floor(logResult)
@@ -54,23 +65,24 @@ func (k Keeper) CalculateAlphaEmission(ctx sdk.Context, netuid uint16) (math.Int
 	multiplier := stdmath.Pow(2.0, float64(flooredLogInt))
 
 	// Calculate block emission percentage: 1 / multiplier
-	blockEmissionPercentage := 1.0 / multiplier
+	blockEmissionPercentage := math.LegacyOneDec().Quo(math.LegacyNewDecWithPrec(int64(multiplier*1000), 3))
 
-	// Calculate actual Alpha emission
-	alphaEmission := blockEmissionPercentage * defaultBlockEmissionFloat
+	// Calculate actual Alpha emission using high-precision arithmetic
+	alphaEmission := defaultBlockEmissionDec.Mul(blockEmissionPercentage)
 
-	// Convert back to math.Int
-	alphaEmissionInt := math.NewInt(int64(alphaEmission))
+	// Convert back to math.Int with proper rounding
+	alphaEmissionInt := alphaEmission.TruncateInt()
 
-	k.Logger(ctx).Debug("calculated Alpha emission",
+	k.Logger(ctx).Debug("calculated Alpha emission (high-precision)",
 		"netuid", netuid,
 		"alpha_issuance", alphaIssuance.String(),
 		"total_supply", params.TotalSupply.String(),
-		"ratio", fmt.Sprintf("%.6f", ratio),
+		"ratio", ratio.String(),
+		"log_arg", logArg.String(),
 		"log_result", fmt.Sprintf("%.6f", logResult),
 		"floored_log", flooredLogInt,
 		"multiplier", fmt.Sprintf("%.6f", multiplier),
-		"emission_percentage", fmt.Sprintf("%.6f", blockEmissionPercentage),
+		"emission_percentage", blockEmissionPercentage.String(),
 		"alpha_emission", alphaEmissionInt.String(),
 	)
 

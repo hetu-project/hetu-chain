@@ -64,16 +64,19 @@ func NewParams(enableBlockInflation bool, mintDenom string, totalSupply, default
 
 // DefaultParams returns default blockinflation parameters
 func DefaultParams() Params {
+	totalSupply, _ := math.NewIntFromString("21000000000000000000000000")
+	defaultBlockEmission, _ := math.NewIntFromString("1000000000000000000")
+
 	return NewParams(
-		true,                                // Enable block inflation by default
-		"ahetu",                             // Default denom (changed from arao to ahetu)
-		math.NewInt(21_000_000_000_000_000), // 21,000,000,000,000,000 aHETU (10^18 precision)
-		math.NewInt(1_000_000_000_000_000),  // 1,000,000,000,000,000 aHETU per block (1 HETU per block)
-		math.LegacyNewDecWithPrec(10, 2),    // Default SubnetRewardBase (0.10)
-		math.LegacyNewDecWithPrec(10, 2),    // Default SubnetRewardK (0.10)
-		math.LegacyNewDecWithPrec(50, 2),    // Default SubnetRewardMaxRatio (0.50)
-		math.LegacyNewDecWithPrec(3, 6),     // Default SubnetMovingAlpha (0.000003)
-		math.LegacyNewDecWithPrec(18, 2),    // Default SubnetOwnerCut (0.18)
+		true,                             // Enable block inflation by default
+		"ahetu",                          // Default denom (changed from arao to ahetu)
+		totalSupply,                      // 21,000,000,000,000,000,000,000,000 aHETU (2100万 HETU with 10^18 precision)
+		defaultBlockEmission,             // 1,000,000,000,000,000,000 aHETU per block (1 HETU per block)
+		math.LegacyNewDecWithPrec(10, 2), // Default SubnetRewardBase (0.10)
+		math.LegacyNewDecWithPrec(10, 2), // Default SubnetRewardK (0.10)
+		math.LegacyNewDecWithPrec(50, 2), // Default SubnetRewardMaxRatio (0.50)
+		math.LegacyNewDecWithPrec(3, 6),  // Default SubnetMovingAlpha (0.000003)
+		math.LegacyNewDecWithPrec(18, 2), // Default SubnetOwnerCut (0.18)
 	)
 }
 
