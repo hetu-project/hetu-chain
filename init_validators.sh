@@ -4,12 +4,16 @@
 set -e
 
 # Check arguments
-if [ "$#" -lt 7 ]; then
-    echo "Usage: $0 <validator0_ip> <validator1_ip> <validator2_ip> <validator3_ip> <validator4_ip> <validator5_ip> <validator6_ip>"
-    echo "Example: $0 1.2.3.4 5.6.7.8 9.10.11.12 13.14.15.16 17.18.19.20 21.22.23.24 25.26.27.28"
+# if [ "$#" -lt 7 ]; then
+#     echo "Usage: $0 <validator0_ip> <validator1_ip> <validator2_ip> <validator3_ip> <validator4_ip> <validator5_ip> <validator6_ip>"
+#     echo "Example: $0 1.2.3.4 5.6.7.8 9.10.11.12 13.14.15.16 17.18.19.20 21.22.23.24 25.26.27.28"
+#     exit 1
+# fi
+if [ "$#" -lt 5 ]; then
+    echo "Usage: $0 <validator0_ip> <validator1_ip> <validator2_ip> <validator3_ip> <validator4_ip>"
+    echo "Example: $0 1.2.3.4 5.6.7.8 9.10.11.12 13.14.15.16 17.18.19.20"
     exit 1
 fi
-
 # validate dependencies are installed
 command -v jq >/dev/null 2>&1 || {
     echo >&2 "jq not installed. More info: https://stedolan.github.io/jq/download/"
@@ -17,10 +21,12 @@ command -v jq >/dev/null 2>&1 || {
 }
 
 # Set number of validators
-NUM_VALIDATORS=7
+# NUM_VALIDATORS=7
 
+NUM_VALIDATORS=5
 # Store validator IPs in array
-declare -a VALIDATOR_IPS=($1 $2 $3 $4 $5 $6 $7)
+# declare -a VALIDATOR_IPS=($1 $2 $3 $4 $5 $6 $7)
+declare -a VALIDATOR_IPS=($1 $2 $3 $4 $5)
 echo "All validator IPs: ${VALIDATOR_IPS[@]}"
 echo "Number of validators: $NUM_VALIDATORS"
 
@@ -31,8 +37,12 @@ KEYALGO="eth_secp256k1"
 DENOM="ahetu"
 HOME_PREFIX="/data/hetud"
 # Set balance and stake amounts (matching local_node.sh exactly)
-GENESIS_BALANCE="1000000000000000000000000000" # 1 million hetu
-GENTX_STAKE="1000000000000000000000000"        # 1 million hetu (1000000000000000000000000 = 10^24)
+# GENESIS_BALANCE="1000000000000000000000000000" # 1 million hetu
+# GENTX_STAKE="1000000000000000000000000"        # 1 million hetu (1000000000000000000000000 = 10^24)
+# BASEFEE=1000000000
+
+GENESIS_BALANCE="100000000000000000000" # 100 hetu
+GENTX_STAKE="10000000000000000000"        # 10 hetu (10000000000000000000 = 10^19)
 BASEFEE=1000000000
 
 # Port configuration
@@ -66,7 +76,8 @@ for i in $(seq 0 $((NUM_VALIDATORS - 1))); do
         continue
     fi
     echo "Cleaning up data on $TARGET_IP..."
-    ssh ubuntu@${TARGET_IP} "pkill hetud || true; rm -rf \"${HOME_PREFIX}\" \"${HOME_PREFIX}\"* 2>/dev/null || true"
+    # ssh ubuntu@${TARGET_IP} "pkill hetud || true; rm -rf \"${HOME_PREFIX}\" \"${HOME_PREFIX}\"* 2>/dev/null || true"
+        ssh root@${TARGET_IP} "pkill hetud || true; rm -rf \"${HOME_PREFIX}\" \"${HOME_PREFIX}\"* 2>/dev/null || true"
 done
 
 # Initialize primary node
@@ -280,9 +291,11 @@ for i in $(seq 0 $((NUM_VALIDATORS - 1))); do
     fi
     echo "Copying validator $i data to $TARGET_IP..."
     # First remove the old directory on remote
-    ssh ubuntu@${TARGET_IP} "rm -rf ${HOME_PREFIX}${i}"
+    # ssh ubuntu@${TARGET_IP} "rm -rf ${HOME_PREFIX}${i}"
+    ssh root@${TARGET_IP} "rm -rf ${HOME_PREFIX}${i}"
     # Then copy the new data
-    rsync -av "${HOME_PREFIX}${i}/" "ubuntu@${TARGET_IP}:${HOME_PREFIX}${i}/"
+    # rsync -av "${HOME_PREFIX}${i}/" "ubuntu@${TARGET_IP}:${HOME_PREFIX}${i}/"
+    rsync -av "${HOME_PREFIX}${i}/" "root@${TARGET_IP}:${HOME_PREFIX}${i}/"
 done
 
 echo "All validators initialized successfully!"
