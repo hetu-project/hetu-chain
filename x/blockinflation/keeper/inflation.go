@@ -114,7 +114,6 @@ func (k Keeper) MintAndAllocateBlockInflation(ctx sdk.Context) error {
 		Denom:  params.MintDenom,
 		Amount: blockEmission,
 	}
-	fmt.Println("测试是否走22222runcoinbase subnetRewardAmount", subnetRewardAmount.String())
 	// Mint coins
 	if err := k.bankKeeper.MintCoins(ctx, blockinflationtypes.ModuleName, sdk.Coins{mintedCoin}); err != nil {
 		return fmt.Errorf("failed to mint coins: %w", err)
@@ -127,7 +126,6 @@ func (k Keeper) MintAndAllocateBlockInflation(ctx sdk.Context) error {
 		}
 		k.AddToPendingSubnetRewards(ctx, subnetRewardCoin)
 
-		fmt.Println("测试是否走runcoinbase subnetRewardAmount", subnetRewardAmount.String())
 		// Execute coinbase logic to distribute rewards to subnets
 		if err := k.RunCoinbase(ctx, subnetRewardAmount); err != nil {
 			k.Logger(ctx).Error("failed to execute coinbase", "error", err)

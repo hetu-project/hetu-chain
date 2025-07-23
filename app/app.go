@@ -189,8 +189,6 @@ import (
 
 	"strings"
 
-	"reflect"
-
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	blockinflationtypes "github.com/hetu-project/hetu/v1/x/blockinflation/types"
 	eventabi "github.com/hetu-project/hetu/v1/x/event/abi"
@@ -698,7 +696,7 @@ func NewEvmos(
 	)
 
 	subspace := app.GetSubspace(blockinflationtypes.ModuleName)
-	fmt.Printf("DEBUG: blockinflation subspace is zero? %v, hasKeyTable? %v\n", reflect.ValueOf(subspace).IsZero(), subspace.HasKeyTable())
+	// fmt.Printf("DEBUG: blockinflation subspace is zero? %v, hasKeyTable? %v\n", reflect.ValueOf(subspace).IsZero(), subspace.HasKeyTable())
 	app.BlockInflationKeeper = blockinflationkeeper.NewKeeper(
 		appCodec,
 		keys[blockinflationtypes.StoreKey],
