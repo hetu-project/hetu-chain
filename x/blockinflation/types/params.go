@@ -74,7 +74,7 @@ func DefaultParams() Params {
 		defaultBlockEmission,             // 1,000,000,000,000,000,000 aHETU per block (1 HETU per block)
 		math.LegacyNewDecWithPrec(10, 2), // Default SubnetRewardBase (0.10)
 		math.LegacyNewDecWithPrec(10, 2), // Default SubnetRewardK (0.10)
-		math.LegacyNewDecWithPrec(50, 2), // Default SubnetRewardMaxRatio (0.50)
+		math.LegacyNewDecWithPrec(90, 2), // Default SubnetRewardMaxRatio (0.50)
 		math.LegacyNewDecWithPrec(3, 6),  // Default SubnetMovingAlpha (0.000003)
 		math.LegacyNewDecWithPrec(18, 2), // Default SubnetOwnerCut (0.18)
 	)

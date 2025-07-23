@@ -100,6 +100,14 @@ jq '.app_state["gov"]["params"]["min_deposit"][0]["denom"]="ahetu"' "$GENESIS" >
 jq '.app_state["evm"]["params"]["evm_denom"]="gas"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
 jq '.app_state["inflation"]["params"]["mint_denom"]="ahetu"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
 
+# === 新增 blockinflation 和 event 模块 genesis 写入 ===
+jq '.app_state.blockinflation.params = {"enable_block_inflation": true, "mint_denom": "ahetu", "total_supply": "21000000000000000000000000", "default_block_emission": "1000000000000000000", "subnet_reward_base": "0.100000000000000000", "subnet_reward_k": "0.100000000000000000", "subnet_reward_max_ratio": "0.500000000000000000", "subnet_moving_alpha": "0.000003000000000000", "subnet_owner_cut": "0.180000000000000000"}' "$GENESIS" > "$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+jq ".app_state[\"blockinflation\"][\"total_issuance\"]={\"denom\":\"ahetu\",\"amount\":\"0\"}" "$GENESIS" > "$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+jq ".app_state[\"blockinflation\"][\"total_burned\"]={\"denom\":\"ahetu\",\"amount\":\"0\"}" "$GENESIS" > "$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+jq ".app_state[\"blockinflation\"][\"pending_subnet_rewards\"]={\"denom\":\"ahetu\",\"amount\":\"0\"}" "$GENESIS" > "$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+jq '.app_state.event = {"subnets": [], "validator_stakes": [], "delegations": [], "validator_weights": []}' "$GENESIS" > "$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+# === END 新增 ===
+
 # Set gas limit in genesis
 jq '.consensus_params["block"]["max_gas"]="10000000"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
 
@@ -199,7 +207,7 @@ for i in $(seq 0 $((NUM_VALIDATORS - 1))); do
     sed -i.bak 's/timeout_prevote_delta = ".*"/timeout_prevote_delta = "100ms"/g' "$CONFIG_TOML"
     sed -i.bak 's/timeout_precommit = ".*"/timeout_precommit = "200ms"/g' "$CONFIG_TOML"
     sed -i.bak 's/timeout_precommit_delta = ".*"/timeout_precommit_delta = "100ms"/g' "$CONFIG_TOML"
-    sed -i.bak 's/timeout_commit = ".*"/timeout_commit = "1s"/g' "$CONFIG_TOML"
+    sed -i.bak 's/timeout_commit = ".*"/timeout_commit = "12s"/g' "$CONFIG_TOML"
     sed -i.bak 's/timeout_broadcast_tx_commit = "10s"/timeout_broadcast_tx_commit = "150s"/g' "$CONFIG_TOML"
 
     # Use the corresponding validator IP

@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -13,6 +14,7 @@ import (
 func (k Keeper) BeginBlocker(ctx sdk.Context) error {
 	defer telemetry.ModuleMeasureSince(blockinflationtypes.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
+	fmt.Println("测试是否走beginblocker")
 	// Mint and allocate block inflation
 	if err := k.MintAndAllocateBlockInflation(ctx); err != nil {
 		k.Logger(ctx).Error("failed to mint and allocate block inflation", "error", err.Error())

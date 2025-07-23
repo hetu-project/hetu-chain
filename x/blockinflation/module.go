@@ -48,8 +48,7 @@ func (b AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry
 
 // DefaultGenesis returns default genesis state as raw bytes for the blockinflation module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	genesisState := types.DefaultGenesisState()
-	bz, err := json.Marshal(genesisState)
+	bz, err := json.Marshal(*types.DefaultGenesisState())
 	if err != nil {
 		panic(err)
 	}

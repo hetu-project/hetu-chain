@@ -41,7 +41,18 @@ jq ".app_state[\"mint\"][\"params\"][\"mint_denom\"]=\"ahetu\"" "$GENESIS" > "$T
 # 注意：以下模块现在会自动使用 DefaultGenesisState() 中的默认值
 # - blockinflation 模块：自动使用 DefaultParams() 和零值状态
 # - event 模块：自动使用空数组作为默认状态 (subnets: [], validator_stakes: [], delegations: [], validator_weights: [])
+# Set blockinflation parameters directly in app_state
+jq '.app_state.blockinflation.params = {"enable_block_inflation": true, "mint_denom": "ahetu", "total_supply": "21000000000000000000000000", "default_block_emission": "1000000000000000000", "subnet_reward_base": "0.100000000000000000", "subnet_reward_k": "0.100000000000000000", "subnet_reward_max_ratio": "0.500000000000000000", "subnet_moving_alpha": "0.000003000000000000", "subnet_owner_cut": "0.180000000000000000"}' "$GENESIS" > "$TMPGENESIS" && mv "$TMPGENESIS" "$GENESIS"
 
+# Set params module for blockinflation parameters
+# jq '.app_state.params = {"subspaces": {"blockinflation": {"key_table": {"params": [{"key": "EnableBlockInflation", "value": true}, {"key": "MintDenom", "value": "ahetu"}, {"key": "TotalSupply", "value": "21000000000000000000000000"}, {"key": "DefaultBlockEmission", "value": "1000000000000000000"}, {"key": "SubnetRewardBase", "value": "0.100000000000000000"}, {"key": "SubnetRewardK", "value": "0.100000000000000000"}, {"key": "SubnetRewardMaxRatio", "value": "0.500000000000000000"}, {"key": "SubnetMovingAlpha", "value": "0.000003000000000000"}, {"key": "SubnetOwnerCut", "value": "0.180000000000000000"}]}}}}' "$GENESIS" > "$TMPGENESIS" && mv "$TMPGENESIS" "$GENESIS"
+
+# Set blockinflation genesis state
+jq ".app_state[\"blockinflation\"][\"total_issuance\"]={\"denom\":\"ahetu\",\"amount\":\"0\"}" "$GENESIS" > "$TMPGENESIS" && mv "$TMPGENESIS" "$GENESIS"
+jq ".app_state[\"blockinflation\"][\"total_burned\"]={\"denom\":\"ahetu\",\"amount\":\"0\"}" "$GENESIS" > "$TMPGENESIS" && mv "$TMPGENESIS" "$GENESIS"
+jq ".app_state[\"blockinflation\"][\"pending_subnet_rewards\"]={\"denom\":\"ahetu\",\"amount\":\"0\"}" "$GENESIS" > "$TMPGENESIS" && mv "$TMPGENESIS" "$GENESIS"
+
+jq '.app_state.event = {"subnets": [], "validator_stakes": [], "delegations": [], "validator_weights": []}' "$GENESIS" > "$TMPGENESIS" && mv "$TMPGENESIS" "$GENESIS"
 # Increase block time
 jq ".consensus_params[\"block\"][\"time_iota_ms\"]=\"30000\"" "$GENESIS" > "$TMPGENESIS" && mv "$TMPGENESIS" "$GENESIS"
 

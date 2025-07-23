@@ -161,7 +161,6 @@ import (
 	_ "github.com/hetu-project/hetu/v1/client/docs/statik"
 
 	"github.com/hetu-project/hetu/v1/app/ante"
-	"github.com/hetu-project/hetu/v1/x/epochs"
 	epochskeeper "github.com/hetu-project/hetu/v1/x/epochs/keeper"
 	epochstypes "github.com/hetu-project/hetu/v1/x/epochs/types"
 	"github.com/hetu-project/hetu/v1/x/erc20"
@@ -254,7 +253,6 @@ var (
 		feemarket.AppModuleBasic{},
 		inflation.AppModuleBasic{},
 		erc20.AppModuleBasic{},
-		epochs.AppModuleBasic{},
 		blockinflation.AppModuleBasic{},
 	)
 
@@ -609,12 +607,12 @@ func NewEvmos(
 		keys[erc20types.StoreKey], appCodec, authtypes.NewModuleAddress(govtypes.ModuleName),
 		app.AccountKeeper, app.BankKeeper, app.EvmKeeper, app.StakingKeeper,
 	)
-	epochsKeeper := epochskeeper.NewKeeper(appCodec, keys[epochstypes.StoreKey])
-	app.EpochsKeeper = *epochsKeeper.SetHooks(
-		epochskeeper.NewMultiEpochHooks(
-			app.InflationKeeper.Hooks(),
-		),
-	)
+	// epochsKeeper := epochskeeper.NewKeeper(appCodec, keys[epochstypes.StoreKey])
+	// app.EpochsKeeper = *epochsKeeper.SetHooks(
+	// 	epochskeeper.NewMultiEpochHooks(
+	// 		app.InflationKeeper.Hooks(),
+	// 	),
+	// )
 	app.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
 		// register the governance hooks
@@ -754,7 +752,7 @@ func NewEvmos(
 			app.GetSubspace(inflationtypes.ModuleName)),
 		erc20.NewAppModule(app.Erc20Keeper, app.AccountKeeper,
 			app.GetSubspace(erc20types.ModuleName)),
-		epochs.NewAppModule(appCodec, app.EpochsKeeper),
+		// epochs.NewAppModule(appCodec, app.EpochsKeeper), // 注释掉 epochs 模块的注册
 		vesting.NewAppModule(app.VestingKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
 		stakework.NewAppModule(appCodec, app.StakeworkKeeper),
 		blockinflation.NewAppModule(*app.BlockInflationKeeper),
@@ -795,7 +793,7 @@ func NewEvmos(
 		upgradetypes.ModuleName,
 		capabilitytypes.ModuleName,
 		// Note: epochs' begin should be "real" start of epochs, we keep epochs beginblock at the beginning
-		epochstypes.ModuleName,
+		// epochs.ModuleName, // 注释掉 epochs 模块的注册
 		feemarkettypes.ModuleName,
 		evmtypes.ModuleName,
 		// minttypes.ModuleName,
@@ -829,7 +827,7 @@ func NewEvmos(
 		evmtypes.ModuleName,
 		feemarkettypes.ModuleName,
 		// Note: epochs' endblock should be "real" end of epochs, we keep epochs endblock at the end
-		epochstypes.ModuleName,
+		// epochs.ModuleName, // 注释掉 epochs 模块的注册
 		// no-op modules
 		ibcexported.ModuleName,
 		ibctransfertypes.ModuleName,
@@ -889,7 +887,7 @@ func NewEvmos(
 		consensusparamtypes.ModuleName,
 		inflationtypes.ModuleName,
 		erc20types.ModuleName,
-		epochstypes.ModuleName,
+		// epochs.ModuleName, // 注释掉 epochs 模块的注册
 		ratelimittypes.ModuleName,
 		blockinflationtypes.ModuleName, // Block inflation module
 		// NOTE: crisis module must go at the end to check for invariants on each module
