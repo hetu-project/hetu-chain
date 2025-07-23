@@ -272,7 +272,8 @@ for i in $(seq 0 $((NUM_VALIDATORS - 1))); do
 
     # Configure peers
     echo "Configuring peers for node $i..."
-    sed -i.bak -e "s/^persistent_peers *=.*/persistent_peers = \"$PEERS\"/" "${CLONE_HOME}/config/config.toml"
+    echo "PEERS for node $i: $PEERS"
+    sed -i.bak -e "s|^persistent_peers *=.*|persistent_peers = \"${PEERS}\"|" "${CLONE_HOME}/config/config.toml"
 done
 
 # Copy genesis to all validators
