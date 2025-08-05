@@ -763,7 +763,6 @@ func NewEvmos(
 		app.mm,
 		map[string]module.AppModuleBasic{
 			genutiltypes.ModuleName: genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
-			stakingtypes.ModuleName: staking.AppModuleBasic{},
 			govtypes.ModuleName: gov.NewAppModuleBasic(
 				[]govclient.ProposalHandler{
 					paramsclient.ProposalHandler,
