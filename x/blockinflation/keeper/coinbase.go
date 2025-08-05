@@ -95,7 +95,6 @@ func (k Keeper) RunCoinbase(ctx sdk.Context, blockEmission math.Int) error {
 	// --- 0. Get current block
 	currentBlock := ctx.BlockHeight()
 	k.Logger(ctx).Debug("Current block", "block", currentBlock)
-	fmt.Println("测试是否走runcoinbase11111", currentBlock)
 	// --- 1. Get all netuids (filter out root)
 	allSubnets := k.eventKeeper.GetAllSubnetNetuids(ctx)
 	k.Logger(ctx).Debug("All subnet netuids", "subnets", allSubnets)

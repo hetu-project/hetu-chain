@@ -760,24 +760,23 @@ func NewEvmos(
 	// non-dependant module elements, such as codec registration and genesis verification.
 	// By default, it is composed of all the modules from the module manager.
 	// Additionally, app module basics can be overwritten by passing them as an argument.
-	// app.BasicModuleManager = module.NewBasicManagerFromManager(
-	// 	app.mm,
-	// 	map[string]module.AppModuleBasic{
-	// 		genutiltypes.ModuleName: genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
-	// 		govtypes.ModuleName: gov.NewAppModuleBasic(
-	// 			[]govclient.ProposalHandler{
-	// 				paramsclient.ProposalHandler,
-	// 				// self proposal types
-	// 				erc20client.RegisterCoinProposalHandler,
-	// 				erc20client.RegisterERC20ProposalHandler,
-	// 				erc20client.ToggleTokenConversionProposalHandler,
-	// 			},
-	// 		),
-	// 		ibctransfertypes.ModuleName: transfer.AppModuleBasic{AppModuleBasic: &ibctransfer.AppModuleBasic{}},
-	// 	},
-	// )
 
-	app.BasicModuleManager = ModuleBasics
+	app.BasicModuleManager = module.NewBasicManagerFromManager(
+		app.mm,
+		map[string]module.AppModuleBasic{
+			genutiltypes.ModuleName: genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
+			govtypes.ModuleName: gov.NewAppModuleBasic(
+				[]govclient.ProposalHandler{
+					paramsclient.ProposalHandler,
+					// self proposal types
+					erc20client.RegisterCoinProposalHandler,
+					erc20client.RegisterERC20ProposalHandler,
+					erc20client.ToggleTokenConversionProposalHandler,
+				},
+			),
+			ibctransfertypes.ModuleName: transfer.AppModuleBasic{AppModuleBasic: &ibctransfer.AppModuleBasic{}},
+		},
+	)
 	app.BasicModuleManager.RegisterLegacyAminoCodec(cdc)
 	app.BasicModuleManager.RegisterInterfaces(interfaceRegistry)
 	app.mm.SetOrderPreBlockers(

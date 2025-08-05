@@ -65,13 +65,13 @@ jq ".consensus_params[\"block\"][\"time_iota_ms\"]=\"30000\"" "$GENESIS" > "$TMP
 jq ".consensus_params[\"block\"][\"max_gas\"]=\"10000000\"" "$GENESIS" > "$TMPGENESIS" && mv "$TMPGENESIS" "$GENESIS"
 
 # Modify the configuration file
-sed -i 's/create_empty_blocks = true/create_empty_blocks = false/g' "$ETHCONFIG"
+sed -i '' 's/create_empty_blocks = true/create_empty_blocks = false/g' "$ETHCONFIG"
 
 # Allocate genesis accounts
 hetud add-genesis-account "$KEY" 100000000000000000000000000ahetu --keyring-backend "$KEYRING" --home "$HETUD_HOME"
 
 # Sign genesis transaction
-hetud gentx "$KEY" 1000000000000000000000ahetu --keyring-backend "$KEYRING" --chain-id "$CHAINID" --home "$HETUD_HOME"
+hetud gentx "$KEY" 1000000000000000000000ahetu --keyring-backend "$KEYRING" --chain-id "$CHAINID" --home "$HETUD_HOME" --fees 1000000ahetu --gas 200000
 
 # Collect genesis transactions
 hetud collect-gentxs
