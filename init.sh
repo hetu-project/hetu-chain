@@ -53,6 +53,11 @@ jq ".app_state[\"blockinflation\"][\"total_burned\"]={\"denom\":\"ahetu\",\"amou
 jq ".app_state[\"blockinflation\"][\"pending_subnet_rewards\"]={\"denom\":\"ahetu\",\"amount\":\"0\"}" "$GENESIS" > "$TMPGENESIS" && mv "$TMPGENESIS" "$GENESIS"
 
 jq '.app_state.event = {"subnets": [], "validator_stakes": [], "delegations": [], "validator_weights": []}' "$GENESIS" > "$TMPGENESIS" && mv "$TMPGENESIS" "$GENESIS"
+
+# Set feemarket parameters to match startup gas prices
+jq '.app_state.feemarket.params = {"no_base_fee": false, "base_fee_change_denominator": 8, "elasticity_multiplier": 2, "enable_height": "0", "base_fee": "1000000000", "min_gas_price": "0.000100000000000000", "min_gas_multiplier": "0.500000000000000000"}' "$GENESIS" > "$TMPGENESIS" && mv "$TMPGENESIS" "$GENESIS"
+jq '.app_state.feemarket.block_gas = "0"' "$GENESIS" > "$TMPGENESIS" && mv "$TMPGENESIS" "$GENESIS"
+
 # Increase block time
 jq ".consensus_params[\"block\"][\"time_iota_ms\"]=\"30000\"" "$GENESIS" > "$TMPGENESIS" && mv "$TMPGENESIS" "$GENESIS"
 

@@ -227,8 +227,8 @@ var (
 		genutil.AppModuleBasic{},
 		bank.AppModuleBasic{},
 		capability.AppModuleBasic{},
-		// staking.AppModuleBasic{},
-		// distr.AppModuleBasic{},
+		staking.AppModuleBasic{},
+		distr.AppModuleBasic{},
 		gov.NewAppModuleBasic(
 			[]govclient.ProposalHandler{
 				paramsclient.ProposalHandler,
