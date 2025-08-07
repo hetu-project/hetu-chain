@@ -20,7 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	evmtypes "github.com/hetu-project/hetu/v1/x/evm/types"
@@ -89,51 +88,57 @@ func (vdd VestingDelegationDecorator) validateMsg(ctx sdk.Context, msg sdk.Msg) 
 		return nil
 	}
 
-	sigTx, ok := msg.(authsigning.SigVerifiableTx)
-	if !ok {
-		return errorsmod.Wrapf(errortypes.ErrInvalidType, "tx %T doesn't implement authsigning.SigVerifiableTx", msg)
+	// Get the delegator address from the message
+	delegatorAddr, err := sdk.AccAddressFromBech32(delegateMsg.DelegatorAddress)
+	if err != nil {
+		return errorsmod.Wrapf(errortypes.ErrInvalidAddress, "invalid delegator address: %s", delegateMsg.DelegatorAddress)
 	}
 
-	signerAddrs, err := sigTx.GetSigners()
+	// Get the account
+	acc := vdd.ak.GetAccount(ctx, delegatorAddr)
+	if acc == nil {
+		return errorsmod.Wrapf(
+			errortypes.ErrUnknownAddress,
+			"account %s does not exist", delegatorAddr,
+		)
+	}
+
+	// Check if it's a clawback vesting account
+	clawbackAccount, isClawback := acc.(*vestingtypes.ClawbackVestingAccount)
+	if !isClawback {
+		// Not a vesting account, skip validation
+		return nil
+	}
+
+	// Validate vesting delegation for clawback accounts
+	return vdd.validateClawbackVestingDelegation(ctx, clawbackAccount, delegateMsg)
+}
+
+// validateClawbackVestingDelegation validates delegation for clawback vesting accounts
+func (vdd VestingDelegationDecorator) validateClawbackVestingDelegation(ctx sdk.Context, clawbackAccount *vestingtypes.ClawbackVestingAccount, delegateMsg *stakingtypes.MsgDelegate) error {
+	// Get bond denomination
+	bondDenom, err := vdd.sk.BondDenom(ctx)
 	if err != nil {
 		return err
 	}
-	for _, addr := range signerAddrs {
-		acc := vdd.ak.GetAccount(ctx, addr)
-		if acc == nil {
-			return errorsmod.Wrapf(
-				errortypes.ErrUnknownAddress,
-				"account %s does not exist", addr,
-			)
-		}
 
-		clawbackAccount, isClawback := acc.(*vestingtypes.ClawbackVestingAccount)
-		if !isClawback {
-			// continue to next decorator as this logic only applies to vesting
-			return nil
-		}
+	// Get vested coins at current block time
+	coins := clawbackAccount.GetVestedOnly(ctx.BlockTime())
+	if coins == nil || coins.Empty() {
+		return errorsmod.Wrap(
+			vestingtypes.ErrInsufficientVestedCoins,
+			"account has no vested coins",
+		)
+	}
 
-		// error if bond amount is > vested coins
-		bondDenom, err := vdd.sk.BondDenom(ctx)
-		if err != nil {
-			return err
-		}
-		coins := clawbackAccount.GetVestedOnly(ctx.BlockTime())
-		if coins == nil || coins.Empty() {
-			return errorsmod.Wrap(
-				vestingtypes.ErrInsufficientVestedCoins,
-				"account has no vested coins",
-			)
-		}
-
-		vested := coins.AmountOf(bondDenom)
-		if vested.LT(delegateMsg.Amount.Amount) {
-			return errorsmod.Wrapf(
-				vestingtypes.ErrInsufficientVestedCoins,
-				"cannot delegate unvested coins. coins vested < delegation amount (%s < %s)",
-				vested, delegateMsg.Amount.Amount,
-			)
-		}
+	// Check if delegation amount exceeds vested amount
+	vested := coins.AmountOf(bondDenom)
+	if vested.LT(delegateMsg.Amount.Amount) {
+		return errorsmod.Wrapf(
+			vestingtypes.ErrInsufficientVestedCoins,
+			"cannot delegate unvested coins. coins vested < delegation amount (%s < %s)",
+			vested, delegateMsg.Amount.Amount,
+		)
 	}
 
 	return nil
