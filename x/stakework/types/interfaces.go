@@ -17,4 +17,8 @@ type EventKeeper interface {
 
 	// 权重相关
 	GetValidatorWeight(ctx sdk.Context, netuid uint16, validator string) (eventtypes.ValidatorWeight, bool)
+
+	// 新增：神经元信息接口（可选，用于未来优化）
+	GetActiveNeuronInfosByNetuid(ctx sdk.Context, netuid uint16) []eventtypes.NeuronInfo
+	GetValidatorInfosByNetuid(ctx sdk.Context, netuid uint16) []eventtypes.NeuronInfo
 }

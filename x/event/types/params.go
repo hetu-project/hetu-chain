@@ -17,7 +17,7 @@ func DefaultParamsMap() map[string]string {
 		"adjustment_interval":         "112",   // 默认调整间隔
 		"adjustment_alpha":            "58982", // 默认调整 alpha 值
 		"bonds_moving_average":        "0.9",   // 默认移动平均
-		"weights_set_rate_limit":      "1000",  // 默认权重设置速率限制
+		"weights_set_rate_limit":      "1000",  // 默认权重设置速率限制 (对应 weights_rate_limit)
 		"validator_prune_len":         "100",   // 默认验证者修剪长度
 		"validator_logits_divergence": "0.1",   // 默认验证者 logits 分歧
 		"validator_sequence_length":   "100",   // 默认验证者序列长度
@@ -28,5 +28,10 @@ func DefaultParamsMap() map[string]string {
 		"alpha_high":                  "0.9",   // 默认 alpha 上限
 		"alpha_low":                   "0.1",   // 默认 alpha 下限
 		"bonds_penalty":               "0.1",   // 默认质押惩罚
+
+		// 新增 stakework 需要的参数
+		"alpha":                   "0.1",  // stakework epoch 算法需要的 alpha 参数
+		"delta":                   "1.0",  // stakework epoch 算法需要的 delta 参数
+		"alpha_sigmoid_steepness": "10.0", // alpha sigmoid 陡峭度
 	}
 }

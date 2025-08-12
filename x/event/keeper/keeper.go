@@ -385,10 +385,10 @@ func (k Keeper) handleNetworkRegistered(ctx sdk.Context, log ethTypes.Log) {
 
 	// 覆盖 Core network parameters (如果事件中有值)
 	if event.Hyperparams.Rho != 0 {
-		params["rho"] = fmt.Sprintf("%d", event.Hyperparams.Rho)
+		params["rho"] = fmt.Sprintf("%.1f", float64(event.Hyperparams.Rho)/10000.0) // uint16 转 float64，假设原值是放大10000倍的
 	}
 	if event.Hyperparams.Kappa != 0 {
-		params["kappa"] = fmt.Sprintf("%d", event.Hyperparams.Kappa)
+		params["kappa"] = fmt.Sprintf("%.1f", float64(event.Hyperparams.Kappa)/10000.0) // uint16 转 float64，假设原值是放大10000倍的
 	}
 	if event.Hyperparams.ImmunityPeriod != 0 {
 		params["immunity_period"] = fmt.Sprintf("%d", event.Hyperparams.ImmunityPeriod)
@@ -421,6 +421,7 @@ func (k Keeper) handleNetworkRegistered(ctx sdk.Context, log ethTypes.Log) {
 	params["target_regs_per_interval"] = fmt.Sprintf("%d", event.Hyperparams.TargetRegsPerInterval)
 	params["max_regs_per_block"] = fmt.Sprintf("%d", event.Hyperparams.MaxRegsPerBlock)
 	params["weights_rate_limit"] = fmt.Sprintf("%d", event.Hyperparams.WeightsRateLimit)
+	params["weights_set_rate_limit"] = fmt.Sprintf("%d", event.Hyperparams.WeightsRateLimit) // 兼容 stakework
 	params["registration_allowed"] = fmt.Sprintf("%t", event.Hyperparams.RegistrationAllowed)
 	params["commit_reveal_enabled"] = fmt.Sprintf("%t", event.Hyperparams.CommitRevealEnabled)
 	params["commit_reveal_period"] = fmt.Sprintf("%d", event.Hyperparams.CommitRevealPeriod)
@@ -763,16 +764,33 @@ func (k Keeper) GetValidatorStake(ctx sdk.Context, netuid uint16, validator stri
 }
 
 func (k Keeper) GetAllValidatorStakesByNetuid(ctx sdk.Context, netuid uint16) []types.ValidatorStake {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("stake:"))
-	prefixKey := uint16ToBytes(netuid)
-	iterator := storetypes.KVStorePrefixIterator(store, prefixKey)
-	defer iterator.Close()
+	// 优化：使用活跃的神经元信息来生成 ValidatorStake 数据
+	// 这样可以确保只返回活跃的验证者，同时保持接口兼容性
+	activeNeurons := k.GetActiveNeuronInfosByNetuid(ctx, netuid)
+
 	var stakes []types.ValidatorStake
-	for ; iterator.Valid(); iterator.Next() {
-		var stake types.ValidatorStake
-		_ = json.Unmarshal(iterator.Value(), &stake)
+	for _, neuron := range activeNeurons {
+		stake := types.ValidatorStake{
+			Netuid:    neuron.Netuid,
+			Validator: neuron.Account,
+			Amount:    neuron.Stake,
+		}
 		stakes = append(stakes, stake)
 	}
+
+	// 如果没有找到活跃神经元，回退到原始的质押数据查询
+	if len(stakes) == 0 {
+		store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("stake:"))
+		prefixKey := uint16ToBytes(netuid)
+		iterator := storetypes.KVStorePrefixIterator(store, prefixKey)
+		defer iterator.Close()
+		for ; iterator.Valid(); iterator.Next() {
+			var stake types.ValidatorStake
+			_ = json.Unmarshal(iterator.Value(), &stake)
+			stakes = append(stakes, stake)
+		}
+	}
+
 	return stakes
 }
 
