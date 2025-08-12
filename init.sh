@@ -71,13 +71,21 @@ sed -i '' 's/create_empty_blocks = true/create_empty_blocks = false/g' "$ETHCONF
 hetud add-genesis-account "$KEY" 100000000000000000000000000ahetu --keyring-backend "$KEYRING" --home "$HETUD_HOME"
 
 # Sign genesis transaction
-hetud gentx "$KEY" 1000000000000000000000ahetu --keyring-backend "$KEYRING" --chain-id "$CHAINID" --home "$HETUD_HOME" --fees 1000000ahetu --gas 200000
+hetud gentx "$KEY" 2000000000000000000000ahetu --keyring-backend "$KEYRING" --chain-id "$CHAINID" --home "$HETUD_HOME" --fees 1000000ahetu --gas 200000
 
 # Collect genesis transactions
 hetud collect-gentxs
 
 # Validate genesis file
 hetud validate-genesis
+
+# Configure P2P for external connections
+# Get the node ID
+NODE_ID=$(hetud tendermint show-node-id --home "$HETUD_HOME")
+echo "Node ID: $NODE_ID"
+
+# Configure external address (replace YOUR_IP with your actual IP)
+# sed -i '' "s/external_address = \"\"/external_address = \"YOUR_IP:26656\"/g" "$ETHCONFIG"
 
 # Start the node
 hetud start --pruning=nothing $TRACE --log_level "$LOGLEVEL2" --minimum-gas-prices=0.0001ahetu --home "$HETUD_HOME" --chain-id "$CHAINID"

@@ -687,6 +687,21 @@ func NewEvmos(
 	if err != nil {
 		panic(fmt.Sprintf("failed to parse Weights ABI: %v", err))
 	}
+
+	// 新增合约 ABI 解析
+	subnetManagerABI, err := abi.JSON(strings.NewReader(string(eventabi.SubnetManagerABI)))
+	if err != nil {
+		panic(fmt.Sprintf("failed to parse SubnetManager ABI: %v", err))
+	}
+	neuronManagerABI, err := abi.JSON(strings.NewReader(string(eventabi.NeuronManagerABI)))
+	if err != nil {
+		panic(fmt.Sprintf("failed to parse NeuronManager ABI: %v", err))
+	}
+	globalStakingABI, err := abi.JSON(strings.NewReader(string(eventabi.GlobalStakingABI)))
+	if err != nil {
+		panic(fmt.Sprintf("failed to parse GlobalStaking ABI: %v", err))
+	}
+
 	app.EventKeeper = eventkeeper.NewKeeper(
 		appCodec,
 		keys["event"],
@@ -694,6 +709,9 @@ func NewEvmos(
 		stakingSelfABI,
 		stakingDelegatedABI,
 		weightsABI,
+		subnetManagerABI,
+		neuronManagerABI,
+		globalStakingABI,
 	)
 
 	subspace := app.GetSubspace(blockinflationtypes.ModuleName)

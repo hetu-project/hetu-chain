@@ -1,0 +1,270 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_systemAddress",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint16",
+        "name": "netuid",
+        "type": "uint16"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "hetuToken",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "alphaToken",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "pool",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "poolsLength",
+        "type": "uint256"
+      }
+    ],
+    "name": "PoolCreated",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "allPools",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "allPoolsLength",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "hetuToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "alphaToken",
+        "type": "address"
+      },
+      {
+        "internalType": "uint16",
+        "name": "netuid",
+        "type": "uint16"
+      },
+      {
+        "internalType": "address",
+        "name": "subnetContract",
+        "type": "address"
+      },
+      {
+        "internalType": "enum SubnetAMM.MechanismType",
+        "name": "mechanism",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "minimumPoolLiquidity",
+        "type": "uint256"
+      }
+    ],
+    "name": "createPool",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "pool",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "createdAt",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "creator",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getFactoryInfo",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "_creator",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_systemAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_createdAt",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_totalPools",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "name": "getPool",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "start",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "end",
+        "type": "uint256"
+      }
+    ],
+    "name": "getPoolsInfo",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "pools",
+        "type": "address[]"
+      },
+      {
+        "internalType": "uint16[]",
+        "name": "netuids",
+        "type": "uint16[]"
+      },
+      {
+        "internalType": "enum SubnetAMM.MechanismType[]",
+        "name": "mechanisms",
+        "type": "uint8[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "totalVolumes",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "isPool",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "systemAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

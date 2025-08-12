@@ -19,6 +19,69 @@ type Subnet struct {
 	EMAPriceHalvingBlocks uint64            `json:"ema_price_halving_blocks" yaml:"ema_price_halving_blocks"` // EMA价格减半区块数 (默认201600=4周)
 }
 
+// SubnetHyperparams represents the hyperparameters for a subnet
+type SubnetHyperparams struct {
+	// === Core network parameters ===
+	Rho                  uint16 `json:"rho" yaml:"rho"`
+	Kappa                uint16 `json:"kappa" yaml:"kappa"`
+	ImmunityPeriod       uint16 `json:"immunity_period" yaml:"immunity_period"`
+	Tempo                uint16 `json:"tempo" yaml:"tempo"`
+	MaxValidators        uint16 `json:"max_validators" yaml:"max_validators"`
+	ActivityCutoff       uint16 `json:"activity_cutoff" yaml:"activity_cutoff"`
+	MaxAllowedUids       uint16 `json:"max_allowed_uids" yaml:"max_allowed_uids"`
+	MaxAllowedValidators uint16 `json:"max_allowed_validators" yaml:"max_allowed_validators"`
+	MinAllowedWeights    uint16 `json:"min_allowed_weights" yaml:"min_allowed_weights"`
+	MaxWeightsLimit      uint16 `json:"max_weights_limit" yaml:"max_weights_limit"`
+
+	// === Economic parameters ===
+	BaseNeuronCost        string `json:"base_neuron_cost" yaml:"base_neuron_cost"`
+	CurrentDifficulty     uint64 `json:"current_difficulty" yaml:"current_difficulty"`
+	TargetRegsPerInterval uint16 `json:"target_regs_per_interval" yaml:"target_regs_per_interval"`
+	MaxRegsPerBlock       uint16 `json:"max_regs_per_block" yaml:"max_regs_per_block"`
+	WeightsRateLimit      uint64 `json:"weights_rate_limit" yaml:"weights_rate_limit"`
+
+	// === Governance parameters ===
+	RegistrationAllowed bool   `json:"registration_allowed" yaml:"registration_allowed"`
+	CommitRevealEnabled bool   `json:"commit_reveal_enabled" yaml:"commit_reveal_enabled"`
+	CommitRevealPeriod  uint64 `json:"commit_reveal_period" yaml:"commit_reveal_period"`
+	ServingRateLimit    uint64 `json:"serving_rate_limit" yaml:"serving_rate_limit"`
+	ValidatorThreshold  string `json:"validator_threshold" yaml:"validator_threshold"`
+	NeuronThreshold     string `json:"neuron_threshold" yaml:"neuron_threshold"`
+}
+
+// SubnetInfo represents subnet information from contract events
+type SubnetInfo struct {
+	Netuid         uint16 `json:"netuid" yaml:"netuid"`
+	Owner          string `json:"owner" yaml:"owner"`
+	AlphaToken     string `json:"alpha_token" yaml:"alpha_token"`
+	AmmPool        string `json:"amm_pool" yaml:"amm_pool"`
+	LockedAmount   string `json:"locked_amount" yaml:"locked_amount"`
+	PoolInitialTao string `json:"pool_initial_tao" yaml:"pool_initial_tao"`
+	BurnedAmount   string `json:"burned_amount" yaml:"burned_amount"`
+	CreatedAt      uint64 `json:"created_at" yaml:"created_at"`
+	IsActive       bool   `json:"is_active" yaml:"is_active"`
+	Name           string `json:"name" yaml:"name"`
+	Description    string `json:"description" yaml:"description"`
+	ActivatedAt    uint64 `json:"activated_at" yaml:"activated_at"`       // 激活时间
+	ActivatedBlock uint64 `json:"activated_block" yaml:"activated_block"` // 激活区块
+}
+
+// NeuronInfo represents neuron information from contract events
+type NeuronInfo struct {
+	Account                string `json:"account" yaml:"account"`
+	Netuid                 uint16 `json:"netuid" yaml:"netuid"`
+	IsActive               bool   `json:"is_active" yaml:"is_active"`
+	IsValidator            bool   `json:"is_validator" yaml:"is_validator"`
+	RequestedValidatorRole bool   `json:"requested_validator_role" yaml:"requested_validator_role"`
+	Stake                  string `json:"stake" yaml:"stake"`
+	RegistrationBlock      uint64 `json:"registration_block" yaml:"registration_block"`
+	LastUpdate             uint64 `json:"last_update" yaml:"last_update"`
+	AxonEndpoint           string `json:"axon_endpoint" yaml:"axon_endpoint"`
+	AxonPort               uint32 `json:"axon_port" yaml:"axon_port"`
+	PrometheusEndpoint     string `json:"prometheus_endpoint" yaml:"prometheus_endpoint"`
+	PrometheusPort         uint32 `json:"prometheus_port" yaml:"prometheus_port"`
+}
+
 // MarshalJSON implements json.Marshaler
 func (s Subnet) MarshalJSON() ([]byte, error) {
 	type Alias Subnet

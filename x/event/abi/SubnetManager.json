@@ -1,0 +1,1807 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_hetuToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_ammFactory",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnableInvalidOwner",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "OwnableUnauthorizedAccount",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ReentrancyGuardReentrantCall",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "string",
+        "name": "paramName",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "oldValue",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newValue",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "updater",
+        "type": "address"
+      }
+    ],
+    "name": "NetworkConfigUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint16",
+        "name": "netuid",
+        "type": "uint16"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "alphaToken",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "ammPool",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "lockedAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "poolAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "burnedAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint16",
+            "name": "rho",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "kappa",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "immunityPeriod",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "tempo",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "maxValidators",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "activityCutoff",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "maxAllowedUids",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "maxAllowedValidators",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "minAllowedWeights",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "maxWeightsLimit",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint256",
+            "name": "baseNeuronCost",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint64",
+            "name": "currentDifficulty",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint16",
+            "name": "targetRegsPerInterval",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "maxRegsPerBlock",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint64",
+            "name": "weightsRateLimit",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bool",
+            "name": "registrationAllowed",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "commitRevealEnabled",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint64",
+            "name": "commitRevealPeriod",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "servingRateLimit",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint256",
+            "name": "validatorThreshold",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "neuronThreshold",
+            "type": "uint256"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct SubnetTypes.SubnetHyperparams",
+        "name": "hyperparams",
+        "type": "tuple"
+      }
+    ],
+    "name": "NetworkRegistered",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousOwner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint16",
+        "name": "netuid",
+        "type": "uint16"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "blockNumber",
+        "type": "uint256"
+      }
+    ],
+    "name": "SubnetActivated",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint16",
+        "name": "netuid",
+        "type": "uint16"
+      }
+    ],
+    "name": "activateSubnet",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "ammFactory",
+    "outputs": [
+      {
+        "internalType": "contract SubnetAMMFactory",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getNetworkLockCost",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getNetworkParams",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "minLock",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "lastLock",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "lastLockBlock",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "rateLimit",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "reductionInterval",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint16",
+        "name": "totalNets",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "nextId",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getNextNetuid",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint16",
+        "name": "netuid",
+        "type": "uint16"
+      }
+    ],
+    "name": "getSubnetDetails",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint16",
+            "name": "netuid",
+            "type": "uint16"
+          },
+          {
+            "internalType": "address",
+            "name": "owner",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "alphaToken",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "ammPool",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lockedAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "poolInitialTao",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "burnedAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "createdAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "isActive",
+            "type": "bool"
+          },
+          {
+            "internalType": "string",
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "description",
+            "type": "string"
+          }
+        ],
+        "internalType": "struct SubnetTypes.SubnetInfo",
+        "name": "subnetInfo",
+        "type": "tuple"
+      },
+      {
+        "internalType": "uint256",
+        "name": "currentPrice",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalVolume",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "hetuReserve",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "alphaReserve",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint16",
+        "name": "netuid",
+        "type": "uint16"
+      }
+    ],
+    "name": "getSubnetHyperparams",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint16",
+            "name": "rho",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "kappa",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "immunityPeriod",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "tempo",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "maxValidators",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "activityCutoff",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "maxAllowedUids",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "maxAllowedValidators",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "minAllowedWeights",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "maxWeightsLimit",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint256",
+            "name": "baseNeuronCost",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint64",
+            "name": "currentDifficulty",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint16",
+            "name": "targetRegsPerInterval",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "maxRegsPerBlock",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint64",
+            "name": "weightsRateLimit",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bool",
+            "name": "registrationAllowed",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "commitRevealEnabled",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint64",
+            "name": "commitRevealPeriod",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "servingRateLimit",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint256",
+            "name": "validatorThreshold",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "neuronThreshold",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct SubnetTypes.SubnetHyperparams",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint16",
+        "name": "netuid",
+        "type": "uint16"
+      }
+    ],
+    "name": "getSubnetInfo",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint16",
+            "name": "netuid",
+            "type": "uint16"
+          },
+          {
+            "internalType": "address",
+            "name": "owner",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "alphaToken",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "ammPool",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lockedAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "poolInitialTao",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "burnedAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "createdAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "isActive",
+            "type": "bool"
+          },
+          {
+            "internalType": "string",
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "description",
+            "type": "string"
+          }
+        ],
+        "internalType": "struct SubnetTypes.SubnetInfo",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint16",
+        "name": "netuid",
+        "type": "uint16"
+      }
+    ],
+    "name": "getSubnetParams",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint16",
+            "name": "rho",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "kappa",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "immunityPeriod",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "tempo",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "maxValidators",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "activityCutoff",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "maxAllowedUids",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "maxAllowedValidators",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "minAllowedWeights",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "maxWeightsLimit",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint256",
+            "name": "baseNeuronCost",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint64",
+            "name": "currentDifficulty",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint16",
+            "name": "targetRegsPerInterval",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "maxRegsPerBlock",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint64",
+            "name": "weightsRateLimit",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bool",
+            "name": "registrationAllowed",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "commitRevealEnabled",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint64",
+            "name": "commitRevealPeriod",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "servingRateLimit",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint256",
+            "name": "validatorThreshold",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "neuronThreshold",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct SubnetTypes.SubnetHyperparams",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "getUserSubnets",
+    "outputs": [
+      {
+        "internalType": "uint16[]",
+        "name": "",
+        "type": "uint16[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "hetuToken",
+    "outputs": [
+      {
+        "internalType": "contract IERC20",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint16",
+        "name": "netuid",
+        "type": "uint16"
+      }
+    ],
+    "name": "isSubnetActive",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "lockReductionInterval",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "networkLastLock",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "networkLastLockBlock",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "networkMinLock",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "networkRateLimit",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "nextNetuid",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "ownerSubnets",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "description",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "tokenName",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "tokenSymbol",
+        "type": "string"
+      }
+    ],
+    "name": "registerNetwork",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "netuid",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "description",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "tokenName",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "tokenSymbol",
+        "type": "string"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint16",
+            "name": "rho",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "kappa",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "immunityPeriod",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "tempo",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "maxValidators",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "activityCutoff",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "maxAllowedUids",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "maxAllowedValidators",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "minAllowedWeights",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "maxWeightsLimit",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint256",
+            "name": "baseNeuronCost",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint64",
+            "name": "currentDifficulty",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint16",
+            "name": "targetRegsPerInterval",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "maxRegsPerBlock",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint64",
+            "name": "weightsRateLimit",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bool",
+            "name": "registrationAllowed",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "commitRevealEnabled",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint64",
+            "name": "commitRevealPeriod",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "servingRateLimit",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint256",
+            "name": "validatorThreshold",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "neuronThreshold",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct SubnetTypes.SubnetHyperparams",
+        "name": "customHyperparams",
+        "type": "tuple"
+      },
+      {
+        "internalType": "bool[21]",
+        "name": "useCustomFlags",
+        "type": "bool[21]"
+      }
+    ],
+    "name": "registerNetworkWithPartialCustom",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "netuid",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "description",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "tokenName",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "tokenSymbol",
+        "type": "string"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint16",
+            "name": "rho",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "kappa",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "immunityPeriod",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "tempo",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "maxValidators",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "activityCutoff",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "maxAllowedUids",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "maxAllowedValidators",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "minAllowedWeights",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "maxWeightsLimit",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint256",
+            "name": "baseNeuronCost",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint64",
+            "name": "currentDifficulty",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint16",
+            "name": "targetRegsPerInterval",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "maxRegsPerBlock",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint64",
+            "name": "weightsRateLimit",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bool",
+            "name": "registrationAllowed",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "commitRevealEnabled",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint64",
+            "name": "commitRevealPeriod",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "servingRateLimit",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint256",
+            "name": "validatorThreshold",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "neuronThreshold",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct SubnetTypes.SubnetHyperparams",
+        "name": "customHyperparams",
+        "type": "tuple"
+      },
+      {
+        "internalType": "bool[21]",
+        "name": "useCustomFlags",
+        "type": "bool[21]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "deadline",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint8",
+        "name": "v",
+        "type": "uint8"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "r",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "s",
+        "type": "bytes32"
+      }
+    ],
+    "name": "registerNetworkWithPartialCustomAndPermit",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "netuid",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "description",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "tokenName",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "tokenSymbol",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "deadline",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint8",
+        "name": "v",
+        "type": "uint8"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "r",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "s",
+        "type": "bytes32"
+      }
+    ],
+    "name": "registerNetworkWithPermit",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "netuid",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "renounceOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "resetNetworkLockState",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "name": "subnetExists",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "name": "subnetHyperparams",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "rho",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "kappa",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "immunityPeriod",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "tempo",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "maxValidators",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "activityCutoff",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "maxAllowedUids",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "maxAllowedValidators",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "minAllowedWeights",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "maxWeightsLimit",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint256",
+        "name": "baseNeuronCost",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint64",
+        "name": "currentDifficulty",
+        "type": "uint64"
+      },
+      {
+        "internalType": "uint16",
+        "name": "targetRegsPerInterval",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "maxRegsPerBlock",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint64",
+        "name": "weightsRateLimit",
+        "type": "uint64"
+      },
+      {
+        "internalType": "bool",
+        "name": "registrationAllowed",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "commitRevealEnabled",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint64",
+        "name": "commitRevealPeriod",
+        "type": "uint64"
+      },
+      {
+        "internalType": "uint64",
+        "name": "servingRateLimit",
+        "type": "uint64"
+      },
+      {
+        "internalType": "uint256",
+        "name": "validatorThreshold",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "neuronThreshold",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "name": "subnets",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "netuid",
+        "type": "uint16"
+      },
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "alphaToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "ammPool",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "lockedAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "poolInitialTao",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "burnedAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "createdAt",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isActive",
+        "type": "bool"
+      },
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "description",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "totalNetworks",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "transferOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "newMinLock",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "newRateLimit",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "newInterval",
+        "type": "uint256"
+      }
+    ],
+    "name": "updateNetworkConfig",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_networkMinLock",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_networkRateLimit",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_lockReductionInterval",
+        "type": "uint256"
+      }
+    ],
+    "name": "updateNetworkParams",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint16",
+        "name": "netuid",
+        "type": "uint16"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint16",
+            "name": "rho",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "kappa",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "immunityPeriod",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "tempo",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "maxValidators",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "activityCutoff",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "maxAllowedUids",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "maxAllowedValidators",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "minAllowedWeights",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "maxWeightsLimit",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint256",
+            "name": "baseNeuronCost",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint64",
+            "name": "currentDifficulty",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint16",
+            "name": "targetRegsPerInterval",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "maxRegsPerBlock",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint64",
+            "name": "weightsRateLimit",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bool",
+            "name": "registrationAllowed",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "commitRevealEnabled",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint64",
+            "name": "commitRevealPeriod",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "servingRateLimit",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint256",
+            "name": "validatorThreshold",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "neuronThreshold",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct SubnetTypes.SubnetHyperparams",
+        "name": "newHyperparams",
+        "type": "tuple"
+      }
+    ],
+    "name": "updateSubnetHyperparams",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]
