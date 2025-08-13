@@ -38,9 +38,9 @@ jq ".app_state[\"crisis\"][\"constant_fee\"][\"denom\"]=\"ahetu\"" "$GENESIS" > 
 jq ".app_state[\"gov\"][\"params\"][\"min_deposit\"][0][\"denom\"]=\"ahetu\"" "$GENESIS" > "$TMPGENESIS" && mv "$TMPGENESIS" "$GENESIS"
 jq ".app_state[\"mint\"][\"params\"][\"mint_denom\"]=\"ahetu\"" "$GENESIS" > "$TMPGENESIS" && mv "$TMPGENESIS" "$GENESIS"
 
-# 注意：以下模块现在会自动使用 DefaultGenesisState() 中的默认值
-# - blockinflation 模块：自动使用 DefaultParams() 和零值状态
-# - event 模块：自动使用空数组作为默认状态 (subnets: [], validator_stakes: [], delegations: [], validator_weights: [])
+# Note: The following modules now automatically use default values from DefaultGenesisState()
+# - blockinflation module: automatically uses DefaultParams() and zero value states
+# - event module: automatically uses empty arrays as default state (subnets: [], validator_stakes: [], delegations: [], validator_weights: [])
 # Set blockinflation parameters directly in app_state
 jq '.app_state.blockinflation.params = {"enable_block_inflation": true, "mint_denom": "ahetu", "total_supply": "21000000000000000000000000", "default_block_emission": "1000000000000000000", "subnet_reward_base": "0.100000000000000000", "subnet_reward_k": "0.100000000000000000", "subnet_reward_max_ratio": "0.900000000000000000", "subnet_moving_alpha": "0.000003000000000000", "subnet_owner_cut": "0.180000000000000000"}' "$GENESIS" > "$TMPGENESIS" && mv "$TMPGENESIS" "$GENESIS"
 

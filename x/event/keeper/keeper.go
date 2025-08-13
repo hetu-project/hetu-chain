@@ -24,9 +24,9 @@ import (
 	"github.com/hetu-project/hetu/v1/x/event/types"
 )
 
-// ----------- 事件 topic 常量 -----------
+// ----------- Event topic constants -----------
 var (
-	// 旧事件保持不变 (向后兼容)
+	// Legacy events remain unchanged (backward compatibility)
 	SubnetRegisteredTopic  = crypto.Keccak256Hash([]byte("SubnetRegistered(address,uint16,uint256,uint256,address,string)")).Hex()
 	StakedSelfTopic        = crypto.Keccak256Hash([]byte("Staked(uint16,address,uint256)")).Hex()
 	UnstakedSelfTopic      = crypto.Keccak256Hash([]byte("Unstaked(uint16,address,uint256)")).Hex()
@@ -34,7 +34,7 @@ var (
 	UnstakedDelegatedTopic = crypto.Keccak256Hash([]byte("Unstaked(uint16,address,address,uint256)")).Hex()
 	WeightsSetTopic        = crypto.Keccak256Hash([]byte("WeightsSet(uint16,address,(address,uint256)[])")).Hex()
 
-	// 新事件 Topics
+	// New event topics
 	NetworkRegisteredTopic       = crypto.Keccak256Hash([]byte("NetworkRegistered(uint16,address,address,address,uint256,uint256,uint256,string,(uint16,uint16,uint16,uint16,uint16,uint16,uint16,uint16,uint16,uint16,uint256,uint64,uint16,uint16,uint64,bool,bool,uint64,uint64,uint256,uint256))")).Hex()
 	SubnetActivatedTopic         = crypto.Keccak256Hash([]byte("SubnetActivated(uint16,address,uint256,uint256)")).Hex()
 	NetworkConfigUpdatedTopic    = crypto.Keccak256Hash([]byte("NetworkConfigUpdated(string,uint256,uint256,address)")).Hex()
@@ -46,24 +46,24 @@ var (
 	DeallocatedFromSubnetTopic   = crypto.Keccak256Hash([]byte("DeallocatedFromSubnet(address,uint16,uint256)")).Hex()
 )
 
-// ----------- Keeper 结构体 -----------
+// ----------- Keeper struct -----------
 type Keeper struct {
 	cdc      codec.Codec
 	storeKey storetypes.StoreKey
 
-	// 原有合约 ABI (保持兼容)
+	// Legacy contract ABIs (maintain compatibility)
 	subnetRegistryABI   abi.ABI
 	stakingSelfABI      abi.ABI
 	stakingDelegatedABI abi.ABI
 	weightsABI          abi.ABI
 
-	// 新增合约 ABI
+	// New contract ABIs
 	subnetManagerABI abi.ABI
 	neuronManagerABI abi.ABI
 	globalStakingABI abi.ABI
 }
 
-// ----------- Keeper 初始化 -----------
+// ----------- Keeper initialization -----------
 func NewKeeper(
 	cdc codec.Codec,
 	storeKey storetypes.StoreKey,
@@ -93,79 +93,79 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/event")
 }
 
-// ----------- HandleEvmLogs 集成所有事件 -----------
+// ----------- HandleEvmLogs integrate all events -----------
 func (k *Keeper) HandleEvmLogs(ctx sdk.Context, logs []ethTypes.Log) {
-	k.Logger(ctx).Debug("开始处理EVM事件", "事件数量", len(logs))
+	k.Logger(ctx).Debug("Starting to process EVM events", "event_count", len(logs))
 
 	for _, log := range logs {
 		if len(log.Topics) == 0 {
 			continue
 		}
 		topic := log.Topics[0].Hex()
-		k.Logger(ctx).Debug("处理EVM事件", "topic", topic, "合约地址", log.Address.Hex(), "区块高度", log.BlockNumber)
+		k.Logger(ctx).Debug("Processing EVM event", "topic", topic, "contract_address", log.Address.Hex(), "block_height", log.BlockNumber)
 
 		switch topic {
-		// 旧事件 (保持兼容)
+		// Legacy events (maintain compatibility)
 		case SubnetRegisteredTopic:
-			k.Logger(ctx).Debug("识别到SubnetRegistered事件")
+			k.Logger(ctx).Debug("Identified SubnetRegistered event")
 			k.handleSubnetRegistered(ctx, log)
 		case StakedSelfTopic:
-			k.Logger(ctx).Debug("识别到StakedSelf事件")
+			k.Logger(ctx).Debug("Identified StakedSelf event")
 			k.handleStaked(ctx, log)
 		case UnstakedSelfTopic:
-			k.Logger(ctx).Debug("识别到UnstakedSelf事件")
+			k.Logger(ctx).Debug("Identified UnstakedSelf event")
 			k.handleUnstaked(ctx, log)
 		case StakedDelegatedTopic:
-			k.Logger(ctx).Debug("识别到StakedDelegated事件")
+			k.Logger(ctx).Debug("Identified StakedDelegated event")
 			k.handleDelegatedStaked(ctx, log)
 		case UnstakedDelegatedTopic:
-			k.Logger(ctx).Debug("识别到UnstakedDelegated事件")
+			k.Logger(ctx).Debug("Identified UnstakedDelegated event")
 			k.handleDelegatedUnstaked(ctx, log)
 		case WeightsSetTopic:
-			k.Logger(ctx).Debug("识别到WeightsSet事件")
+			k.Logger(ctx).Debug("Identified WeightsSet event")
 			k.handleWeightsSet(ctx, log)
 
-		// 新事件
+		// New events
 		case NetworkRegisteredTopic:
-			k.Logger(ctx).Debug("识别到NetworkRegistered事件")
+			k.Logger(ctx).Debug("Identified NetworkRegistered event")
 			k.handleNetworkRegistered(ctx, log)
 		case SubnetActivatedTopic:
-			k.Logger(ctx).Debug("识别到SubnetActivated事件")
+			k.Logger(ctx).Debug("Identified SubnetActivated event")
 			k.handleSubnetActivated(ctx, log)
 		case NetworkConfigUpdatedTopic:
-			k.Logger(ctx).Debug("识别到NetworkConfigUpdated事件")
+			k.Logger(ctx).Debug("Identified NetworkConfigUpdated event")
 			k.handleNetworkConfigUpdated(ctx, log)
 		case NeuronRegisteredTopic:
-			k.Logger(ctx).Debug("识别到NeuronRegistered事件")
+			k.Logger(ctx).Debug("Identified NeuronRegistered event")
 			k.handleNeuronRegistered(ctx, log)
 		case NeuronDeregisteredTopic:
-			k.Logger(ctx).Debug("识别到NeuronDeregistered事件")
+			k.Logger(ctx).Debug("Identified NeuronDeregistered event")
 			k.handleNeuronDeregistered(ctx, log)
 		case NeuronStakeChangedTopic:
-			k.Logger(ctx).Debug("识别到NeuronStakeChanged事件")
+			k.Logger(ctx).Debug("Identified NeuronStakeChanged event")
 			k.handleNeuronStakeChanged(ctx, log)
 		case ServiceUpdatedTopic:
-			k.Logger(ctx).Debug("识别到ServiceUpdated事件")
+			k.Logger(ctx).Debug("Identified ServiceUpdated event")
 			k.handleServiceUpdated(ctx, log)
 		case SubnetAllocationChangedTopic:
-			k.Logger(ctx).Debug("识别到SubnetAllocationChanged事件")
+			k.Logger(ctx).Debug("Identified SubnetAllocationChanged event")
 			k.handleSubnetAllocationChanged(ctx, log)
 		case DeallocatedFromSubnetTopic:
-			k.Logger(ctx).Debug("识别到DeallocatedFromSubnet事件")
+			k.Logger(ctx).Debug("Identified DeallocatedFromSubnet event")
 			k.handleDeallocatedFromSubnet(ctx, log)
 		default:
-			k.Logger(ctx).Debug("未识别的EVM事件topic", "topic", topic, "合约地址", log.Address.Hex())
+			k.Logger(ctx).Debug("Unrecognized EVM event topic", "topic", topic, "contract_address", log.Address.Hex())
 		}
 	}
 
-	k.Logger(ctx).Debug("完成处理EVM事件", "事件数量", len(logs))
+	k.Logger(ctx).Debug("Finished processing EVM events", "event_count", len(logs))
 }
 
-// ----------- 事件处理方法 -----------
+// ----------- Event handler methods -----------
 
-// 子网注册
+// Subnet registration
 func (k Keeper) handleSubnetRegistered(ctx sdk.Context, log ethTypes.Log) {
-	k.Logger(ctx).Debug("开始处理SubnetRegistered事件", "合约地址", log.Address.Hex(), "区块高度", log.BlockNumber)
+	k.Logger(ctx).Debug("Starting to process SubnetRegistered event", "contract_address", log.Address.Hex(), "block_height", log.BlockNumber)
 
 	var event struct {
 		Owner      common.Address
@@ -176,11 +176,11 @@ func (k Keeper) handleSubnetRegistered(ctx sdk.Context, log ethTypes.Log) {
 		Param      string
 	}
 	if err := k.subnetRegistryABI.UnpackIntoInterface(&event, "SubnetRegistered", log.Data); err != nil {
-		k.Logger(ctx).Error("解析SubnetRegistered事件失败", "error", err, "合约地址", log.Address.Hex())
+		k.Logger(ctx).Error("Failed to parse SubnetRegistered event", "error", err, "contract_address", log.Address.Hex())
 		return
 	}
 
-	k.Logger(ctx).Debug("成功解析SubnetRegistered事件",
+	k.Logger(ctx).Debug("Successfully parsed SubnetRegistered event",
 		"netuid", event.Netuid,
 		"owner", event.Owner.Hex(),
 		"lockAmount", event.LockAmount.String(),
@@ -188,7 +188,7 @@ func (k Keeper) handleSubnetRegistered(ctx sdk.Context, log ethTypes.Log) {
 		"pool", event.Pool.Hex(),
 		"param", event.Param)
 
-	params := types.DefaultParamsMap() // 你需在 types 实现 DefaultParamsMap
+	params := types.DefaultParamsMap() // Default parameters map implemented in types
 	userParams := map[string]string{}
 	_ = json.Unmarshal([]byte(event.Param), &userParams)
 	for k, v := range userParams {
@@ -201,16 +201,16 @@ func (k Keeper) handleSubnetRegistered(ctx sdk.Context, log ethTypes.Log) {
 		BurnedTao:             event.BurnedTao.String(),
 		Pool:                  event.Pool.Hex(),
 		Params:                params,
-		Mechanism:             1,      // 默认动态机制
-		EMAPriceHalvingBlocks: 201600, // 默认4周 (201600块)
+		Mechanism:             1,      // Default dynamic mechanism
+		EMAPriceHalvingBlocks: 201600, // Default 4 weeks (201600 blocks)
 	}
 	k.SetSubnet(ctx, subnet)
-	k.Logger(ctx).Debug("成功存储子网信息", "netuid", event.Netuid, "owner", event.Owner.Hex())
+	k.Logger(ctx).Debug("Successfully stored subnet information", "netuid", event.Netuid, "owner", event.Owner.Hex())
 }
 
-// validator自质押
+// Validator self-staking
 func (k Keeper) handleStaked(ctx sdk.Context, log ethTypes.Log) {
-	k.Logger(ctx).Debug("开始处理Staked事件", "合约地址", log.Address.Hex())
+	k.Logger(ctx).Debug("Starting to process Staked event", "contract_address", log.Address.Hex())
 
 	var event struct {
 		Netuid    uint16
@@ -218,11 +218,11 @@ func (k Keeper) handleStaked(ctx sdk.Context, log ethTypes.Log) {
 		Amount    *big.Int
 	}
 	if err := k.stakingSelfABI.UnpackIntoInterface(&event, "Staked", log.Data); err != nil {
-		k.Logger(ctx).Error("解析Staked事件失败", "error", err, "合约地址", log.Address.Hex())
+		k.Logger(ctx).Error("Failed to parse Staked event", "error", err, "contract_address", log.Address.Hex())
 		return
 	}
 
-	k.Logger(ctx).Debug("成功解析Staked事件", "netuid", event.Netuid, "validator", event.Validator.Hex(), "amount", event.Amount.String())
+	k.Logger(ctx).Debug("Successfully parsed Staked event", "netuid", event.Netuid, "validator", event.Validator.Hex(), "amount", event.Amount.String())
 
 	stake, _ := k.GetValidatorStake(ctx, event.Netuid, event.Validator.Hex())
 	if stake.Netuid == 0 {
@@ -231,12 +231,12 @@ func (k Keeper) handleStaked(ctx sdk.Context, log ethTypes.Log) {
 	stake.Amount = types.AddBigIntString(stake.Amount, event.Amount.String())
 	k.SetValidatorStake(ctx, stake)
 
-	k.Logger(ctx).Debug("成功更新验证者质押", "netuid", event.Netuid, "validator", event.Validator.Hex(), "newAmount", stake.Amount)
+	k.Logger(ctx).Debug("Successfully updated validator stake", "netuid", event.Netuid, "validator", event.Validator.Hex(), "newAmount", stake.Amount)
 }
 
-// validator自解质押
+// Validator self-unstaking
 func (k Keeper) handleUnstaked(ctx sdk.Context, log ethTypes.Log) {
-	k.Logger(ctx).Debug("开始处理Unstaked事件", "合约地址", log.Address.Hex())
+	k.Logger(ctx).Debug("Starting to process Unstaked event", "contract_address", log.Address.Hex())
 
 	var event struct {
 		Netuid    uint16
@@ -244,11 +244,11 @@ func (k Keeper) handleUnstaked(ctx sdk.Context, log ethTypes.Log) {
 		Amount    *big.Int
 	}
 	if err := k.stakingSelfABI.UnpackIntoInterface(&event, "Unstaked", log.Data); err != nil {
-		k.Logger(ctx).Error("解析Unstaked事件失败", "error", err, "合约地址", log.Address.Hex())
+		k.Logger(ctx).Error("Failed to parse Unstaked event", "error", err, "contract_address", log.Address.Hex())
 		return
 	}
 
-	k.Logger(ctx).Debug("成功解析Unstaked事件", "netuid", event.Netuid, "validator", event.Validator.Hex(), "amount", event.Amount.String())
+	k.Logger(ctx).Debug("Successfully parsed Unstaked event", "netuid", event.Netuid, "validator", event.Validator.Hex(), "amount", event.Amount.String())
 	stake, _ := k.GetValidatorStake(ctx, event.Netuid, event.Validator.Hex())
 	if stake.Netuid == 0 {
 		return
@@ -257,7 +257,7 @@ func (k Keeper) handleUnstaked(ctx sdk.Context, log ethTypes.Log) {
 	k.SetValidatorStake(ctx, stake)
 }
 
-// 委托质押
+// Delegated staking
 func (k Keeper) handleDelegatedStaked(ctx sdk.Context, log ethTypes.Log) {
 	var event struct {
 		Netuid    uint16
@@ -277,7 +277,7 @@ func (k Keeper) handleDelegatedStaked(ctx sdk.Context, log ethTypes.Log) {
 	k.SetDelegation(ctx, deleg)
 }
 
-// 委托解质押
+// Delegated unstaking
 func (k Keeper) handleDelegatedUnstaked(ctx sdk.Context, log ethTypes.Log) {
 	var event struct {
 		Netuid    uint16
@@ -297,7 +297,7 @@ func (k Keeper) handleDelegatedUnstaked(ctx sdk.Context, log ethTypes.Log) {
 	k.SetDelegation(ctx, deleg)
 }
 
-// 权重矩阵
+// Weights set
 func (k Keeper) handleWeightsSet(ctx sdk.Context, log ethTypes.Log) {
 	var event struct {
 		Netuid    uint16
@@ -318,11 +318,11 @@ func (k Keeper) handleWeightsSet(ctx sdk.Context, log ethTypes.Log) {
 	k.SetValidatorWeight(ctx, event.Netuid, event.Validator.Hex(), weights)
 }
 
-// ----------- 新事件处理方法 -----------
+// ----------- New event handler methods -----------
 
-// NetworkRegistered - 网络注册事件
+// NetworkRegistered - Network registration event
 func (k Keeper) handleNetworkRegistered(ctx sdk.Context, log ethTypes.Log) {
-	k.Logger(ctx).Debug("开始处理NetworkRegistered事件", "合约地址", log.Address.Hex(), "区块高度", log.BlockNumber)
+	k.Logger(ctx).Debug("Starting to process NetworkRegistered event", "contract_address", log.Address.Hex(), "block_height", log.BlockNumber)
 
 	var event struct {
 		Netuid       uint16
@@ -362,11 +362,11 @@ func (k Keeper) handleNetworkRegistered(ctx sdk.Context, log ethTypes.Log) {
 	}
 
 	if err := k.subnetManagerABI.UnpackIntoInterface(&event, "NetworkRegistered", log.Data); err != nil {
-		k.Logger(ctx).Error("解析NetworkRegistered事件失败", "error", err, "合约地址", log.Address.Hex())
+		k.Logger(ctx).Error("Failed to parse NetworkRegistered event", "error", err, "contract_address", log.Address.Hex())
 		return
 	}
 
-	k.Logger(ctx).Debug("成功解析NetworkRegistered事件",
+	k.Logger(ctx).Debug("Successfully parsed NetworkRegistered event",
 		"netuid", event.Netuid,
 		"owner", event.Owner.Hex(),
 		"alphaToken", event.AlphaToken.Hex(),
@@ -380,15 +380,15 @@ func (k Keeper) handleNetworkRegistered(ctx sdk.Context, log ethTypes.Log) {
 		"immunityPeriod", event.Hyperparams.ImmunityPeriod,
 		"tempo", event.Hyperparams.Tempo)
 
-	// 处理参数 - Core network parameters 与默认值合并
+	// Handle parameters - Merge Core network parameters with default values
 	params := types.DefaultParamsMap()
 
-	// 覆盖 Core network parameters (如果事件中有值)
+	// Override Core network parameters (if event has values)
 	if event.Hyperparams.Rho != 0 {
-		params["rho"] = fmt.Sprintf("%.1f", float64(event.Hyperparams.Rho)/10000.0) // uint16 转 float64，假设原值是放大10000倍的
+		params["rho"] = fmt.Sprintf("%.1f", float64(event.Hyperparams.Rho)/10000.0) // uint16 to float64, assuming original value is scaled by 10000
 	}
 	if event.Hyperparams.Kappa != 0 {
-		params["kappa"] = fmt.Sprintf("%.1f", float64(event.Hyperparams.Kappa)/10000.0) // uint16 转 float64，假设原值是放大10000倍的
+		params["kappa"] = fmt.Sprintf("%.1f", float64(event.Hyperparams.Kappa)/10000.0) // uint16 to float64, assuming original value is scaled by 10000
 	}
 	if event.Hyperparams.ImmunityPeriod != 0 {
 		params["immunity_period"] = fmt.Sprintf("%d", event.Hyperparams.ImmunityPeriod)
@@ -415,13 +415,13 @@ func (k Keeper) handleNetworkRegistered(ctx sdk.Context, log ethTypes.Log) {
 		params["max_weights_limit"] = fmt.Sprintf("%d", event.Hyperparams.MaxWeightsLimit)
 	}
 
-	// 直接添加 Economic & Governance parameters
+	// Directly add Economic & Governance parameters
 	params["base_neuron_cost"] = event.Hyperparams.BaseNeuronCost.String()
 	params["current_difficulty"] = fmt.Sprintf("%d", event.Hyperparams.CurrentDifficulty)
 	params["target_regs_per_interval"] = fmt.Sprintf("%d", event.Hyperparams.TargetRegsPerInterval)
 	params["max_regs_per_block"] = fmt.Sprintf("%d", event.Hyperparams.MaxRegsPerBlock)
 	params["weights_rate_limit"] = fmt.Sprintf("%d", event.Hyperparams.WeightsRateLimit)
-	params["weights_set_rate_limit"] = fmt.Sprintf("%d", event.Hyperparams.WeightsRateLimit) // 兼容 stakework
+	params["weights_set_rate_limit"] = fmt.Sprintf("%d", event.Hyperparams.WeightsRateLimit) // Compatible with stakework
 	params["registration_allowed"] = fmt.Sprintf("%t", event.Hyperparams.RegistrationAllowed)
 	params["commit_reveal_enabled"] = fmt.Sprintf("%t", event.Hyperparams.CommitRevealEnabled)
 	params["commit_reveal_period"] = fmt.Sprintf("%d", event.Hyperparams.CommitRevealPeriod)
@@ -429,7 +429,7 @@ func (k Keeper) handleNetworkRegistered(ctx sdk.Context, log ethTypes.Log) {
 	params["validator_threshold"] = event.Hyperparams.ValidatorThreshold.String()
 	params["neuron_threshold"] = event.Hyperparams.NeuronThreshold.String()
 
-	// 创建子网结构
+	// Create subnet structure
 	subnet := types.Subnet{
 		Netuid:                event.Netuid,
 		Owner:                 event.Owner.Hex(),
@@ -437,14 +437,14 @@ func (k Keeper) handleNetworkRegistered(ctx sdk.Context, log ethTypes.Log) {
 		BurnedTao:             event.BurnedAmount.String(),
 		Pool:                  event.AmmPool.Hex(),
 		Params:                params,
-		Mechanism:             1,      // 默认动态机制
-		EMAPriceHalvingBlocks: 201600, // 默认4周 (201600块)
+		Mechanism:             1,      // Default dynamic mechanism
+		EMAPriceHalvingBlocks: 201600, // Default 4 weeks (201600 blocks)
 	}
 
-	// 存储子网信息
+	// Store subnet information
 	k.SetSubnet(ctx, subnet)
 
-	// 存储详细的子网信息
+	// Store detailed subnet information
 	subnetInfo := types.SubnetInfo{
 		Netuid:         event.Netuid,
 		Owner:          event.Owner.Hex(),
@@ -454,14 +454,14 @@ func (k Keeper) handleNetworkRegistered(ctx sdk.Context, log ethTypes.Log) {
 		PoolInitialTao: event.PoolAmount.String(),
 		BurnedAmount:   event.BurnedAmount.String(),
 		CreatedAt:      uint64(ctx.BlockTime().Unix()),
-		IsActive:       false, // 初始状态为未激活
+		IsActive:       false, // Initial state is inactive
 		Name:           event.Name,
-		Description:    "", // NetworkRegistered 事件中没有 description
+		Description:    "", // NetworkRegistered event does not have a description
 	}
 	k.SetSubnetInfo(ctx, subnetInfo)
 }
 
-// SubnetActivated - 子网激活事件
+// SubnetActivated - Subnet activation event
 func (k Keeper) handleSubnetActivated(ctx sdk.Context, log ethTypes.Log) {
 	var event struct {
 		Netuid      uint16
@@ -475,14 +475,14 @@ func (k Keeper) handleSubnetActivated(ctx sdk.Context, log ethTypes.Log) {
 		return
 	}
 
-	// 更新子网激活状态
+	// Update subnet activation status
 	subnet, found := k.GetSubnet(ctx, event.Netuid)
 	if found {
 		subnet.FirstEmissionBlock = event.BlockNumber.Uint64()
 		k.SetSubnet(ctx, subnet)
 	}
 
-	// 更新详细子网信息
+	// Update detailed subnet information
 	subnetInfo, found := k.GetSubnetInfo(ctx, event.Netuid)
 	if found {
 		subnetInfo.IsActive = true
@@ -492,7 +492,7 @@ func (k Keeper) handleSubnetActivated(ctx sdk.Context, log ethTypes.Log) {
 	}
 }
 
-// NetworkConfigUpdated - 网络配置更新事件
+// NetworkConfigUpdated - Network configuration update event
 func (k Keeper) handleNetworkConfigUpdated(ctx sdk.Context, log ethTypes.Log) {
 	var event struct {
 		ParamName string
@@ -506,7 +506,7 @@ func (k Keeper) handleNetworkConfigUpdated(ctx sdk.Context, log ethTypes.Log) {
 		return
 	}
 
-	// 这个事件主要用于日志记录，暂时不需要更新状态
+	// This event is mainly for logging, no state update needed for now
 	k.Logger(ctx).Info("Network config updated",
 		"param", event.ParamName,
 		"old_value", event.OldValue.String(),
@@ -514,9 +514,9 @@ func (k Keeper) handleNetworkConfigUpdated(ctx sdk.Context, log ethTypes.Log) {
 		"updater", event.Updater.Hex())
 }
 
-// NeuronRegistered - 神经元注册事件
+// NeuronRegistered - Neuron registration event
 func (k Keeper) handleNeuronRegistered(ctx sdk.Context, log ethTypes.Log) {
-	k.Logger(ctx).Debug("开始处理NeuronRegistered事件", "合约地址", log.Address.Hex(), "区块高度", log.BlockNumber)
+	k.Logger(ctx).Debug("Starting to process NeuronRegistered event", "contract_address", log.Address.Hex(), "block_height", log.BlockNumber)
 
 	var event struct {
 		Netuid                 uint16
@@ -532,11 +532,11 @@ func (k Keeper) handleNeuronRegistered(ctx sdk.Context, log ethTypes.Log) {
 	}
 
 	if err := k.neuronManagerABI.UnpackIntoInterface(&event, "NeuronRegistered", log.Data); err != nil {
-		k.Logger(ctx).Error("解析NeuronRegistered事件失败", "error", err, "合约地址", log.Address.Hex())
+		k.Logger(ctx).Error("Failed to parse NeuronRegistered event", "error", err, "contract_address", log.Address.Hex())
 		return
 	}
 
-	k.Logger(ctx).Debug("成功解析NeuronRegistered事件",
+	k.Logger(ctx).Debug("Successfully parsed NeuronRegistered event",
 		"netuid", event.Netuid,
 		"account", event.Account.Hex(),
 		"stake", event.Stake.String(),
@@ -548,7 +548,7 @@ func (k Keeper) handleNeuronRegistered(ctx sdk.Context, log ethTypes.Log) {
 		"prometheusPort", event.PrometheusPort,
 		"blockNumber", event.BlockNumber.String())
 
-	// 创建神经元信息
+	// Create neuron information
 	neuronInfo := types.NeuronInfo{
 		Account:                event.Account.Hex(),
 		Netuid:                 event.Netuid,
@@ -565,10 +565,10 @@ func (k Keeper) handleNeuronRegistered(ctx sdk.Context, log ethTypes.Log) {
 	}
 
 	k.SetNeuronInfo(ctx, neuronInfo)
-	k.Logger(ctx).Debug("成功存储神经元信息", "netuid", event.Netuid, "account", event.Account.Hex(), "isValidator", event.IsValidator)
+	k.Logger(ctx).Debug("Successfully stored neuron information", "netuid", event.Netuid, "account", event.Account.Hex(), "isValidator", event.IsValidator)
 }
 
-// NeuronDeregistered - 神经元注销事件
+// NeuronDeregistered - Neuron deregistration event
 func (k Keeper) handleNeuronDeregistered(ctx sdk.Context, log ethTypes.Log) {
 	var event struct {
 		Netuid      uint16
@@ -581,7 +581,7 @@ func (k Keeper) handleNeuronDeregistered(ctx sdk.Context, log ethTypes.Log) {
 		return
 	}
 
-	// 更新神经元状态为非活跃而不删除
+	// Update neuron status to inactive without deleting
 	neuronInfo, found := k.GetNeuronInfo(ctx, event.Netuid, event.Account.Hex())
 	if found {
 		neuronInfo.IsActive = false
@@ -590,7 +590,7 @@ func (k Keeper) handleNeuronDeregistered(ctx sdk.Context, log ethTypes.Log) {
 	}
 }
 
-// StakeAllocationChanged (NeuronManager) - 神经元质押分配变更事件
+// StakeAllocationChanged (NeuronManager) - Neuron stake allocation change event
 func (k Keeper) handleNeuronStakeChanged(ctx sdk.Context, log ethTypes.Log) {
 	var event struct {
 		Netuid      uint16
@@ -605,7 +605,7 @@ func (k Keeper) handleNeuronStakeChanged(ctx sdk.Context, log ethTypes.Log) {
 		return
 	}
 
-	// 更新神经元质押信息
+	// Update neuron stake information
 	neuronInfo, found := k.GetNeuronInfo(ctx, event.Netuid, event.Account.Hex())
 	if found {
 		neuronInfo.Stake = event.NewStake.String()
@@ -614,7 +614,7 @@ func (k Keeper) handleNeuronStakeChanged(ctx sdk.Context, log ethTypes.Log) {
 	}
 }
 
-// ServiceUpdated - 服务信息更新事件
+// ServiceUpdated - Service information update event
 func (k Keeper) handleServiceUpdated(ctx sdk.Context, log ethTypes.Log) {
 	var event struct {
 		Netuid             uint16
@@ -631,7 +631,7 @@ func (k Keeper) handleServiceUpdated(ctx sdk.Context, log ethTypes.Log) {
 		return
 	}
 
-	// 更新神经元服务信息
+	// Update neuron service information
 	neuronInfo, found := k.GetNeuronInfo(ctx, event.Netuid, event.Account.Hex())
 	if found {
 		neuronInfo.AxonEndpoint = event.AxonEndpoint
@@ -643,7 +643,7 @@ func (k Keeper) handleServiceUpdated(ctx sdk.Context, log ethTypes.Log) {
 	}
 }
 
-// SubnetAllocationChanged (GlobalStaking) - 子网分配变更事件
+// SubnetAllocationChanged (GlobalStaking) - Subnet allocation change event
 func (k Keeper) handleSubnetAllocationChanged(ctx sdk.Context, log ethTypes.Log) {
 	var event struct {
 		User      common.Address
@@ -657,7 +657,7 @@ func (k Keeper) handleSubnetAllocationChanged(ctx sdk.Context, log ethTypes.Log)
 		return
 	}
 
-	// 更新神经元质押信息
+	// Update neuron stake information
 	neuronInfo, found := k.GetNeuronInfo(ctx, event.Netuid, event.User.Hex())
 	if found {
 		neuronInfo.Stake = event.NewAmount.String()
@@ -666,7 +666,7 @@ func (k Keeper) handleSubnetAllocationChanged(ctx sdk.Context, log ethTypes.Log)
 	}
 }
 
-// DeallocatedFromSubnet (GlobalStaking) - 从子网撤回质押事件
+// DeallocatedFromSubnet (GlobalStaking) - Withdraw stake from subnet event
 func (k Keeper) handleDeallocatedFromSubnet(ctx sdk.Context, log ethTypes.Log) {
 	var event struct {
 		User   common.Address
@@ -679,7 +679,7 @@ func (k Keeper) handleDeallocatedFromSubnet(ctx sdk.Context, log ethTypes.Log) {
 		return
 	}
 
-	// 更新神经元质押信息 (减少质押)
+	// Update neuron stake information (reduce stake)
 	neuronInfo, found := k.GetNeuronInfo(ctx, event.Netuid, event.User.Hex())
 	if found {
 		currentStake := types.SubBigIntString(neuronInfo.Stake, event.Amount.String())
@@ -689,14 +689,15 @@ func (k Keeper) handleDeallocatedFromSubnet(ctx sdk.Context, log ethTypes.Log) {
 	}
 }
 
-// ----------- 工具函数 -----------
+// ----------- Utility functions -----------
+
 func uint16ToBytes(u uint16) []byte {
 	return []byte{byte(u >> 8), byte(u)}
 }
 
-// ----------- 存储/查询方法 -----------
+// ----------- Storage/Query methods -----------
 
-// ---------------- 子网 ----------------
+// ---------------- Subnet ----------------
 func (k Keeper) SetSubnet(ctx sdk.Context, subnet types.Subnet) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("subnet:"))
 	bz, _ := json.Marshal(subnet)
@@ -743,7 +744,7 @@ func (k Keeper) GetAllSubnets(ctx sdk.Context) []types.Subnet {
 	return subnets
 }
 
-// ---------------- 质押 ----------------
+// ---------------- Stake ----------------
 func (k Keeper) SetValidatorStake(ctx sdk.Context, stake types.ValidatorStake) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("stake:"))
 	key := append(uint16ToBytes(stake.Netuid), []byte(":"+stake.Validator)...)
@@ -764,8 +765,8 @@ func (k Keeper) GetValidatorStake(ctx sdk.Context, netuid uint16, validator stri
 }
 
 func (k Keeper) GetAllValidatorStakesByNetuid(ctx sdk.Context, netuid uint16) []types.ValidatorStake {
-	// 优化：使用活跃的神经元信息来生成 ValidatorStake 数据
-	// 这样可以确保只返回活跃的验证者，同时保持接口兼容性
+	// Optimization: Use active neuron information to generate ValidatorStake data
+	// This ensures only active validators are returned while maintaining interface compatibility
 	activeNeurons := k.GetActiveNeuronInfosByNetuid(ctx, netuid)
 
 	var stakes []types.ValidatorStake
@@ -778,7 +779,7 @@ func (k Keeper) GetAllValidatorStakesByNetuid(ctx sdk.Context, netuid uint16) []
 		stakes = append(stakes, stake)
 	}
 
-	// 如果没有找到活跃神经元，回退到原始的质押数据查询
+	// If no active neurons found, fallback to original stake data query
 	if len(stakes) == 0 {
 		store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("stake:"))
 		prefixKey := uint16ToBytes(netuid)
@@ -790,7 +791,6 @@ func (k Keeper) GetAllValidatorStakesByNetuid(ctx sdk.Context, netuid uint16) []
 			stakes = append(stakes, stake)
 		}
 	}
-
 	return stakes
 }
 
@@ -809,7 +809,7 @@ func (k Keeper) GetAllValidatorStakesByValidator(ctx sdk.Context, validator stri
 	return stakes
 }
 
-// ---------------- 委托 ----------------
+// ---------------- Delegation ----------------
 func (k Keeper) SetDelegation(ctx sdk.Context, deleg types.Delegation) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("delegation:"))
 	key := append(uint16ToBytes(deleg.Netuid), []byte(":"+deleg.Validator+":"+deleg.Staker)...)
@@ -858,7 +858,7 @@ func (k Keeper) GetDelegationsByValidator(ctx sdk.Context, netuid uint16, valida
 	return delegs
 }
 
-// ---------------- 权重 ----------------
+// ---------------- Weight ----------------
 func (k Keeper) SetValidatorWeight(ctx sdk.Context, netuid uint16, validator string, weights map[string]uint64) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("weight:"))
 	key := append(uint16ToBytes(netuid), []byte(":"+validator)...)
@@ -883,7 +883,7 @@ func (k Keeper) GetValidatorWeight(ctx sdk.Context, netuid uint16, validator str
 	return valWeight, true
 }
 
-// ---------------- 质押量聚合 ----------------
+// ---------------- Stake Aggregation ----------------
 func (k Keeper) GetAllValidatorStakesAmount(ctx sdk.Context, netuid uint16) map[string]string {
 	result := make(map[string]string)
 	for _, stake := range k.GetAllValidatorStakesByNetuid(ctx, netuid) {
@@ -920,7 +920,7 @@ func (k Keeper) GetAllSubnetNetuids(ctx sdk.Context) []uint16 {
 	subnets := k.GetAllSubnets(ctx)
 	var netuids []uint16
 	for _, subnet := range subnets {
-		if subnet.Netuid != 0 { // 过滤掉根子网
+		if subnet.Netuid != 0 { // Filter out root subnet
 			netuids = append(netuids, subnet.Netuid)
 		}
 	}
@@ -930,16 +930,16 @@ func (k Keeper) GetAllSubnetNetuids(ctx sdk.Context) []uint16 {
 // GetSubnetsToEmitTo returns subnets that have first emission block number set
 func (k Keeper) GetSubnetsToEmitTo(ctx sdk.Context) []uint16 {
 	subnets := k.GetAllSubnets(ctx)
-	var emitSubnets []uint16
+	var netuids []uint16
 	for _, subnet := range subnets {
-		if subnet.Netuid != 0 && subnet.FirstEmissionBlock > 0 { // 过滤掉根子网和未设置首次排放区块的子网
-			emitSubnets = append(emitSubnets, subnet.Netuid)
+		if subnet.Netuid != 0 && subnet.FirstEmissionBlock > 0 { // Filter out root subnet and subnets without first emission block set
+			netuids = append(netuids, subnet.Netuid)
 		}
 	}
-	return emitSubnets
+	return netuids
 }
 
-// ---------------- 子网详细信息 ----------------
+// ---------------- Subnet Info ----------------
 func (k Keeper) SetSubnetInfo(ctx sdk.Context, subnetInfo types.SubnetInfo) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("subnetinfo:"))
 	bz, _ := json.Marshal(subnetInfo)
@@ -970,7 +970,7 @@ func (k Keeper) GetAllSubnetInfos(ctx sdk.Context) []types.SubnetInfo {
 	return subnetInfos
 }
 
-// ---------------- 神经元信息 ----------------
+// ---------------- Neuron Info ----------------
 func (k Keeper) SetNeuronInfo(ctx sdk.Context, neuronInfo types.NeuronInfo) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("neuroninfo:"))
 	key := append(uint16ToBytes(neuronInfo.Netuid), []byte(":"+neuronInfo.Account)...)
@@ -1059,7 +1059,7 @@ func (k Keeper) GetSubnetFirstEmissionBlock(ctx sdk.Context, netuid uint16) (uin
 	return subnet.FirstEmissionBlock, true
 }
 
-// ---------------- 价格相关存储 ----------------
+// ---------------- Price Related Storage ----------------
 
 // SetSubnetMovingPrice sets the moving price for a subnet
 func (k Keeper) SetSubnetMovingPrice(ctx sdk.Context, netuid uint16, price math.LegacyDec) {
@@ -1185,7 +1185,7 @@ func (k Keeper) GetSubnetEmissionData(ctx sdk.Context, netuid uint16) (types.Sub
 	return data, true
 }
 
-// ---------------- 价格计算函数 ----------------
+// ---------------- Price Calculation Functions ----------------
 
 // GetAlphaPrice calculates the alpha price for a subnet
 func (k Keeper) GetAlphaPrice(ctx sdk.Context, netuid uint16) math.LegacyDec {
@@ -1514,7 +1514,7 @@ func (k Keeper) AddPendingEmission(ctx sdk.Context, netuid uint16, amount math.I
 	)
 }
 
-// SetBlocksSinceLastStep 设置自上次epoch以来的区块计数器
+// SetBlocksSinceLastStep sets the block counter since last epoch
 func (k Keeper) SetBlocksSinceLastStep(ctx sdk.Context, netuid uint16, value uint64) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("blocks_since_last_step:"))
 	bz := make([]byte, 8)
@@ -1522,7 +1522,7 @@ func (k Keeper) SetBlocksSinceLastStep(ctx sdk.Context, netuid uint16, value uin
 	store.Set(uint16ToBytes(netuid), bz)
 }
 
-// GetBlocksSinceLastStep 获取自上次epoch以来的区块计数器
+// GetBlocksSinceLastStep gets the block counter since last epoch
 func (k Keeper) GetBlocksSinceLastStep(ctx sdk.Context, netuid uint16) uint64 {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("blocks_since_last_step:"))
 	bz := store.Get(uint16ToBytes(netuid))
@@ -1532,7 +1532,7 @@ func (k Keeper) GetBlocksSinceLastStep(ctx sdk.Context, netuid uint16) uint64 {
 	return binary.BigEndian.Uint64(bz)
 }
 
-// SetLastMechanismStepBlock 设置上次epoch运行的区块号
+// SetLastMechanismStepBlock sets the block number of last epoch run
 func (k Keeper) SetLastMechanismStepBlock(ctx sdk.Context, netuid uint16, blockHeight int64) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("last_mechanism_step_block:"))
 	bz := make([]byte, 8)
@@ -1540,7 +1540,7 @@ func (k Keeper) SetLastMechanismStepBlock(ctx sdk.Context, netuid uint16, blockH
 	store.Set(uint16ToBytes(netuid), bz)
 }
 
-// GetLastMechanismStepBlock 获取上次epoch运行的区块号
+// GetLastMechanismStepBlock gets the block number of last epoch run
 func (k Keeper) GetLastMechanismStepBlock(ctx sdk.Context, netuid uint16) int64 {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("last_mechanism_step_block:"))
 	bz := store.Get(uint16ToBytes(netuid))

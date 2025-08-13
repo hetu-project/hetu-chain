@@ -14,7 +14,7 @@ var StakingDelegatedABI []byte
 //go:embed Weights.json
 var WeightsABI []byte
 
-// 新增合约 ABI
+// New contract ABIs
 //
 //go:embed SubnetManager.json
 var SubnetManagerABI []byte

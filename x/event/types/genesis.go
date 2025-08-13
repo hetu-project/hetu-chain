@@ -33,6 +33,6 @@ func DefaultGenesisState() *GenesisState {
 
 // Validate performs basic genesis state validation returning an error upon any failure.
 func (gs GenesisState) Validate() error {
-	// 可根据需要添加更详细的校验逻辑
+	// Add more detailed validation logic as needed
 	return nil
 }

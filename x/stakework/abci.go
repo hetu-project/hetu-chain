@@ -5,14 +5,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// EndBlock 在每个区块结束时运行
+// EndBlock runs at the end of each block
 /*
-这个文件实现了 Cosmos SDK 的 ABCI (Application Blockchain Interface) 接口：
-作用：
-EndBlock: 在每个区块结束时被调用，用于执行区块结束时的逻辑
-目前是简化实现，只返回空的验证者更新列表
-可以在这里添加区块结束时的清理工作、状态更新等
+This file implements the Cosmos SDK's ABCI (Application Blockchain Interface) interface:
+Purpose:
+EndBlock: Called at the end of each block, used to execute logic at block end
+Currently a simplified implementation, only returns an empty validator update list
+Can add cleanup work, state updates, etc. at block end here
 */
-func (am AppModule) EndBlock(ctx sdk.Context) []abci.ValidatorUpdate {
+func EndBlock(ctx sdk.Context) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
 }

@@ -103,22 +103,22 @@ func (am AppModule) InitGenesis(ctx sdk.Context, _ codec.JSONCodec, gs json.RawM
 		panic(err)
 	}
 
-	// 初始化子网数据
+	// Initialize subnet data
 	for _, subnet := range genState.Subnets {
 		am.keeper.SetSubnet(ctx, subnet)
 	}
 
-	// 初始化验证者质押数据
+	// Initialize validator stake data
 	for _, stake := range genState.ValidatorStakes {
 		am.keeper.SetValidatorStake(ctx, stake)
 	}
 
-	// 初始化委托数据
+	// Initialize delegation data
 	for _, deleg := range genState.Delegations {
 		am.keeper.SetDelegation(ctx, deleg)
 	}
 
-	// 初始化权重数据
+	// Initialize validator weight data
 	for _, weight := range genState.ValidatorWeights {
 		am.keeper.SetValidatorWeight(ctx, weight.Netuid, weight.Validator, weight.Weights)
 	}
@@ -127,7 +127,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, _ codec.JSONCodec, gs json.RawM
 }
 
 func (am AppModule) ExportGenesis(ctx sdk.Context, _ codec.JSONCodec) json.RawMessage {
-	// 导出所有数据
+	// Export all data
 	subnets := am.keeper.GetAllSubnets(ctx)
 
 	var validatorStakes []types.ValidatorStake

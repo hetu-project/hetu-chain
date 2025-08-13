@@ -61,14 +61,14 @@ type EventKeeper interface {
 	GetPendingEmission(ctx sdk.Context, netuid uint16) math.Int
 }
 
-// StakeworkKeeper defines the expected stakework keeper for epoch logic
-// 只声明需要用到的方法
-// 注意：ctx 为 sdk.Context
-// RunEpoch 返回 *types.EpochResult, error
-// shouldRunEpoch 返回 bool
-// 你可以根据 stakework keeper 实现补充方法
+// StakeworkKeeper defines the expected interface for interacting with stakework module
+// Only declare the methods that are needed
+// Note: ctx is sdk.Context
+// RunEpoch returns *types.EpochResult, error
+// ShouldRunEpoch returns bool
+// You can supplement methods according to stakework keeper implementation
 
 type StakeworkKeeper interface {
+	RunEpoch(ctx sdk.Context, netuid uint16, emission uint64) (*stakeworktypes.EpochResult, error)
 	ShouldRunEpoch(ctx sdk.Context, netuid uint16, tempo uint64) bool
-	RunEpoch(ctx sdk.Context, netuid uint16, raoEmission uint64) (*stakeworktypes.EpochResult, error)
 }

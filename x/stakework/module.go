@@ -14,7 +14,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/hetu-project/hetu/v1/x/stakework/keeper"
-	"github.com/hetu-project/hetu/v1/x/stakework/types"
 )
 
 var (
@@ -23,61 +22,61 @@ var (
 	_ appmodule.AppModule   = AppModule{}
 )
 
-// AppModuleBasic 定义模块的基本接口
+// AppModuleBasic defines the module's basic interface
 type AppModuleBasic struct{}
 
-// Name 返回模块名称
+// Name returns the module name
 func (AppModuleBasic) Name() string {
-	return types.ModuleName
+	return "stakework"
 }
 
-// RegisterLegacyAminoCodec 注册 legacy amino codec
-func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	// 简化的模块，暂时不需要注册消息类型
+// RegisterLegacyAminoCodec registers legacy amino codec
+func (AppModuleBasic) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {
+	// Simplified module, no need to register message types for now
 }
 
-// RegisterInterfaces 注册接口
+// RegisterInterfaces registers interfaces
 func (AppModuleBasic) RegisterInterfaces(reg codectypes.InterfaceRegistry) {
-	// 简化的模块，暂时不需要注册接口
+	// Simplified module, no need to register interfaces for now
 }
 
-// DefaultGenesis 返回默认的 genesis 状态
+// DefaultGenesis returns the default genesis state
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	// 简化的模块，返回空的 genesis 状态
+	// Simplified module, return empty genesis state
 	return json.RawMessage(`{}`)
 }
 
-// ValidateGenesis 验证 genesis 状态
+// ValidateGenesis validates the genesis state
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
-	// 简化的模块，暂时不需要验证
+	// Simplified module, no need to validate for now
 	return nil
 }
 
-// RegisterGRPCGatewayRoutes 注册 gRPC gateway 路由
+// RegisterGRPCGatewayRoutes registers gRPC gateway routes
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	// 简化的模块，暂时不需要 gRPC 路由
+	// Simplified module, no need for gRPC routes for now
 }
 
-// GetTxCmd 返回交易命令
+// GetTxCmd returns the transaction command
 func (a AppModuleBasic) GetTxCmd() *cobra.Command {
-	// 简化的模块，暂时没有交易命令
+	// Simplified module, no transaction commands for now
 	return nil
 }
 
-// GetQueryCmd 返回查询命令
+// GetQueryCmd returns the query command
 func (a AppModuleBasic) GetQueryCmd() *cobra.Command {
-	// 简化的模块，暂时没有查询命令
+	// Simplified module, no query commands for now
 	return nil
 }
 
-// AppModule 实现 AppModule 接口
+// AppModule implements the AppModule interface
 type AppModule struct {
 	AppModuleBasic
 
 	keeper keeper.Keeper
 }
 
-// NewAppModule 创建新的 AppModule
+// NewAppModule creates a new AppModule
 func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
@@ -85,48 +84,48 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
 	}
 }
 
-// RegisterServices 注册服务
+// RegisterServices registers services
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	// 简化的模块，暂时不需要注册服务
+	// Simplified module, no need to register services for now
 }
 
-// RegisterInvariants 注册不变量
+// RegisterInvariants registers invariants
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
-	// 简化的模块不需要复杂的不变量检查
+	// Simplified module, no complex invariant checks needed
 }
 
-// InitGenesis 初始化 genesis 状态
+// InitGenesis initializes the genesis state
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.RawMessage) []interface{} {
-	// 简化的初始化，主要设置基本状态
+	// Simplified initialization, mainly setting basic state
 	InitGenesis(ctx, am.keeper)
 	return []interface{}{}
 }
 
-// ExportGenesis 导出 genesis 状态
+// ExportGenesis exports the genesis state
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	// 简化的导出，返回空状态
+	// Simplified export, return empty state
 	return json.RawMessage(`{}`)
 }
 
-// ConsensusVersion 返回共识版本
+// ConsensusVersion returns the consensus version
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
-// BeginBlock 在每个区块开始时执行
+// BeginBlock executes at the beginning of each block
 func (am AppModule) BeginBlock(ctx sdk.Context, _ interface{}) {
-	// 检查是否需要运行 epoch
+	// Check if epochs need to be run
 	am.checkAndRunEpochs(ctx)
 }
 
-// checkAndRunEpochs 检查并运行 epoch
+// checkAndRunEpochs checks and runs epochs
 func (am AppModule) checkAndRunEpochs(ctx sdk.Context) {
-	// 获取所有子网
+	// Get all subnets
 	subnets := am.keeper.GetEventKeeper().GetAllSubnets(ctx)
 
 	for _, subnet := range subnets {
-		// 尝试运行 epoch
-		_, err := am.keeper.RunEpoch(ctx, subnet.Netuid, 1000000) // 默认 1M rao emission
+		// Attempt to run epoch
+		_, err := am.keeper.RunEpoch(ctx, subnet.Netuid, 1000000) // Default 1M rao emission
 		if err != nil {
-			// 如果不是因为时间未到导致的错误，记录日志
+			// If not an error due to time not being due, log it
 			if err != keeper.ErrEpochNotDue {
 				ctx.Logger().Error("Failed to run epoch", "netuid", subnet.Netuid, "error", err)
 			}
@@ -134,29 +133,29 @@ func (am AppModule) checkAndRunEpochs(ctx sdk.Context) {
 	}
 }
 
-// 依赖注入支持
+// Dependency injection support
 
-// IsOnePerModuleType 标记为每个模块类型一个实例
+// IsOnePerModuleType marks as one instance per module type
 func (am AppModule) IsOnePerModuleType() {}
 
-// IsAppModule 标记为应用模块
+// IsAppModule marks as an app module
 func (am AppModule) IsAppModule() {}
 
-// ProvideModule 提供模块依赖
+// ProvideModule provides module dependencies
 func ProvideModule(in depinject.Config) (keeper.Keeper, error) {
-	// 这里需要根据实际的依赖注入配置来实现
-	// 暂时返回一个简单的实现
+	// This needs to be implemented based on the actual dependency injection configuration
+	// For now, return a simple implementation
 	return keeper.Keeper{}, nil
 }
 
-// InitGenesis 初始化 genesis 状态
+// InitGenesis initializes the genesis state
 func InitGenesis(ctx sdk.Context, k keeper.Keeper) {
-	// 简化的初始化，主要设置基本状态
-	// 这里可以设置一些基本的配置
+	// Simplified initialization, mainly setting basic state
+	// Here you can set some basic configurations
 }
 
-// ExportGenesis 导出 genesis 状态
+// ExportGenesis exports the genesis state
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) interface{} {
-	// 简化的导出，返回空状态
+	// Simplified export, return empty state
 	return nil
 }

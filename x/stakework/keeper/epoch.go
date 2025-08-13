@@ -13,29 +13,29 @@ import (
 	"github.com/hetu-project/hetu/v1/x/stakework/types"
 )
 
-// 错误定义
+// Error definitions
 var (
 	ErrSubnetNotFound = errors.New("subnet not found")
 	ErrEpochNotDue    = errors.New("epoch not due")
 )
 
-// RunEpoch 运行完整的 Bittensor epoch 算法
+// RunEpoch runs the complete Bittensor epoch algorithm
 func (k Keeper) RunEpoch(ctx sdk.Context, netuid uint16, raoEmission uint64) (*types.EpochResult, error) {
-	// 1. 获取子网数据
+	// 1. Get subnet data
 	subnet, found := k.eventKeeper.GetSubnet(ctx, netuid)
 	if !found {
 		return nil, ErrSubnetNotFound
 	}
 
-	// 2. 解析子网参数
+	// 2. Parse subnet parameters
 	params := types.ParseEpochParams(subnet.Params)
 
-	// 3. 检查是否应该运行 epoch
+	// 3. Check if epoch should run
 	if !k.shouldRunEpoch(ctx, netuid, params.Tempo) {
 		return nil, ErrEpochNotDue
 	}
 
-	// 4. 获取子网的所有验证者数据
+	// 4. Get all validator data for the subnet
 	validators := k.getSubnetValidators(ctx, netuid)
 	if len(validators) == 0 {
 		return &types.EpochResult{
@@ -48,52 +48,52 @@ func (k Keeper) RunEpoch(ctx sdk.Context, netuid uint16, raoEmission uint64) (*t
 		}, nil
 	}
 
-	// 5. 计算活跃状态（使用 activity_cutoff）
+	// 5. Calculate active status (using activity_cutoff)
 	active := k.calculateActive(ctx, netuid, validators, params)
 
-	// 6. 获取质押权重
+	// 6. Get stake weights
 	stake := k.getStakeWeights(ctx, netuid, validators)
 
-	// 7. 归一化质押权重
+	// 7. Normalize stake weights
 	activeStake := k.normalizeStake(stake, active)
 
-	// 8. 获取权重矩阵
+	// 8. Get weights matrix
 	weights := k.getWeightsMatrix(ctx, netuid, validators)
 
-	// 9. 计算共识分数（加权中位数）
+	// 9. Calculate consensus scores (weighted median)
 	consensus := k.weightedMedianCol(activeStake, weights, params.Kappa)
 
-	// 10. 裁剪权重
+	// 10. Clip weights
 	clippedWeights := k.clipWeights(weights, consensus, params.Delta)
 
-	// 11. 计算 bonds（历史权重EMA）
+	// 11. Calculate bonds (historical weights EMA)
 	prevBonds := k.getPrevBonds(ctx, netuid, validators)
 	var bonds [][]float64
 
 	if params.LiquidAlphaEnabled {
-		// 使用动态 alpha
+		// Use dynamic alpha
 		alphas := k.computeLiquidAlphaValues(weights, prevBonds, consensus, params)
 		bonds = k.computeBondsWithDynamicAlpha(clippedWeights, prevBonds, alphas)
 	} else {
-		// 使用固定 alpha：使用 bonds_moving_average
+		// Use fixed alpha: use bonds_moving_average
 		fixedAlpha := k.computeDisabledLiquidAlpha(params.BondsMovingAverage)
 		bonds = k.computeBonds(clippedWeights, prevBonds, fixedAlpha)
 	}
 
-	// 12. 计算分红（dividends）
+	// 12. Calculate dividends
 	dividends := k.computeDividends(bonds)
 
-	// 13. 计算激励（incentive）- 使用 rho 参数
+	// 13. Calculate incentive (using rho parameter)
 	incentive := k.computeIncentive(clippedWeights, activeStake, params.Rho)
 
-	// 14. 归一化分红和激励
+	// 14. Normalize dividends and incentive
 	normDividends := k.normalizeDividends(dividends, active)
 	normIncentive := k.normalizeIncentive(incentive, active)
 
-	// 15. 分配 emission（结合 incentive 和 dividends）
+	// 15. Distribute emission (combine incentive and dividends)
 	emission := k.distributeEmission(normIncentive, normDividends, raoEmission)
 
-	// 16. 构建结果
+	// 16. Build result
 	result := &types.EpochResult{
 		Netuid:    netuid,
 		Accounts:  make([]string, len(validators)),
@@ -104,35 +104,35 @@ func (k Keeper) RunEpoch(ctx sdk.Context, netuid uint16, raoEmission uint64) (*t
 		Consensus: consensus,
 	}
 
-	// 填充账户地址、分红和激励
+	// Populate account addresses, dividends, and incentive
 	for i, validator := range validators {
 		result.Accounts[i] = validator.Address
 		result.Dividend[i] = uint64(normDividends[i] * float64(raoEmission))
 		result.Incentive[i] = uint64(normIncentive[i] * float64(raoEmission))
 	}
 
-	// 17. 保存 bonds 到存储
+	// 17. Save bonds to storage
 	k.saveBonds(ctx, netuid, validators, bonds)
 
-	// 18. 更新最后 epoch 时间
-	// k.setLastEpochTime(ctx, netuid, ctx.BlockTime()) // 删除不再需要的函数
+	// 18. Update last epoch time
+	// k.setLastEpochTime(ctx, netuid, ctx.BlockTime()) // Delete the function no longer needed
 
 	return result, nil
 }
 
-// shouldRunEpoch 检查是否应该运行 epoch
-// 按照 Bittensor 的真实实现：基于区块号的公式
+// shouldRunEpoch checks if an epoch should run
+// Based on Bittensor's actual implementation: based on block number formula
 // (block_number + netuid + 1) % (tempo + 1) == 0
 func (k Keeper) shouldRunEpoch(ctx sdk.Context, netuid uint16, tempo uint64) bool {
 	currentBlock := uint64(ctx.BlockHeight())
 
-	// Bittensor 的 epoch 公式：
+	// Bittensor's epoch formula:
 	// (block_number + netuid + 1) % (tempo + 1) == 0
 	result := (currentBlock + uint64(netuid) + 1) % (tempo + 1)
 	return result == 0
 }
 
-// ShouldRunEpoch 导出方法，满足 blockinflation/types.StakeworkKeeper 接口
+// ShouldRunEpoch export method, satisfies blockinflation/types.StakeworkKeeper interface
 func (k Keeper) ShouldRunEpoch(ctx sdk.Context, netuid uint16, tempo uint64) bool {
 	// Add debug information
 	if k.eventKeeper == nil {
@@ -147,15 +147,15 @@ func (k Keeper) ShouldRunEpoch(ctx sdk.Context, netuid uint16, tempo uint64) boo
 	return k.shouldRunEpoch(ctx, netuid, tempo)
 }
 
-// getSubnetValidators 获取子网的所有验证者
+// getSubnetValidators gets all validators for a subnet
 func (k Keeper) getSubnetValidators(ctx sdk.Context, netuid uint16) []types.ValidatorInfo {
-	// 从 event 模块获取所有质押信息
+	// Get all stake information from the event module
 	stakes := k.eventKeeper.GetAllValidatorStakesByNetuid(ctx, netuid)
 
 	validators := make([]types.ValidatorInfo, 0, len(stakes))
 	validatorMap := make(map[string]types.ValidatorInfo)
 
-	// 处理质押信息
+	// Process stake information
 	for _, stake := range stakes {
 		amount, _ := new(big.Int).SetString(stake.Amount, 10)
 		stakeFloat := new(big.Float).SetInt(amount)
@@ -165,16 +165,16 @@ func (k Keeper) getSubnetValidators(ctx sdk.Context, netuid uint16) []types.Vali
 			Address: stake.Validator,
 			Stake:   stakeValue,
 			Weights: []uint64{},
-			Active:  true, // 默认活跃，后续会更新
+			Active:  true, // Default active, will be updated later
 		}
 		validatorMap[stake.Validator] = validator
 	}
 
-	// 处理权重信息
+	// Process weight information
 	for validatorAddr := range validatorMap {
 		weight, found := k.eventKeeper.GetValidatorWeight(ctx, netuid, validatorAddr)
 		if found {
-			// 将 map 转换为数组
+			// Convert map to array
 			weights := make([]uint64, 0, len(weight.Weights))
 			for _, w := range weight.Weights {
 				weights = append(weights, w)
@@ -187,7 +187,7 @@ func (k Keeper) getSubnetValidators(ctx sdk.Context, netuid uint16) []types.Vali
 		}
 	}
 
-	// 转换为数组
+	// Convert to array
 	for _, validator := range validatorMap {
 		validators = append(validators, validator)
 	}
@@ -195,16 +195,16 @@ func (k Keeper) getSubnetValidators(ctx sdk.Context, netuid uint16) []types.Vali
 	return validators
 }
 
-// calculateActive 计算活跃状态
+// calculateActive calculates active status
 func (k Keeper) calculateActive(ctx sdk.Context, netuid uint16, validators []types.ValidatorInfo, params types.EpochParams) []bool {
 	active := make([]bool, len(validators))
 	currentBlock := uint64(ctx.BlockHeight())
 
 	for i, validator := range validators {
-		// 检查验证者是否在活跃截止时间内有活动
-		// 这里需要从 event 模块获取最后活跃时间
-		// 暂时使用简单的逻辑：所有验证者都设为活跃
-		// TODO: 实现真正的活跃性检查逻辑
+		// Check if the validator has activity within the active cutoff time
+		// This needs to get the last active time from the event module
+		// For now, using a simple logic: all validators are set to active
+		// TODO: Implement actual active status check logic
 		lastActiveBlock := k.getLastActiveBlock(ctx, netuid, validator.Address)
 		if currentBlock-lastActiveBlock <= params.ActivityCutoff {
 			active[i] = true
@@ -216,14 +216,14 @@ func (k Keeper) calculateActive(ctx sdk.Context, netuid uint16, validators []typ
 	return active
 }
 
-// getLastActiveBlock 获取验证者最后活跃区块（临时实现）
+// getLastActiveBlock gets the last active block for a validator (temporary implementation)
 func (k Keeper) getLastActiveBlock(ctx sdk.Context, netuid uint16, validator string) uint64 {
-	// TODO: 从 event 模块获取验证者的最后活跃时间
-	// 暂时返回当前区块，表示所有验证者都是活跃的
+	// TODO: Get the last active time for the validator from the event module
+	// For now, return the current block, indicating all validators are active
 	return uint64(ctx.BlockHeight())
 }
 
-// getStakeWeights 获取质押权重
+// getStakeWeights gets stake weights
 func (k Keeper) getStakeWeights(ctx sdk.Context, netuid uint16, validators []types.ValidatorInfo) []float64 {
 	stake := make([]float64, len(validators))
 	for i, validator := range validators {
@@ -232,7 +232,7 @@ func (k Keeper) getStakeWeights(ctx sdk.Context, netuid uint16, validators []typ
 	return stake
 }
 
-// normalizeStake 归一化质押权重
+// normalizeStake normalizes stake weights
 func (k Keeper) normalizeStake(stake []float64, active []bool) []float64 {
 	sum := 0.0
 	for i, s := range stake {
@@ -254,7 +254,7 @@ func (k Keeper) normalizeStake(stake []float64, active []bool) []float64 {
 	return out
 }
 
-// getWeightsMatrix 获取权重矩阵
+// getWeightsMatrix gets the weights matrix
 func (k Keeper) getWeightsMatrix(ctx sdk.Context, netuid uint16, validators []types.ValidatorInfo) [][]float64 {
 	n := len(validators)
 	weights := make([][]float64, n)
@@ -273,42 +273,42 @@ func (k Keeper) getWeightsMatrix(ctx sdk.Context, netuid uint16, validators []ty
 	return weights
 }
 
-// weightedMedianCol 加权中位数计算
+// weightedMedianCol calculates weighted median
 /*
-示例
-假设有以下输入：
+Example
+Assume the following inputs:
 
-    stake = [100, 200, 300]：三个验证者的质押量。
-    weights = [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6], [0.7, 0.8, 0.9]]：三个验证者对三个节点的权重。
-    kappa = 0.5：计算中位数的阈值。
+    stake = [100, 200, 300]: three validator's stake.
+    weights = [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6], [0.7, 0.8, 0.9]]: three validators' weights for three nodes.
+    kappa = 0.5: threshold for median calculation.
 
-我们期望的输出是每个节点的共识分数，即每个节点的加权中位数。
-计算过程：
+We expect the output to be the consensus score for each node, i.e., the weighted median for each node.
+Calculation process:
 
-    对于节点 0：
-        打分 = [1000.1, 2000.4, 300*0.7] = [10, 80, 210]
-        排序后 = [10, 80, 210]
-        加权中位数 = 80（因为 0.5 * (10+80+210) = 125，80 是第一个大于或等于 125 的数）
-    对于节点 1：
-        打分 = [1000.2, 2000.5, 300*0.8] = [20, 100, 240]
-        排序后 = [20, 100, 240]
-        加权中位数 = 100（因为 0.5 * (20+100+240) = 140，100 是第一个大于或等于 140 的数）
-    对于节点 2：
-        打分 = [1000.3, 2000.6, 300*0.9] = [30, 120, 270]
-        排序后 = [30, 120, 270]
-        加权中位数 = 120（因为 0.5 * (30+120+270) = 195，120 是第一个大于或等于 195 的数）
+    For node 0:
+        Scores = [1000.1, 2000.4, 300*0.7] = [10, 80, 210]
+        Sorted = [10, 80, 210]
+        Weighted Median = 80 (because 0.5 * (10+80+210) = 125, 80 is the first number greater than or equal to 125)
+    For node 1:
+        Scores = [1000.2, 2000.5, 300*0.8] = [20, 100, 240]
+        Sorted = [20, 100, 240]
+        Weighted Median = 100 (because 0.5 * (20+100+240) = 140, 100 is the first number greater than or equal to 140)
+    For node 2:
+        Scores = [1000.3, 2000.6, 300*0.9] = [30, 120, 270]
+        Sorted = [30, 120, 270]
+        Weighted Median = 120 (because 0.5 * (30+120+270) = 195, 120 is the first number greater than or equal to 195)
 
-输出：
+Output:
 
     consensus = [80, 100, 120]
 */
 func (k Keeper) weightedMedianCol(stake []float64, weights [][]float64, kappa float64) []float64 {
-	n := len(weights[0]) // 节点数
-	m := len(stake)      // 验证者数
+	n := len(weights[0]) // Number of nodes
+	m := len(stake)      // Number of validators
 	consensus := make([]float64, n)
 
 	for j := 0; j < n; j++ {
-		// 收集所有验证者对节点j的打分
+		// Collect all scores for node j from validators
 		type pair struct {
 			w, s float64
 		}
@@ -319,12 +319,12 @@ func (k Keeper) weightedMedianCol(stake []float64, weights [][]float64, kappa fl
 			}
 		}
 
-		// 按分数升序排序
+		// Sort by score in ascending order
 		sort.Slice(pairs, func(a, b int) bool {
 			return pairs[a].w < pairs[b].w
 		})
 
-		// 计算加权中位数
+		// Calculate weighted median
 		total := 0.0
 		for _, p := range pairs {
 			total += p.s
@@ -343,61 +343,61 @@ func (k Keeper) weightedMedianCol(stake []float64, weights [][]float64, kappa fl
 	return consensus
 }
 
-// clipWeights 裁剪权重 防止单个节点的权重过大或过小
+// clipWeights clips weights to prevent single node weights from being too large or too small
 /*
 
-假设有以下输入：
+Assume the following inputs:
 
-    weights = [[0.7, 0.8, 0.9], [0.4, 0.5, 0.6], [0.1, 0.2, 0.3]]：一个 3x3 的权重矩阵。
-    consensus = [0.5, 0.6, 0.7]：每个节点的共识分数。
-    delta = 0.1：权重调整的幅度。
+    weights = [[0.7, 0.8, 0.9], [0.4, 0.5, 0.6], [0.1, 0.2, 0.3]]: a 3x3 weight matrix.
+    consensus = [0.5, 0.6, 0.7]: consensus score for each node.
+    delta = 0.1: magnitude of weight adjustment.
 
-计算过程：
-对于每个节点 j 的权重，计算最大值 max 和最小值 min：
+Calculation process:
+For each node j's weight, calculate max and min:
 
-    对于节点 0：
-        最大权重 max = 0.6 + 0.1 = 0.7
-        最小权重 min = 0.5 - 0.1 = 0.4
-        裁剪后的权重：[0.4, 0.6, 0.7]（原始权重 [0.7, 0.8, 0.9] 中的 0.8 和 0.9 超出了范围）
-    对于节点 1：
-        最大权重 max = 0.7 + 0.1 = 0.8
-        最小权重 min = 0.6 - 0.1 = 0.5
-        裁剪后的权重：[0.5, 0.5, 0.6]（所有权重都在范围内）
-    对于节点 2：
-        最大权重 max = 0.8 + 0.1 = 0.9
-        最小权重 min = 0.7 - 0.1 = 0.6
-        裁剪后的权重：[0.6, 0.7, 0.7]（原始权重 [0.1, 0.2, 0.3] 都在范围内）
+    For node 0:
+        Max weight max = 0.6 + 0.1 = 0.7
+        Min weight min = 0.5 - 0.1 = 0.4
+        Clipped weight: [0.4, 0.6, 0.7] (0.8 and 0.9 in original weights are outside the range)
+    For node 1:
+        Max weight max = 0.7 + 0.1 = 0.8
+        Min weight min = 0.6 - 0.1 = 0.5
+        Clipped weight: [0.5, 0.5, 0.6] (all weights are within the range)
+    For node 2:
+        Max weight max = 0.8 + 0.1 = 0.9
+        Min weight min = 0.7 - 0.1 = 0.6
+        Clipped weight: [0.6, 0.7, 0.7] (all weights in original weights are within the range)
 
-输出：
+Output:
 
     clipped = [[0.4, 0.6, 0.7], [0.5, 0.5, 0.6], [0.6, 0.7, 0.7]]
 */
 func (k Keeper) clipWeights(weights [][]float64, consensus []float64, delta float64) [][]float64 {
-	m := len(weights)               // 权重矩阵的行数
-	n := len(weights[0])            // 权重矩阵的列数
-	clipped := make([][]float64, m) // 初始化裁剪后的权重矩阵
+	m := len(weights)               // Number of rows in the weight matrix
+	n := len(weights[0])            // Number of columns in the weight matrix
+	clipped := make([][]float64, m) // Initialize the clipped weight matrix
 
 	for i := 0; i < m; i++ {
 		clipped[i] = make([]float64, n)
 		for j := 0; j < n; j++ {
 			if j < len(consensus) {
-				min := consensus[j] - delta // 计算最小权重值
-				max := consensus[j] + delta // 计算最大权重值
-				if weights[i][j] < min {    // 如果原始权重小于最小值
+				min := consensus[j] - delta // Calculate minimum weight value
+				max := consensus[j] + delta // Calculate maximum weight value
+				if weights[i][j] < min {    // If original weight is less than minimum
 					clipped[i][j] = min
-				} else if weights[i][j] > max { // 如果原始权重大于最大值
+				} else if weights[i][j] > max { // If original weight is greater than maximum
 					clipped[i][j] = max
-				} else { // 如果原始权重在最小值和最大值之间
-					clipped[i][j] = weights[i][j] // 否则保持原始权重
+				} else { // If original weight is between minimum and maximum
+					clipped[i][j] = weights[i][j] // Otherwise, keep original weight
 				}
 			}
 		}
 	}
 
-	return clipped //返回裁剪后的权重矩阵
+	return clipped // Return the clipped weight matrix
 }
 
-// computeBonds Bonds 的 EMA 计算
+// computeBonds calculates EMA for Bonds
 func (k Keeper) computeBonds(clippedWeights, prevBonds [][]float64, alpha float64) [][]float64 {
 	m := len(clippedWeights)
 	n := len(clippedWeights[0])
@@ -417,7 +417,7 @@ func (k Keeper) computeBonds(clippedWeights, prevBonds [][]float64, alpha float6
 	return bonds
 }
 
-// computeDividends 分红计算
+// computeDividends calculates dividends
 func (k Keeper) computeDividends(bonds [][]float64) []float64 {
 	n := len(bonds[0])
 	dividends := make([]float64, n)
@@ -435,7 +435,7 @@ func (k Keeper) computeDividends(bonds [][]float64) []float64 {
 	return dividends
 }
 
-// normalizeDividends 归一化分红
+// normalizeDividends normalizes dividends
 func (k Keeper) normalizeDividends(dividends []float64, active []bool) []float64 {
 	sum := 0.0
 	for i, d := range dividends {
@@ -457,7 +457,7 @@ func (k Keeper) normalizeDividends(dividends []float64, active []bool) []float64
 	return out
 }
 
-// distributeEmission 激励分配
+// distributeEmission distributes emission
 func (k Keeper) distributeEmission(normIncentive, normDividends []float64, raoEmission uint64) []uint64 {
 	n := len(normIncentive)
 	emission := make([]uint64, n)
@@ -469,30 +469,30 @@ func (k Keeper) distributeEmission(normIncentive, normDividends []float64, raoEm
 	return emission
 }
 
-// getPrevBonds 获取上一轮的 bonds
+// getPrevBonds gets previous epoch's bonds
 func (k Keeper) getPrevBonds(ctx sdk.Context, netuid uint16, validators []types.ValidatorInfo) [][]float64 {
 	n := len(validators)
 	bonds := make([][]float64, n)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("bonds:"))
 
-	// 从存储中获取历史 bonds
+	// Get historical bonds from storage
 	for i := 0; i < n; i++ {
 		bonds[i] = make([]float64, n)
 		for j := 0; j < n; j++ {
-			// 创建键：netuid:validator_i:validator_j
+			// Create key: netuid:validator_i:validator_j
 			key := fmt.Sprintf("%d:%s:%s", netuid, validators[i].Address, validators[j].Address)
 
-			// 从存储中读取 bonds 值
+			// Read bonds value from storage
 			bz := store.Get([]byte(key))
 			if bz != nil {
-				// 将字符串转换回 float64
+				// Convert string back to float64
 				if bondStr := string(bz); bondStr != "" {
 					if bondValue, err := strconv.ParseFloat(bondStr, 64); err == nil {
 						bonds[i][j] = bondValue
 					}
 				}
 			}
-			// 如果没有找到历史数据，默认为 0.0
+			// If no historical data found, default to 0.0
 		}
 	}
 
@@ -505,18 +505,18 @@ func (k Keeper) getPrevBonds(ctx sdk.Context, netuid uint16, validators []types.
 	return bonds
 }
 
-// saveBonds 保存 bonds 到存储
-// bonds 是历史权重的指数移动平均（EMA），用于下一轮 epoch 计算
+// saveBonds saves bonds to storage
+// bonds are the exponential moving average (EMA) of historical weights, used for the next epoch calculation
 func (k Keeper) saveBonds(ctx sdk.Context, netuid uint16, validators []types.ValidatorInfo, bonds [][]float64) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("bonds:"))
 
-	// 为每个验证者保存 bonds 数据
+	// Save bonds data for each validator
 	for i, validator := range validators {
 		for j, bondValue := range bonds[i] {
-			// 创建键：netuid:validator_i:validator_j
+			// Create key: netuid:validator_i:validator_j
 			key := fmt.Sprintf("%d:%s:%s", netuid, validator.Address, validators[j].Address)
 
-			// 将 float64 转换为字符串存储
+			// Store float64 as string
 			bondStr := fmt.Sprintf("%.10f", bondValue)
 			store.Set([]byte(key), []byte(bondStr))
 		}
@@ -529,7 +529,7 @@ func (k Keeper) saveBonds(ctx sdk.Context, netuid uint16, validators []types.Val
 	)
 }
 
-// computeLiquidAlphaValues 计算动态 alpha 矩阵
+// computeLiquidAlphaValues calculates dynamic alpha matrix
 func (k Keeper) computeLiquidAlphaValues(weights [][]float64, bonds [][]float64, consensus []float64, params types.EpochParams) [][]float64 {
 	m := len(weights)
 	n := len(weights[0])
@@ -544,7 +544,7 @@ func (k Keeper) computeLiquidAlphaValues(weights [][]float64, bonds [][]float64,
 	return alphas
 }
 
-// alphaSigmoid 计算 sigmoid alpha
+// alphaSigmoid calculates sigmoid alpha
 func (k Keeper) alphaSigmoid(consensus, weight, bond float64, params types.EpochParams) float64 {
 	diffBuy := k.clamp(weight-consensus, 0, 1)
 	diffSell := k.clamp(bond-weight, 0, 1)
@@ -559,7 +559,7 @@ func (k Keeper) alphaSigmoid(consensus, weight, bond float64, params types.Epoch
 	return k.clamp(alpha, params.AlphaLow, params.AlphaHigh)
 }
 
-// clamp 限制值在指定范围内
+// clamp limits value within a specified range
 func (k Keeper) clamp(value, min, max float64) float64 {
 	if value < min {
 		return min
@@ -570,7 +570,7 @@ func (k Keeper) clamp(value, min, max float64) float64 {
 	return value
 }
 
-// computeBondsWithDynamicAlpha 使用动态 alpha 计算 bonds
+// computeBondsWithDynamicAlpha calculates bonds using dynamic alpha
 func (k Keeper) computeBondsWithDynamicAlpha(weights, bonds [][]float64, alphas [][]float64) [][]float64 {
 	m := len(weights)
 	n := len(weights[0])
@@ -586,36 +586,37 @@ func (k Keeper) computeBondsWithDynamicAlpha(weights, bonds [][]float64, alphas 
 	return result
 }
 
-// computeDisabledLiquidAlpha 计算固定 alpha
+// computeDisabledLiquidAlpha calculates fixed alpha
 func (k Keeper) computeDisabledLiquidAlpha(bondsMovingAverage float64) float64 {
-	return 1.0 - bondsMovingAverage
+	return bondsMovingAverage
 }
 
-// computeIncentive 计算激励（使用 rho 参数）
+// computeIncentive calculates incentive (using rho parameter)
 func (k Keeper) computeIncentive(clippedWeights [][]float64, activeStake []float64, rho float64) []float64 {
-	// 计算 ranks
+	// Calculate ranks
 	ranks := k.matMul(clippedWeights, activeStake)
-	// 归一化
-	ranks = k.normalize(ranks)
-	// 应用 rho 参数
-	incentive := make([]float64, len(ranks))
-	for i := range ranks {
-		incentive[i] = ranks[i] * rho
+	// Normalize
+	normalized := k.normalize(ranks)
+	// Apply rho parameter
+	for i := range normalized {
+		if normalized[i] > 0 {
+			normalized[i] = math.Pow(normalized[i], rho)
+		}
 	}
-	return incentive
+	return k.normalize(normalized)
 }
 
-// matMul 矩阵乘法
-func (k Keeper) matMul(weights [][]float64, stake []float64) []float64 {
-	m := len(weights)
-	n := len(weights[0])
+// matMul matrix multiplication
+func (k Keeper) matMul(matrix [][]float64, vector []float64) []float64 {
+	m := len(matrix)
+	n := len(matrix[0])
 	result := make([]float64, n)
 
 	for j := 0; j < n; j++ {
 		sum := 0.0
 		for i := 0; i < m; i++ {
-			if i < len(weights) && j < len(weights[i]) {
-				sum += weights[i][j] * stake[i]
+			if i < len(matrix) && j < len(matrix[i]) {
+				sum += matrix[i][j] * vector[i]
 			}
 		}
 		result[j] = sum
@@ -623,25 +624,23 @@ func (k Keeper) matMul(weights [][]float64, stake []float64) []float64 {
 	return result
 }
 
-// normalize 归一化数组
-func (k Keeper) normalize(values []float64) []float64 {
+// normalize normalizes array
+func (k Keeper) normalize(arr []float64) []float64 {
 	sum := 0.0
-	for _, v := range values {
+	for _, v := range arr {
 		sum += v
 	}
-
 	if sum == 0 {
-		return make([]float64, len(values))
+		return arr
 	}
-
-	result := make([]float64, len(values))
-	for i, v := range values {
-		result[i] = v / sum
+	normalized := make([]float64, len(arr))
+	for i, v := range arr {
+		normalized[i] = v / sum
 	}
-	return result
+	return normalized
 }
 
-// normalizeIncentive 归一化激励
+// normalizeIncentive normalizes incentive
 func (k Keeper) normalizeIncentive(incentive []float64, active []bool) []float64 {
-	return k.normalizeDividends(incentive, active) // 复用相同逻辑
+	return k.normalizeDividends(incentive, active) // Reuse the same logic
 }

@@ -70,7 +70,7 @@ func DefaultParams() Params {
 	return NewParams(
 		true,                             // Enable block inflation by default
 		"ahetu",                          // Default denom (changed from arao to ahetu)
-		totalSupply,                      // 21,000,000,000,000,000,000,000,000 aHETU (2100万 HETU with 10^18 precision)
+		totalSupply,                      // 21,000,000,000,000,000,000,000,000 aHETU (21 million HETU with 10^18 precision)
 		defaultBlockEmission,             // 1,000,000,000,000,000,000 aHETU per block (1 HETU per block)
 		math.LegacyNewDecWithPrec(10, 2), // Default SubnetRewardBase (0.10)
 		math.LegacyNewDecWithPrec(10, 2), // Default SubnetRewardK (0.10)

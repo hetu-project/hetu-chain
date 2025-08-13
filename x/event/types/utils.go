@@ -4,22 +4,22 @@ import (
 	"math/big"
 )
 
-// AddBigIntString 将两个字符串形式的大整数相加
+// AddBigIntString adds two big integer strings
 func AddBigIntString(a, b string) string {
-	bigA, _ := new(big.Int).SetString(a, 10)
-	bigB, _ := new(big.Int).SetString(b, 10)
-	result := new(big.Int).Add(bigA, bigB)
+	aInt, _ := new(big.Int).SetString(a, 10)
+	bInt, _ := new(big.Int).SetString(b, 10)
+	result := new(big.Int).Add(aInt, bInt)
 	return result.String()
 }
 
-// SubBigIntString 将两个字符串形式的大整数相减
+// SubBigIntString subtracts two big integer strings
 func SubBigIntString(a, b string) string {
-	bigA, _ := new(big.Int).SetString(a, 10)
-	bigB, _ := new(big.Int).SetString(b, 10)
-	result := new(big.Int).Sub(bigA, bigB)
-	// 确保结果不为负数
-	if result.Sign() < 0 {
+	aInt, _ := new(big.Int).SetString(a, 10)
+	bInt, _ := new(big.Int).SetString(b, 10)
+	// Ensure the result is not negative
+	if aInt.Cmp(bInt) < 0 {
 		return "0"
 	}
+	result := new(big.Int).Sub(aInt, bInt)
 	return result.String()
 }

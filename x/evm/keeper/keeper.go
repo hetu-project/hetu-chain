@@ -40,11 +40,6 @@ import (
 // CustomContractFn defines a custom precompiled contract generator with ctx, rules and returns a precompiled contract.
 type CustomContractFn func(sdk.Context, params.Rules) vm.PrecompiledContract
 
-// EventHandler 事件处理接口，避免 import cycle
-type EventHandler interface {
-	HandleEvmLogs(ctx sdk.Context, logs []ethtypes.Log)
-}
-
 // Keeper grants access to the EVM module state and implements the go-ethereum StateDB interface.
 type Keeper struct {
 	// Protobuf codec
@@ -81,7 +76,14 @@ type Keeper struct {
 	// Legacy subspace
 	ss                paramstypes.Subspace
 	customContractFns []CustomContractFn
-	eventHandler      EventHandler
+	evmLogger         vm.EVMLogger
+	customPrecompiles map[common.Address]vm.PrecompiledContract
+	// EventHandler event processing interface, avoid import cycle
+	eventHandler EventHandler
+}
+
+type EventHandler interface {
+	HandleEvmLogs(ctx sdk.Context, logs []ethtypes.Log)
 }
 
 // NewKeeper generates new evm module keeper
@@ -321,7 +323,7 @@ func (k *Keeper) GetAccountOrEmpty(ctx sdk.Context, addr common.Address) statedb
 }
 
 // GetNonce returns the sequence number of an account, returns 0 if not exists.
-func (k *Keeper) GetNonce(ctx sdk.Context, addr common.Address) uint64 {
+func (k Keeper) GetNonce(ctx sdk.Context, addr common.Address) uint64 {
 	cosmosAddr := sdk.AccAddress(addr.Bytes())
 	acct := k.accountKeeper.GetAccount(ctx, cosmosAddr)
 	if acct == nil {
@@ -402,7 +404,7 @@ func (k Keeper) AddTransientGasUsed(ctx sdk.Context, gasUsed uint64) (uint64, er
 	return result, nil
 }
 
-// SetEventHandler 设置事件处理依赖
+// SetEventHandler sets the event processing dependency
 func (k *Keeper) SetEventHandler(handler EventHandler) {
 	k.eventHandler = handler
 }

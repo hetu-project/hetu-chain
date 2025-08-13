@@ -184,15 +184,15 @@ func (k *Keeper) ApplyTransaction(ctx sdk.Context, tx *ethtypes.Transaction) (*t
 	}
 
 	logs := types.LogsToEthereum(res.Logs)
-	fmt.Printf("测试是否调用事件业务处理1: %v\n", logs)
-	// === 事件业务处理 ===
+	fmt.Printf("Testing event processing call 1: %v\n", logs)
+	// === Event business processing ===
 	if k.eventHandler != nil && len(logs) > 0 {
-		// []*types.Log 转 []types.Log
+		// []*types.Log to []types.Log
 		plainLogs := make([]ethtypes.Log, len(logs))
 		for i, l := range logs {
 			plainLogs[i] = *l
 		}
-		fmt.Printf("测试是否调用事件业务处理2: %v\n", plainLogs)
+		fmt.Printf("Testing event processing call 2: %v\n", plainLogs)
 		k.eventHandler.HandleEvmLogs(ctx, plainLogs)
 	}
 	// ===================

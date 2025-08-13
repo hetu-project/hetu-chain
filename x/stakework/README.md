@@ -1,23 +1,23 @@
 # Stakework Module
 
-Stakework 是一个实现 Bittensor epoch 算法的共识模块，专注于实现完整的 Bittensor 网络共识机制。该模块完全基于 event 模块的数据，为每个子网提供独立的参数配置和奖励分配。
+Stakework is a consensus module that implements the Bittensor epoch algorithm, focusing on implementing the complete Bittensor network consensus mechanism. This module is entirely based on data from the event module, providing independent parameter configuration and reward distribution for each subnet.
 
-## 概述
+## Overview
 
-Stakework 模块实现了 Bittensor 网络的核心共识机制，包括：
+The Stakework module implements the core consensus mechanism of the Bittensor network, including:
 
-- **Epoch 算法**：实现完整的 Bittensor epoch 计算逻辑
-- **权重管理**：处理验证者之间的权重分配和更新
-- **共识计算**：基于加权中位数的共识机制
-- **奖励分配**：根据共识结果分配网络奖励
-- **Bonds 系统**：实现历史权重的指数移动平均
-- **动态 Alpha**：支持动态调整的 EMA 参数
+- **Epoch Algorithm**: Complete implementation of Bittensor epoch calculation logic
+- **Weight Management**: Handles weight allocation and updates between validators
+- **Consensus Calculation**: Consensus mechanism based on weighted median
+- **Reward Distribution**: Distributes network rewards based on consensus results
+- **Bonds System**: Implements exponential moving average of historical weights
+- **Dynamic Alpha**: Supports dynamically adjustable EMA parameters
 
-## 核心功能
+## Core Features
 
-### 1. Epoch 运行机制
+### 1. Epoch Execution Mechanism
 
-模块在每个区块检查是否需要运行 epoch，基于子网的 `tempo` 参数：
+The module checks whether an epoch needs to be run at each block based on the subnet's `tempo` parameter:
 
 ```go
 func (k Keeper) shouldRunEpoch(ctx sdk.Context, netuid uint16, tempo uint64) bool {
@@ -27,9 +27,9 @@ func (k Keeper) shouldRunEpoch(ctx sdk.Context, netuid uint16, tempo uint64) boo
 }
 ```
 
-### 2. 权重归一化
+### 2. Weight Normalization
 
-确保所有权重总和为 1：
+Ensures all weights sum to 1:
 
 ```go
 func (k Keeper) normalize(values []float64) []float64 {
@@ -50,38 +50,38 @@ func (k Keeper) normalize(values []float64) []float64 {
 }
 ```
 
-### 3. 共识计算
+### 3. Consensus Calculation
 
-使用加权中位数计算共识分数：
+Uses weighted median to calculate consensus scores:
 
 ```go
 func (k Keeper) weightedMedianCol(stake []float64, weights [][]float64, kappa float64) []float64 {
-    // 实现加权中位数算法
+    // Implements weighted median algorithm
 }
 ```
 
-### 4. Bonds 计算
+### 4. Bonds Calculation
 
-支持固定和动态 alpha 的 EMA 计算：
+Supports EMA calculation with both fixed and dynamic alpha:
 
 ```go
 func (k Keeper) computeBonds(clippedWeights [][]float64, prevBonds [][]float64, alpha float64) [][]float64 {
-    // 实现 EMA 计算
+    // Implements EMA calculation
 }
 ```
 
-## 参数配置
+## Parameter Configuration
 
-每个子网可以独立配置以下参数：
+Each subnet can independently configure the following parameters:
 
-- **kappa**: 多数阈值 (默认 0.5)
-- **alpha**: EMA 参数 (默认 0.1-0.9)
-- **delta**: 权重裁剪范围 (默认 1.0)
-- **tempo**: epoch 运行频率
-- **rho**: 激励参数
-- **liquid_alpha_enabled**: 是否启用动态 alpha
+- **kappa**: Majority threshold (default 0.5)
+- **alpha**: EMA parameter (default 0.1-0.9)
+- **delta**: Weight clipping range (default 1.0)
+- **tempo**: Epoch execution frequency
+- **rho**: Incentive parameter
+- **liquid_alpha_enabled**: Whether to enable dynamic alpha
 
-## 数据结构
+## Data Structures
 
 ### EpochResult
 
@@ -120,9 +120,9 @@ type EpochParams struct {
 }
 ```
 
-## 使用方式
+## Usage
 
-### 1. 运行 Epoch
+### 1. Run Epoch
 
 ```go
 result, err := k.RunEpoch(ctx, netuid, raoEmission)
@@ -131,25 +131,25 @@ if err != nil {
 }
 ```
 
-### 2. 获取子网验证者
+### 2. Get Subnet Validators
 
 ```go
 validators := k.getSubnetValidators(ctx, netuid)
 ```
 
-### 3. 计算活跃状态
+### 3. Calculate Active Status
 
 ```go
 active := k.calculateActive(ctx, netuid, validators, params)
 ```
 
-## 依赖关系
+## Dependencies
 
-- **Event 模块**: 提供子网和验证者数据
-- **Bank 模块**: 处理代币转账和余额查询
-- **Staking 模块**: 获取质押相关信息
+- **Event Module**: Provides subnet and validator data
+- **Bank Module**: Handles token transfers and balance queries
+- **Staking Module**: Gets staking-related information
 
-## 配置示例
+## Configuration Example
 
 ```json
 {
@@ -172,18 +172,18 @@ active := k.calculateActive(ctx, netuid, validators, params)
 }
 ```
 
-## 测试
+## Testing
 
-模块包含完整的单元测试，覆盖核心算法和边界情况：
+The module includes comprehensive unit tests covering core algorithms and edge cases:
 
 ```bash
 go test ./x/stakework/...
 ```
 
-## 贡献
+## Contributing
 
-欢迎提交 Issue 和 Pull Request 来改进这个模块。
+Issues and Pull Requests are welcome to improve this module.
 
-## 许可证
+## License
 
-本项目采用 MIT 许可证。
+This project is licensed under the MIT License.

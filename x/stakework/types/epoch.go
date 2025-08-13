@@ -4,47 +4,47 @@ import (
 	"strconv"
 )
 
-// EpochResult epoch 计算结果
+// EpochResult epoch calculation result
 type EpochResult struct {
 	Netuid    uint16      `json:"netuid"`
 	Accounts  []string    `json:"accounts"`
 	Emission  []uint64    `json:"emission"`
 	Dividend  []uint64    `json:"dividend"`
-	Incentive []uint64    `json:"incentive"` // 新增：激励分配
+	Incentive []uint64    `json:"incentive"` // New: incentive allocation
 	Bonds     [][]float64 `json:"bonds"`
 	Consensus []float64   `json:"consensus"`
 }
 
-// EpochParams epoch 参数（从 event 模块的 Subnet.Params 解析）
+// EpochParams epoch parameters (parsed from event module's Subnet.Params)
 type EpochParams struct {
-	// 核心参数
-	Kappa float64 `json:"kappa"` // 多数阈值 (0.5)
-	Alpha float64 `json:"alpha"` // EMA 参数 (0.1-0.9)
-	Delta float64 `json:"delta"` // 权重裁剪范围 (1.0)
+	// Core parameters
+	Kappa float64 `json:"kappa"` // Majority threshold (0.5)
+	Alpha float64 `json:"alpha"` // EMA parameter (0.1-0.9)
+	Delta float64 `json:"delta"` // Weight clipping range (1.0)
 
-	// 活跃性参数
-	ActivityCutoff uint64 `json:"activity_cutoff"` // 活跃截止时间
-	ImmunityPeriod uint64 `json:"immunity_period"` // 免疫期
+	// Activity parameters
+	ActivityCutoff uint64 `json:"activity_cutoff"` // Activity cutoff time
+	ImmunityPeriod uint64 `json:"immunity_period"` // Immunity period
 
-	// 权重参数
-	MaxWeightsLimit     uint64 `json:"max_weights_limit"`      // 最大权重数量
-	MinAllowedWeights   uint64 `json:"min_allowed_weights"`    // 最小权重数量
-	WeightsSetRateLimit uint64 `json:"weights_set_rate_limit"` // 权重设置速率限制
+	// Weight parameters
+	MaxWeightsLimit     uint64 `json:"max_weights_limit"`      // Maximum weight count
+	MinAllowedWeights   uint64 `json:"min_allowed_weights"`    // Minimum weight count
+	WeightsSetRateLimit uint64 `json:"weights_set_rate_limit"` // Weight setting rate limit
 
-	// 其他参数
-	Tempo              uint64  `json:"tempo"`                // epoch 运行频率
-	BondsPenalty       float64 `json:"bonds_penalty"`        // bonds 惩罚
-	BondsMovingAverage float64 `json:"bonds_moving_average"` // bonds 移动平均
+	// Other parameters
+	Tempo              uint64  `json:"tempo"`                // Epoch run frequency
+	BondsPenalty       float64 `json:"bonds_penalty"`        // Bonds penalty
+	BondsMovingAverage float64 `json:"bonds_moving_average"` // Bonds moving average
 
-	// 新增参数
-	Rho                   float64 `json:"rho"`                     // 激励参数
-	LiquidAlphaEnabled    bool    `json:"liquid_alpha_enabled"`    // 是否启用动态 alpha
-	AlphaSigmoidSteepness float64 `json:"alpha_sigmoid_steepness"` // sigmoid 陡峭度
-	AlphaLow              float64 `json:"alpha_low"`               // alpha 下限
-	AlphaHigh             float64 `json:"alpha_high"`              // alpha 上限
+	// New parameters
+	Rho                   float64 `json:"rho"`                     // Incentive parameter
+	LiquidAlphaEnabled    bool    `json:"liquid_alpha_enabled"`    // Whether to enable dynamic alpha
+	AlphaSigmoidSteepness float64 `json:"alpha_sigmoid_steepness"` // Alpha sigmoid steepness
+	AlphaLow              float64 `json:"alpha_low"`               // Alpha lower bound
+	AlphaHigh             float64 `json:"alpha_high"`              // Alpha upper bound
 }
 
-// DefaultEpochParams 默认参数
+// DefaultEpochParams default parameters
 func DefaultEpochParams() EpochParams {
 	return EpochParams{
 		Kappa:                 0.5,
@@ -66,112 +66,112 @@ func DefaultEpochParams() EpochParams {
 	}
 }
 
-// ParseEpochParams 从 event 模块的 Subnet.Params 解析参数
-func ParseEpochParams(params map[string]string) EpochParams {
-	epochParams := DefaultEpochParams()
+// ParseEpochParams parses parameters from event module's Subnet.Params
+func ParseEpochParams(paramMap map[string]string) EpochParams {
+	params := DefaultEpochParams()
 
-	// 解析参数（如果存在的话）
-	if val, ok := params["kappa"]; ok {
+	// Parse parameters (if they exist)
+	if val, exists := paramMap["kappa"]; exists {
 		if f, err := strconv.ParseFloat(val, 64); err == nil {
-			epochParams.Kappa = f
+			params.Kappa = f
 		}
 	}
 
-	if val, ok := params["alpha"]; ok {
+	if val, exists := paramMap["alpha"]; exists {
 		if f, err := strconv.ParseFloat(val, 64); err == nil {
-			epochParams.Alpha = f
+			params.Alpha = f
 		}
 	}
 
-	if val, ok := params["delta"]; ok {
+	if val, exists := paramMap["delta"]; exists {
 		if f, err := strconv.ParseFloat(val, 64); err == nil {
-			epochParams.Delta = f
+			params.Delta = f
 		}
 	}
 
-	if val, ok := params["activity_cutoff"]; ok {
+	if val, exists := paramMap["activity_cutoff"]; exists {
 		if f, err := strconv.ParseUint(val, 10, 64); err == nil {
-			epochParams.ActivityCutoff = f
+			params.ActivityCutoff = f
 		}
 	}
 
-	if val, ok := params["immunity_period"]; ok {
+	if val, exists := paramMap["immunity_period"]; exists {
 		if f, err := strconv.ParseUint(val, 10, 64); err == nil {
-			epochParams.ImmunityPeriod = f
+			params.ImmunityPeriod = f
 		}
 	}
 
-	if val, ok := params["max_weights_limit"]; ok {
+	if val, exists := paramMap["max_weights_limit"]; exists {
 		if f, err := strconv.ParseUint(val, 10, 64); err == nil {
-			epochParams.MaxWeightsLimit = f
+			params.MaxWeightsLimit = f
 		}
 	}
 
-	if val, ok := params["min_allowed_weights"]; ok {
+	if val, exists := paramMap["min_allowed_weights"]; exists {
 		if f, err := strconv.ParseUint(val, 10, 64); err == nil {
-			epochParams.MinAllowedWeights = f
+			params.MinAllowedWeights = f
 		}
 	}
 
-	if val, ok := params["weights_set_rate_limit"]; ok {
+	if val, exists := paramMap["weights_set_rate_limit"]; exists {
 		if f, err := strconv.ParseUint(val, 10, 64); err == nil {
-			epochParams.WeightsSetRateLimit = f
+			params.WeightsSetRateLimit = f
 		}
 	}
 
-	if val, ok := params["tempo"]; ok {
+	if val, exists := paramMap["tempo"]; exists {
 		if f, err := strconv.ParseUint(val, 10, 64); err == nil {
-			epochParams.Tempo = f
+			params.Tempo = f
 		}
 	}
 
-	if val, ok := params["bonds_penalty"]; ok {
+	if val, exists := paramMap["bonds_penalty"]; exists {
 		if f, err := strconv.ParseFloat(val, 64); err == nil {
-			epochParams.BondsPenalty = f
+			params.BondsPenalty = f
 		}
 	}
 
-	if val, ok := params["bonds_moving_average"]; ok {
+	if val, exists := paramMap["bonds_moving_average"]; exists {
 		if f, err := strconv.ParseFloat(val, 64); err == nil {
-			epochParams.BondsMovingAverage = f
+			params.BondsMovingAverage = f
 		}
 	}
 
-	// 解析新增参数
-	if val, ok := params["rho"]; ok {
+	// Parse new parameters
+	if val, exists := paramMap["rho"]; exists {
 		if f, err := strconv.ParseFloat(val, 64); err == nil {
-			epochParams.Rho = f
+			params.Rho = f
 		}
 	}
 
-	if val, ok := params["liquid_alpha_enabled"]; ok {
+	if val, exists := paramMap["liquid_alpha_enabled"]; exists {
 		if b, err := strconv.ParseBool(val); err == nil {
-			epochParams.LiquidAlphaEnabled = b
+			params.LiquidAlphaEnabled = b
 		}
 	}
 
-	if val, ok := params["alpha_sigmoid_steepness"]; ok {
+	if val, exists := paramMap["alpha_sigmoid_steepness"]; exists {
 		if f, err := strconv.ParseFloat(val, 64); err == nil {
-			epochParams.AlphaSigmoidSteepness = f
+			params.AlphaSigmoidSteepness = f
 		}
 	}
 
-	if val, ok := params["alpha_low"]; ok {
+	if val, exists := paramMap["alpha_low"]; exists {
 		if f, err := strconv.ParseFloat(val, 64); err == nil {
-			epochParams.AlphaLow = f
+			params.AlphaLow = f
 		}
 	}
 
-	if val, ok := params["alpha_high"]; ok {
+	if val, exists := paramMap["alpha_high"]; exists {
 		if f, err := strconv.ParseFloat(val, 64); err == nil {
-			epochParams.AlphaHigh = f
+			params.AlphaHigh = f
 		}
 	}
 
-	return epochParams
+	return params
 }
 
-// ValidatorInfo 验证者信息（从 event 模块获取）
+// ValidatorInfo validator information (obtained from event module)
 type ValidatorInfo struct {
 	Address string   `json:"address"`
 	Stake   float64  `json:"stake"`
@@ -179,7 +179,7 @@ type ValidatorInfo struct {
 	Active  bool     `json:"active"`
 }
 
-// SubnetEpochData 子网 epoch 数据
+// SubnetEpochData subnet epoch data
 type SubnetEpochData struct {
 	Netuid     uint16          `json:"netuid"`
 	Validators []ValidatorInfo `json:"validators"`

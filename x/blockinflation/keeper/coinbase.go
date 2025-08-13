@@ -184,11 +184,11 @@ func (k Keeper) RunCoinbase(ctx sdk.Context, blockEmission math.Int) error {
 		if k.stakeworkKeeper.ShouldRunEpoch(ctx, netuid, tempo) {
 			k.Logger(ctx).Debug("Epoch triggered", "netuid", netuid, "block", ctx.BlockHeight())
 
-			// 重置计数器
+			// Reset counters
 			k.eventKeeper.SetBlocksSinceLastStep(ctx, netuid, 0)
 			k.eventKeeper.SetLastMechanismStepBlock(ctx, netuid, ctx.BlockHeight())
 
-			// 取出并清零pending emission和owner cut
+			// Extract and clear pending emission and owner cut
 			pendingAlpha := k.eventKeeper.GetPendingEmission(ctx, netuid)
 			k.eventKeeper.SetPendingEmission(ctx, netuid, math.ZeroInt())
 			ownerCut := k.eventKeeper.GetPendingOwnerCut(ctx, netuid)
@@ -196,20 +196,20 @@ func (k Keeper) RunCoinbase(ctx sdk.Context, blockEmission math.Int) error {
 
 			k.Logger(ctx).Debug("Draining pending emission", "netuid", netuid, "pending_alpha", pendingAlpha.String(), "owner_cut", ownerCut.String())
 
-			// 运行epoch共识
+			// Run epoch consensus
 			epochResult, err := k.stakeworkKeeper.RunEpoch(ctx, netuid, pendingAlpha.Uint64())
 			if err != nil {
 				k.Logger(ctx).Error("RunEpoch failed", "netuid", netuid, "error", err)
 				continue
 			}
 
-			// 统计激励总和
+			// Calculate incentive sum
 			incentiveSum := uint64(0)
 			for _, v := range epochResult.Incentive {
 				incentiveSum += v
 			}
 
-			// 计算验证者可分配的alpha
+			// Calculate validator-allocatable alpha
 			var pendingValidatorAlpha uint64
 			if incentiveSum != 0 {
 				pendingValidatorAlpha = pendingAlpha.Uint64() / 2
@@ -217,15 +217,15 @@ func (k Keeper) RunCoinbase(ctx sdk.Context, blockEmission math.Int) error {
 				pendingValidatorAlpha = pendingAlpha.Uint64()
 			}
 
-			// 构建分红账户列表
+			// Build dividend account list
 			dividendAccounts := make([]string, len(epochResult.Accounts))
 			copy(dividendAccounts, epochResult.Accounts)
 
-			// 获取本子网质押量
+			// Get subnet stake amounts
 			stakeMap := k.getStakeMap(ctx, netuid, dividendAccounts)
 			k.Logger(ctx).Debug("Stake map", "netuid", netuid, "stake_map", stakeMap)
 
-			// 统计分红
+			// Calculate dividends
 			dividends := map[string]uint64{}
 			for i, addr := range epochResult.Accounts {
 				dividends[addr] = epochResult.Dividend[i]
@@ -235,7 +235,7 @@ func (k Keeper) RunCoinbase(ctx sdk.Context, blockEmission math.Int) error {
 				totalAlphaDivs += v
 			}
 
-			// 分红分配（无父子关系，直接给自己，权重用本子网质押量）
+			// Dividend allocation (no parent-child relationship, direct allocation, weight by subnet stake)
 			alphaDividends := map[string]uint64{}
 			for addr, alphaDiv := range dividends {
 				var share float64
@@ -246,25 +246,25 @@ func (k Keeper) RunCoinbase(ctx sdk.Context, blockEmission math.Int) error {
 			}
 			k.Logger(ctx).Debug("Alpha dividends", "netuid", netuid, "alpha_dividends", alphaDividends)
 
-			// 激励分配
+			// Incentive allocation
 			incentives := map[string]uint64{}
 			for i, addr := range epochResult.Accounts {
 				incentives[addr] = epochResult.Incentive[i]
 			}
 			k.Logger(ctx).Debug("Incentives", "netuid", netuid, "incentives", incentives)
 
-			// 日志输出
+			// Log distribution
 			for addr, amount := range alphaDividends {
 				k.Logger(ctx).Info("Alpha dividend distributed", "netuid", netuid, "account", addr, "amount", amount)
-				// TODO: 实际分配奖励到账户
+				// TODO: Actually distribute rewards to accounts
 			}
 			for addr, amount := range incentives {
 				k.Logger(ctx).Info("Incentive distributed", "netuid", netuid, "account", addr, "amount", amount)
-				// TODO: 实际分配激励到账户
+				// TODO: Actually distribute incentives to accounts
 			}
 			if ownerCut.IsPositive() {
 				k.Logger(ctx).Info("Owner cut distributed", "netuid", netuid, "amount", ownerCut.String())
-				// TODO: 实际分配owner cut
+				// TODO: Actually distribute owner cut
 			}
 		} else {
 			blocks := k.eventKeeper.GetBlocksSinceLastStep(ctx, netuid)
@@ -297,7 +297,7 @@ func (k Keeper) RunCoinbase(ctx sdk.Context, blockEmission math.Int) error {
 	return nil
 }
 
-// getStakeMap 获取每个账户在本子网的质押量（没有根子网）
+// getStakeMap retrieves stake amount for each account in this subnet (no parent subnet)
 func (k Keeper) getStakeMap(ctx sdk.Context, netuid uint16, accounts []string) map[string]uint64 {
 	stakeMap := map[string]uint64{}
 	stakes := k.eventKeeper.GetAllValidatorStakesByNetuid(ctx, netuid)

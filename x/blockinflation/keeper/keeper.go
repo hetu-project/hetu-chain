@@ -63,7 +63,7 @@ func (k Keeper) GetParams(ctx sdk.Context) blockinflationtypes.Params {
 	defer func() {
 		if r := recover(); r != nil {
 			k.Logger(ctx).Warn("Panic in GetParamSet, writing default params", "panic", r)
-			// 写入默认参数到 KVStore
+			// Write default parameters to KVStore
 			k.SetParams(ctx, blockinflationtypes.DefaultParams())
 			params = blockinflationtypes.DefaultParams()
 		}

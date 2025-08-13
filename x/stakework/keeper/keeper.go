@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -9,14 +11,14 @@ import (
 	"github.com/hetu-project/hetu/v1/x/stakework/types"
 )
 
-// Keeper 简化的 yuma keeper
+// Keeper simplified yuma keeper
 type Keeper struct {
 	cdc         codec.BinaryCodec
 	storeKey    storetypes.StoreKey
 	eventKeeper types.EventKeeper
 }
 
-// NewKeeper 创建新的 keeper
+// NewKeeper creates a new keeper
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
@@ -29,12 +31,12 @@ func NewKeeper(
 	}
 }
 
-// Logger 返回模块的 logger
+// Logger returns the module's logger
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", "x/stakework")
+	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-// GetEventKeeper 获取 event keeper
+// GetEventKeeper gets the event keeper
 func (k Keeper) GetEventKeeper() types.EventKeeper {
 	return k.eventKeeper
 }

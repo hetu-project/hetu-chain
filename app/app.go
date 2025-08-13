@@ -670,7 +670,7 @@ func NewEvmos(
 	)
 	app.EvidenceKeeper = *evidenceKeeper
 
-	// 初始化 EventKeeper (必须在 BlockInflationKeeper 之前)
+	// Initialize EventKeeper (must be before BlockInflationKeeper)
 	subnetRegistryABI, err := abi.JSON(strings.NewReader(string(eventabi.SubnetRegistryABI)))
 	if err != nil {
 		panic(fmt.Sprintf("failed to parse SubnetRegistry ABI: %v", err))
@@ -688,7 +688,7 @@ func NewEvmos(
 		panic(fmt.Sprintf("failed to parse Weights ABI: %v", err))
 	}
 
-	// 新增合约 ABI 解析
+	// Parse new contract ABIs
 	subnetManagerABI, err := abi.JSON(strings.NewReader(string(eventabi.SubnetManagerABI)))
 	if err != nil {
 		panic(fmt.Sprintf("failed to parse SubnetManager ABI: %v", err))
@@ -769,7 +769,7 @@ func NewEvmos(
 			app.GetSubspace(inflationtypes.ModuleName)),
 		erc20.NewAppModule(app.Erc20Keeper, app.AccountKeeper,
 			app.GetSubspace(erc20types.ModuleName)),
-		// epochs.NewAppModule(appCodec, app.EpochsKeeper), // 注释掉 epochs 模块的注册
+		// epochs.NewAppModule(appCodec, app.EpochsKeeper), // Commented out epochs module registration
 		vesting.NewAppModule(app.VestingKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
 		stakework.NewAppModule(appCodec, app.StakeworkKeeper),
 		blockinflation.NewAppModule(*app.BlockInflationKeeper),
@@ -810,7 +810,7 @@ func NewEvmos(
 		upgradetypes.ModuleName,
 		capabilitytypes.ModuleName,
 		// Note: epochs' begin should be "real" start of epochs, we keep epochs beginblock at the beginning
-		// epochs.ModuleName, // 注释掉 epochs 模块的注册
+		// epochs.ModuleName, // Commented out epochs module registration
 		feemarkettypes.ModuleName,
 		evmtypes.ModuleName,
 		// minttypes.ModuleName,
@@ -844,7 +844,7 @@ func NewEvmos(
 		evmtypes.ModuleName,
 		feemarkettypes.ModuleName,
 		// Note: epochs' endblock should be "real" end of epochs, we keep epochs endblock at the end
-		// epochs.ModuleName, // 注释掉 epochs 模块的注册
+		// epochs.ModuleName, // Commented out epochs module registration
 		// no-op modules
 		ibcexported.ModuleName,
 		ibctransfertypes.ModuleName,
@@ -904,7 +904,7 @@ func NewEvmos(
 		consensusparamtypes.ModuleName,
 		inflationtypes.ModuleName,
 		erc20types.ModuleName,
-		// epochs.ModuleName, // 注释掉 epochs 模块的注册
+		// epochs.ModuleName, // Commented out epochs module registration
 		ratelimittypes.ModuleName,
 		blockinflationtypes.ModuleName, // Block inflation module
 		// NOTE: crisis module must go at the end to check for invariants on each module
@@ -957,14 +957,14 @@ func NewEvmos(
 		_ = app.tpsCounter.start(context.Background())
 	}()
 
-	// 初始化 StakeworkKeeper (必须在 EventKeeper 之后)
+	// Initialize StakeworkKeeper (must be after EventKeeper)
 	app.StakeworkKeeper = stakeworkkeeper.NewKeeper(
 		appCodec,
 		keys["stakework"],
 		app.EventKeeper,
 	)
 
-	// 设置 EventKeeper 作为 EVM 的事件处理器
+	// Set EventKeeper as EVM event handler
 	app.EvmKeeper.SetEventHandler(app.EventKeeper)
 
 	return app
