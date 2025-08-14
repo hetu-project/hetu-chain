@@ -22,7 +22,6 @@ func (k Keeper) MintAlphaTokens(ctx sdk.Context, netuid uint16, recipient string
 		return fmt.Errorf("subnet not found: %d", netuid)
 	}
 
-	// 获取子网信息
 	subnetInfo, found := getSubnetInfo(subnet)
 	if !found || subnetInfo.AlphaToken == "" {
 		return fmt.Errorf("subnet has no alpha token: %d", netuid)

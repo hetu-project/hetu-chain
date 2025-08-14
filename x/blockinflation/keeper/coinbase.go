@@ -256,7 +256,6 @@ func (k Keeper) RunCoinbase(ctx sdk.Context, blockEmission math.Int) error {
 			// Log distribution
 			for addr, amount := range alphaDividends {
 				k.Logger(ctx).Info("Alpha dividend distributed", "netuid", netuid, "account", addr, "amount", amount)
-				// 铸造 Alpha 代币给验证者
 				if err := k.MintAlphaTokens(ctx, netuid, addr, amount); err != nil {
 					k.Logger(ctx).Error("Failed to mint alpha tokens for validator dividend",
 						"netuid", netuid,
@@ -264,12 +263,9 @@ func (k Keeper) RunCoinbase(ctx sdk.Context, blockEmission math.Int) error {
 						"amount", amount,
 						"error", err,
 					)
-					// 继续处理，不中断流程
 				}
 			}
 			for addr, amount := range incentives {
-				k.Logger(ctx).Info("Incentive distributed", "netuid", netuid, "account", addr, "amount", amount)
-				// 铸造 Alpha 代币给激励接收者
 				if err := k.MintAlphaTokens(ctx, netuid, addr, amount); err != nil {
 					k.Logger(ctx).Error("Failed to mint alpha tokens for incentives",
 						"netuid", netuid,
@@ -277,12 +273,10 @@ func (k Keeper) RunCoinbase(ctx sdk.Context, blockEmission math.Int) error {
 						"amount", amount,
 						"error", err,
 					)
-					// 继续处理，不中断流程
 				}
 			}
 			if ownerCut.IsPositive() {
 				k.Logger(ctx).Info("Owner cut distributed", "netuid", netuid, "amount", ownerCut.String())
-				// 铸造 Alpha 代币给子网所有者
 				subnetInfo, found := getSubnetInfo(subnet)
 				if !found {
 					k.Logger(ctx).Error("Failed to get subnet info for owner cut",
@@ -298,7 +292,6 @@ func (k Keeper) RunCoinbase(ctx sdk.Context, blockEmission math.Int) error {
 						"amount", ownerCut.Uint64(),
 						"error", err,
 					)
-					// 继续处理，不中断流程
 				}
 			}
 		} else {
