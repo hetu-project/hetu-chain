@@ -23,6 +23,7 @@ type (
 		bankKeeper       blockinflationtypes.BankKeeper
 		eventKeeper      blockinflationtypes.EventKeeper
 		stakeworkKeeper  blockinflationtypes.StakeworkKeeper
+		erc20Keeper      blockinflationtypes.ERC20Keeper
 		feeCollectorName string
 		subspace         paramstypes.Subspace
 	}
@@ -36,6 +37,7 @@ func NewKeeper(
 	bk blockinflationtypes.BankKeeper,
 	ek blockinflationtypes.EventKeeper,
 	stakeworkKeeper blockinflationtypes.StakeworkKeeper,
+	erc20Keeper blockinflationtypes.ERC20Keeper,
 	feeCollectorName string,
 	subspace paramstypes.Subspace,
 ) *Keeper {
@@ -47,6 +49,7 @@ func NewKeeper(
 		bankKeeper:       bk,
 		eventKeeper:      ek,
 		stakeworkKeeper:  stakeworkKeeper,
+		erc20Keeper:      erc20Keeper,
 		feeCollectorName: feeCollectorName,
 		subspace:         subspace,
 	}

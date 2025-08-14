@@ -24,3 +24,6 @@ var NeuronManagerABI []byte
 
 //go:embed GlobalStaking.json
 var GlobalStakingABI []byte
+
+//go:embed AlphaToken.json
+var AlphaTokenABI []byte

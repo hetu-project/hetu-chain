@@ -21,23 +21,42 @@ var (
 
 // RunEpoch runs the complete Bittensor epoch algorithm
 func (k Keeper) RunEpoch(ctx sdk.Context, netuid uint16, raoEmission uint64) (*types.EpochResult, error) {
+	logger := k.Logger(ctx)
+	logger.Debug("Starting epoch calculation", "netuid", netuid, "emission", raoEmission)
+
 	// 1. Get subnet data
 	subnet, found := k.eventKeeper.GetSubnet(ctx, netuid)
 	if !found {
+		logger.Error("Subnet not found", "netuid", netuid)
 		return nil, ErrSubnetNotFound
 	}
+	logger.Debug("Retrieved subnet data", "netuid", netuid, "subnet", subnet)
 
 	// 2. Parse subnet parameters
 	params := types.ParseEpochParams(subnet.Params)
+	logger.Debug("Parsed subnet parameters",
+		"kappa", params.Kappa,
+		"alpha", params.Alpha,
+		"delta", params.Delta,
+		"tempo", params.Tempo,
+		"rho", params.Rho,
+		"liquid_alpha_enabled", params.LiquidAlphaEnabled)
 
 	// 3. Check if epoch should run
 	if !k.shouldRunEpoch(ctx, netuid, params.Tempo) {
+		logger.Debug("Epoch not due yet",
+			"netuid", netuid,
+			"current_block", ctx.BlockHeight(),
+			"tempo", params.Tempo)
 		return nil, ErrEpochNotDue
 	}
+	logger.Debug("Epoch should run", "current_block", ctx.BlockHeight())
 
 	// 4. Get all validator data for the subnet
 	validators := k.getSubnetValidators(ctx, netuid)
+	logger.Debug("Retrieved validators", "count", len(validators))
 	if len(validators) == 0 {
+		logger.Debug("No validators found, returning empty result")
 		return &types.EpochResult{
 			Netuid:    netuid,
 			Accounts:  []string{},
@@ -48,50 +67,104 @@ func (k Keeper) RunEpoch(ctx sdk.Context, netuid uint16, raoEmission uint64) (*t
 		}, nil
 	}
 
-	// 5. Calculate active status (using activity_cutoff)
+	// 5. Calculate active status
 	active := k.calculateActive(ctx, netuid, validators, params)
+	activeCount := 0
+	for _, isActive := range active {
+		if isActive {
+			activeCount++
+		}
+	}
+	logger.Debug("Calculated active status",
+		"total_validators", len(validators),
+		"active_validators", activeCount)
 
 	// 6. Get stake weights
 	stake := k.getStakeWeights(ctx, netuid, validators)
+	logger.Debug("Retrieved stake weights",
+		"count", len(stake),
+		"total_stake", k.sumArray(stake))
 
 	// 7. Normalize stake weights
 	activeStake := k.normalizeStake(stake, active)
+	logger.Debug("Normalized stake weights",
+		"normalized_sum", k.sumArray(activeStake))
 
 	// 8. Get weights matrix
 	weights := k.getWeightsMatrix(ctx, netuid, validators)
+	logger.Debug("Retrieved weights matrix",
+		"matrix_size", fmt.Sprintf("%dx%d", len(weights), len(weights[0])),
+		"sample_weights", k.sampleWeights(weights, 3))
 
-	// 9. Calculate consensus scores (weighted median)
+	// 9. Calculate consensus scores
 	consensus := k.weightedMedianCol(activeStake, weights, params.Kappa)
+	logger.Debug("Calculated consensus scores",
+		"scores_count", len(consensus),
+		"min_score", k.minArray(consensus),
+		"max_score", k.maxArray(consensus),
+		"avg_score", k.avgArray(consensus))
 
 	// 10. Clip weights
 	clippedWeights := k.clipWeights(weights, consensus, params.Delta)
+	logger.Debug("Clipped weights",
+		"matrix_size", fmt.Sprintf("%dx%d", len(clippedWeights), len(clippedWeights[0])),
+		"sample_clipped", k.sampleWeights(clippedWeights, 3))
 
-	// 11. Calculate bonds (historical weights EMA)
+	// 11. Calculate bonds
 	prevBonds := k.getPrevBonds(ctx, netuid, validators)
 	var bonds [][]float64
 
 	if params.LiquidAlphaEnabled {
+		logger.Debug("Using dynamic alpha for bonds calculation")
 		// Use dynamic alpha
 		alphas := k.computeLiquidAlphaValues(weights, prevBonds, consensus, params)
+		logger.Debug("Computed liquid alpha values",
+			"matrix_size", fmt.Sprintf("%dx%d", len(alphas), len(alphas[0])),
+			"min_alpha", k.minMatrix(alphas),
+			"max_alpha", k.maxMatrix(alphas),
+			"avg_alpha", k.avgMatrix(alphas))
 		bonds = k.computeBondsWithDynamicAlpha(clippedWeights, prevBonds, alphas)
 	} else {
-		// Use fixed alpha: use bonds_moving_average
+		logger.Debug("Using fixed alpha for bonds calculation",
+			"alpha", params.BondsMovingAverage)
+		// Use fixed alpha
 		fixedAlpha := k.computeDisabledLiquidAlpha(params.BondsMovingAverage)
 		bonds = k.computeBonds(clippedWeights, prevBonds, fixedAlpha)
 	}
+	logger.Debug("Calculated bonds",
+		"matrix_size", fmt.Sprintf("%dx%d", len(bonds), len(bonds[0])),
+		"min_bond", k.minMatrix(bonds),
+		"max_bond", k.maxMatrix(bonds),
+		"avg_bond", k.avgMatrix(bonds))
 
 	// 12. Calculate dividends
 	dividends := k.computeDividends(bonds)
+	logger.Debug("Calculated dividends",
+		"count", len(dividends),
+		"total_dividends", k.sumArray(dividends))
 
-	// 13. Calculate incentive (using rho parameter)
+	// 13. Calculate incentive
 	incentive := k.computeIncentive(clippedWeights, activeStake, params.Rho)
+	logger.Debug("Calculated incentive",
+		"count", len(incentive),
+		"total_incentive", k.sumArray(incentive))
 
 	// 14. Normalize dividends and incentive
 	normDividends := k.normalizeDividends(dividends, active)
 	normIncentive := k.normalizeIncentive(incentive, active)
+	logger.Debug("Normalized rewards",
+		"normalized_dividends_sum", k.sumArray(normDividends),
+		"normalized_incentive_sum", k.sumArray(normIncentive))
 
-	// 15. Distribute emission (combine incentive and dividends)
+	// 15. Distribute emission
 	emission := k.distributeEmission(normIncentive, normDividends, raoEmission)
+	totalEmission := uint64(0)
+	for _, e := range emission {
+		totalEmission += e
+	}
+	logger.Debug("Distributed emission",
+		"total_emission", totalEmission,
+		"target_emission", raoEmission)
 
 	// 16. Build result
 	result := &types.EpochResult{
@@ -113,9 +186,13 @@ func (k Keeper) RunEpoch(ctx sdk.Context, netuid uint16, raoEmission uint64) (*t
 
 	// 17. Save bonds to storage
 	k.saveBonds(ctx, netuid, validators, bonds)
+	logger.Debug("Saved bonds to storage")
 
-	// 18. Update last epoch time
-	// k.setLastEpochTime(ctx, netuid, ctx.BlockTime()) // Delete the function no longer needed
+	logger.Debug("Epoch calculation completed successfully",
+		"netuid", netuid,
+		"validators_count", len(validators),
+		"active_count", activeCount,
+		"total_emission", totalEmission)
 
 	return result, nil
 }
@@ -643,4 +720,111 @@ func (k Keeper) normalize(arr []float64) []float64 {
 // normalizeIncentive normalizes incentive
 func (k Keeper) normalizeIncentive(incentive []float64, active []bool) []float64 {
 	return k.normalizeDividends(incentive, active) // Reuse the same logic
+}
+
+// Helper functions for debug logging
+func (k Keeper) sumArray(arr []float64) float64 {
+	sum := 0.0
+	for _, v := range arr {
+		sum += v
+	}
+	return sum
+}
+
+func (k Keeper) minArray(arr []float64) float64 {
+	if len(arr) == 0 {
+		return 0
+	}
+	min := arr[0]
+	for _, v := range arr {
+		if v < min {
+			min = v
+		}
+	}
+	return min
+}
+
+func (k Keeper) maxArray(arr []float64) float64 {
+	if len(arr) == 0 {
+		return 0
+	}
+	max := arr[0]
+	for _, v := range arr {
+		if v > max {
+			max = v
+		}
+	}
+	return max
+}
+
+func (k Keeper) avgArray(arr []float64) float64 {
+	if len(arr) == 0 {
+		return 0
+	}
+	return k.sumArray(arr) / float64(len(arr))
+}
+
+func (k Keeper) minMatrix(matrix [][]float64) float64 {
+	if len(matrix) == 0 || len(matrix[0]) == 0 {
+		return 0
+	}
+	min := matrix[0][0]
+	for _, row := range matrix {
+		for _, v := range row {
+			if v < min {
+				min = v
+			}
+		}
+	}
+	return min
+}
+
+func (k Keeper) maxMatrix(matrix [][]float64) float64 {
+	if len(matrix) == 0 || len(matrix[0]) == 0 {
+		return 0
+	}
+	max := matrix[0][0]
+	for _, row := range matrix {
+		for _, v := range row {
+			if v > max {
+				max = v
+			}
+		}
+	}
+	return max
+}
+
+func (k Keeper) avgMatrix(matrix [][]float64) float64 {
+	if len(matrix) == 0 || len(matrix[0]) == 0 {
+		return 0
+	}
+	sum := 0.0
+	count := 0
+	for _, row := range matrix {
+		for _, v := range row {
+			sum += v
+			count++
+		}
+	}
+	return sum / float64(count)
+}
+
+func (k Keeper) sampleWeights(matrix [][]float64, sampleSize int) string {
+	if len(matrix) == 0 || len(matrix[0]) == 0 {
+		return "empty"
+	}
+	sample := make([]float64, 0)
+	for i := 0; i < min(sampleSize, len(matrix)); i++ {
+		for j := 0; j < min(sampleSize, len(matrix[i])); j++ {
+			sample = append(sample, matrix[i][j])
+		}
+	}
+	return fmt.Sprintf("sample[%d]: %v", len(sample), sample)
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
