@@ -100,11 +100,19 @@ func (k Keeper) MintAndAllocateBlockInflation(ctx sdk.Context) error {
 	// Get subnet count for reward calculation
 	subnetCount := uint64(len(k.eventKeeper.GetAllSubnetNetuids(ctx)))
 
+	k.Logger(ctx).Info("Test whether the subnet was successfully obtained",
+		"subnetCount", subnetCount,
+	)
+
 	// Calculate subnet reward ratio
 	subnetRewardRatio := blockinflationtypes.CalculateSubnetRewardRatio(params, subnetCount)
 
 	// Calculate subnet reward amount
 	subnetRewardAmount := math.LegacyNewDecFromInt(blockEmission).Mul(subnetRewardRatio).TruncateInt()
+
+	k.Logger(ctx).Info("Test whether the subnet reward ratio was successfully obtained",
+		"subnetRewardRatio", subnetRewardRatio.String(),
+	)
 
 	// Calculate remaining amount for fee collector
 	feeCollectorAmount := blockEmission.Sub(subnetRewardAmount)
