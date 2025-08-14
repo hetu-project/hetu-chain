@@ -920,9 +920,10 @@ func (k Keeper) GetAllSubnetNetuids(ctx sdk.Context) []uint16 {
 	subnets := k.GetAllSubnets(ctx)
 	var netuids []uint16
 	for _, subnet := range subnets {
-		if subnet.Netuid != 0 { // Filter out root subnet
-			netuids = append(netuids, subnet.Netuid)
-		}
+		// if subnet.Netuid != 0 { // Filter out root subnet
+		// 	netuids = append(netuids, subnet.Netuid)
+		// }
+		netuids = append(netuids, subnet.Netuid)
 	}
 	return netuids
 }
@@ -932,7 +933,10 @@ func (k Keeper) GetSubnetsToEmitTo(ctx sdk.Context) []uint16 {
 	subnets := k.GetAllSubnets(ctx)
 	var netuids []uint16
 	for _, subnet := range subnets {
-		if subnet.Netuid != 0 && subnet.FirstEmissionBlock > 0 { // Filter out root subnet and subnets without first emission block set
+		// if subnet.Netuid != 0 && subnet.FirstEmissionBlock > 0 { // Filter out root subnet and subnets without first emission block set
+		// 	netuids = append(netuids, subnet.Netuid)
+		// }
+		if subnet.FirstEmissionBlock > 0 { // Filter out root subnet and subnets without first emission block set
 			netuids = append(netuids, subnet.Netuid)
 		}
 	}

@@ -8,58 +8,108 @@ parent:
 </div>
 
 Hetu Chain is a scalable, high-throughput blockchain that is fully compatible and interoperable with Ethereum.
-It's built using the [Cosmos SDK](https://github.com/cosmos/cosmos-sdk/) and implements
-[Narwhal](https://github.com/MystenLabs/narwhal) + [Bullshark](https://github.com/MystenLabs/sui/tree/main/consensus/bullshark) consensus mechanism
-for improved performance and scalability.
+It's built using the [Cosmos SDK](https://github.com/cosmos/cosmos-sdk/) with EVM compatibility, supporting both Cosmos and Ethereum ecosystems.
 
 ## Documentation
 
 Our documentation is hosted in a [separate repository](https://github.com/hetu-project/docs).
 Head over there and check it out.
 
-**Note**: Requires [Go 1.20+](https://golang.org/dl/)
+## Prerequisites
+
+- [Go 1.20+](https://golang.org/dl/)
+- [Git](https://git-scm.com/)
+- [Make](https://www.gnu.org/software/make/)
+- [gcc](https://gcc.gnu.org/) (for cgo support)
 
 ## Installation
 
-For prerequisites and detailed build instructions
-please read the [Installation](https://docs.hetu.org/protocol/hetu-cli) instructions.
-Once the dependencies are installed, run:
+Follow these steps to install Hetu Chain from source:
+
+### Clone the Repository
 
 ```bash
+git clone https://github.com/hetu-project/hetu-chain.git
+cd hetu-chain
+```
+
+### Build and Install
+
+```bash
+# Build the binary
+make build
+
+# Install the binary to your GOPATH
 make install
 ```
 
-Or check out the latest [release](https://github.com/hetu-project/hetu/releases).
+After installation, verify that the binary is correctly installed:
+
+```bash
+hetud version
+```
+
+### Using Pre-built Binaries
+
+Alternatively, you can download pre-built binaries from the latest [release](https://github.com/hetu-project/hetu/releases).
+
+```bash
+# Download the binary for your platform
+wget https://github.com/hetu-project/hetu/releases/download/v0.x.x/hetud-v0.x.x-linux-amd64.tar.gz
+
+# Extract the binary
+tar -xzf hetud-v0.x.x-linux-amd64.tar.gz
+
+# Move the binary to your PATH
+sudo mv hetud /usr/local/bin/
+```
 
 ## Deployment
 
-**Important: Before deploying, ensure that the Narwhal mempool is deployed. See [hetu-parallel-engine/hetu-consensus](https://github.com/hetu-project/hetu-parallel-engine/tree/main/hetu-consensus) for details.**
-
 ### Local Deployment
 
-To deploy locally, use the `local_node.sh` script. This script will set up a local environment for running the Hetu Chain node.
+To quickly set up a local development environment, use the `init.sh` script:
 
 ```bash
-./local_node.sh
+# Initialize a single-node local network
+./init.sh
+
+# Start the node
+./start.sh
 ```
+
+This script will:
+1. Initialize the genesis file
+2. Create a validator account
+3. Add genesis accounts with test tokens
+4. Configure the node
+5. Start the node in development mode
 
 ### Remote Deployment
 
-For remote deployment, ensure that `hetud` is available in the `PATH` on each machine. It is also recommended to set up SSH keys on the remote machines for secure and passwordless access.
+For multi-node deployments in a production environment:
 
-1. `init_validators.sh`: This script initializes the validators required for the Hetu Chain. You need to provide the remote IPs for the 4 validators in the network as parameters.
+1. **Initialize Validators**: Use the `init_validators.sh` script to set up validators in your network.
 
    ```bash
    ./init_validators.sh <remote_ip1> <remote_ip2> <remote_ip3> <remote_ip4>
    ```
 
-2. `start_node_archive.sh`: This script starts the node in archive mode.
+2. **Start Archive Node**: For full historical data, start a node in archive mode.
 
    ```bash
    ./start_node_archive.sh
    ```
 
-These scripts will help you set up and run the Hetu Chain on a remote server.
+3. **Configure Networking**: Ensure proper firewall settings to allow P2P communication between nodes.
+
+## Key Features
+
+- **EVM Compatibility**: Full support for Ethereum smart contracts and tools
+- **Cosmos SDK Integration**: Leverage Cosmos ecosystem features like IBC
+- **Bittensor-inspired Consensus**: Advanced consensus mechanism for AI networks
+- **Subnet Architecture**: Specialized subnets for different AI services
+- **Alpha Token System**: Subnet-specific tokens for incentive alignment
 
 ## Community
 
@@ -75,7 +125,6 @@ We welcome all contributions! There are many ways to contribute to the project, 
 
 - Cloning code repo and opening a [PR](https://github.com/hetu-project/hetu/pulls).
 - Submitting feature requests or [bugs](https://github.com/hetu-project/hetu/issues).
-- Improving our product or contribution [documentation](./docs/).
-- Contributing [use cases](./demos/) to a feature request.
+- Improving our product or contribution [documentation](https://github.com/hetu-project/hetu-docs).
 
-For additional instructions, standards and style guides, please refer to the [Contributing](./CONTRIBUTING.md) document.
+For additional instructions, standards and style guides, please refer to the [Contributing](https://github.com/hetu-project/hetu-docs) document.
