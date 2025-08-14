@@ -16,21 +16,22 @@ import (
 
 // MintAlphaTokens mints alpha tokens to the specified address
 func (k Keeper) MintAlphaTokens(ctx sdk.Context, netuid uint16, recipient string, amount uint64) error {
-	// 1. Get the subnet info to find the AlphaToken address
+	// 1. Get the subnet to find information about it
 	subnet, found := k.eventKeeper.GetSubnet(ctx, netuid)
 	if !found {
 		return fmt.Errorf("subnet not found: %d", netuid)
 	}
 
-	subnetInfo, found := getSubnetInfo(subnet)
-	if !found || subnetInfo.AlphaToken == "" {
-		return fmt.Errorf("subnet has no alpha token: %d", netuid)
+	// 2. Check if the subnet has an AlphaToken address in its params
+	alphaTokenAddress, ok := subnet.Params["alpha_token"]
+	if !ok || alphaTokenAddress == "" {
+		return fmt.Errorf("subnet has no alpha token address in params: %d", netuid)
 	}
 
 	// 3. Parse the AlphaToken address
-	alphaTokenAddr := common.HexToAddress(subnetInfo.AlphaToken)
+	alphaTokenAddr := common.HexToAddress(alphaTokenAddress)
 	if (alphaTokenAddr == common.Address{}) {
-		return fmt.Errorf("invalid alpha token address: %s", subnetInfo.AlphaToken)
+		return fmt.Errorf("invalid alpha token address: %s", alphaTokenAddress)
 	}
 
 	// 4. Get the AlphaToken ABI

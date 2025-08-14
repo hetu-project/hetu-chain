@@ -277,21 +277,15 @@ func (k Keeper) RunCoinbase(ctx sdk.Context, blockEmission math.Int) error {
 			}
 			if ownerCut.IsPositive() {
 				k.Logger(ctx).Info("Owner cut distributed", "netuid", netuid, "amount", ownerCut.String())
-				subnetInfo, found := getSubnetInfo(subnet)
-				if !found {
-					k.Logger(ctx).Error("Failed to get subnet info for owner cut",
-						"netuid", netuid,
-						"amount", ownerCut.Uint64(),
-					)
-					continue
-				}
-				if err := k.MintAlphaTokens(ctx, netuid, subnetInfo.Owner, ownerCut.Uint64()); err != nil {
+				// 铸造 Alpha 代币给子网所有者
+				if err := k.MintAlphaTokens(ctx, netuid, subnet.Owner, ownerCut.Uint64()); err != nil {
 					k.Logger(ctx).Error("Failed to mint alpha tokens for subnet owner",
 						"netuid", netuid,
-						"owner", subnetInfo.Owner,
+						"owner", subnet.Owner,
 						"amount", ownerCut.Uint64(),
 						"error", err,
 					)
+					// 继续处理，不中断流程
 				}
 			}
 		} else {
