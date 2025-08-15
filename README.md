@@ -19,7 +19,7 @@ Head over there and check it out.
 
 - [Go 1.20+](https://golang.org/dl/)
 - [Git](https://git-scm.com/)
-- [Make](https://www.gnu.org/software/make/)
+- [Make](https://www.gnu.org/software/make/manual/make.html)
 - [gcc](https://gcc.gnu.org/) (for cgo support)
 
 ## Installation
@@ -75,7 +75,7 @@ To quickly set up a local development environment, use the `init.sh` script:
 ./init.sh
 
 # Start the node
-./start.sh
+./start_node_archive.sh
 ```
 
 This script will:

@@ -31,7 +31,8 @@ func getAlphaTokenABI() (abi.ABI, error) {
 }
 
 // MintAlphaTokens mints alpha tokens to the specified address
-func (k Keeper) MintAlphaTokens(ctx sdk.Context, netuid uint16, recipient string, amount uint64) error {
+// amount is the ERC-20 smallest-unit amount (usually 18 decimals).
+func (k Keeper) MintAlphaTokens(ctx sdk.Context, netuid uint16, recipient string, amount *big.Int) error {
 	// 1. Get the subnet to find information about it
 	subnet, found := k.eventKeeper.GetSubnet(ctx, netuid)
 	if !found {
@@ -67,8 +68,13 @@ func (k Keeper) MintAlphaTokens(ctx sdk.Context, netuid uint16, recipient string
 		return fmt.Errorf("recipient address cannot be the zero address: %s", recipient)
 	}
 
-	// 6. Convert amount to big.Int
-	amountBig := new(big.Int).SetUint64(amount)
+	// 6. Validate amount
+	if amount == nil {
+		return fmt.Errorf("amount cannot be nil")
+	}
+	if amount.Sign() <= 0 {
+		return fmt.Errorf("amount must be positive, got: %s", amount.String())
+	}
 
 	// 7. Call the mint function on the AlphaToken contract
 	moduleAddress := authtypes.NewModuleAddress(types.ModuleName)
@@ -80,7 +86,7 @@ func (k Keeper) MintAlphaTokens(ctx sdk.Context, netuid uint16, recipient string
 		true, // commit
 		"mint",
 		recipientAddr,
-		amountBig,
+		amount,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to mint alpha tokens: %w", err)
@@ -89,7 +95,7 @@ func (k Keeper) MintAlphaTokens(ctx sdk.Context, netuid uint16, recipient string
 	k.Logger(ctx).Info("Minted alpha tokens",
 		"netuid", netuid,
 		"recipient", recipient,
-		"amount", amount,
+		"amount", amount.String(),
 		"token_address", alphaTokenAddr.Hex(),
 	)
 

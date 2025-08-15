@@ -683,15 +683,11 @@ func TestYumaSubnetRewardRatioAndDistribution(t *testing.T) {
 
 // Helper function: create test keeper
 func createTestKeeper(t *testing.T) Keeper {
-	// Create a fully functional test keeper
-	// Use mocked dependencies to avoid complex initialization
+	subspace := createTestSubspace()
 	k := Keeper{
-		// Here we need to set necessary fields, but since the test mainly focuses on algorithm logic
-		// We can create a simplified version that only tests the core calculation logic
+		subspace: subspace,
+		// Add other necessary fields for testing
 	}
-
-	// Note: This test keeper is mainly used for testing algorithm logic
-	// In actual use, you may need more complete mock objects
 	return k
 }
 

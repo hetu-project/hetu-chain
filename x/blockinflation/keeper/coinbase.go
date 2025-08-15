@@ -285,7 +285,7 @@ func (k Keeper) RunCoinbase(ctx sdk.Context, blockEmission math.Int) error {
 			// Log distribution
 			for addr, amount := range alphaDividends {
 				k.Logger(ctx).Info("Alpha dividend distributed", "netuid", netuid, "account", addr, "amount", amount)
-				if err := k.MintAlphaTokens(ctx, netuid, addr, amount); err != nil {
+				if err := k.MintAlphaTokens(ctx, netuid, addr, new(big.Int).SetUint64(amount)); err != nil {
 					k.Logger(ctx).Error("Failed to mint alpha tokens for validator dividend",
 						"netuid", netuid,
 						"address", addr,
@@ -295,7 +295,7 @@ func (k Keeper) RunCoinbase(ctx sdk.Context, blockEmission math.Int) error {
 				}
 			}
 			for addr, amount := range incentives {
-				if err := k.MintAlphaTokens(ctx, netuid, addr, amount); err != nil {
+				if err := k.MintAlphaTokens(ctx, netuid, addr, new(big.Int).SetUint64(amount)); err != nil {
 					k.Logger(ctx).Error("Failed to mint alpha tokens for incentives",
 						"netuid", netuid,
 						"address", addr,
@@ -306,11 +306,11 @@ func (k Keeper) RunCoinbase(ctx sdk.Context, blockEmission math.Int) error {
 			}
 			if ownerCut.IsPositive() {
 				k.Logger(ctx).Info("Owner cut distributed", "netuid", netuid, "amount", ownerCut.String())
-				if err := k.MintAlphaTokens(ctx, netuid, subnet.Owner, ownerCut.Uint64()); err != nil {
+				if err := k.MintAlphaTokens(ctx, netuid, subnet.Owner, ownerCut.BigInt()); err != nil {
 					k.Logger(ctx).Error("Failed to mint alpha tokens for subnet owner",
 						"netuid", netuid,
 						"owner", subnet.Owner,
-						"amount", ownerCut.Uint64(),
+						"amount", ownerCut.String(),
 						"error", err,
 					)
 				}
