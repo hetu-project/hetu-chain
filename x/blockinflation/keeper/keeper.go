@@ -15,7 +15,6 @@ import (
 	pb "github.com/hetu-project/hetu/v1/x/blockinflation/types/generated"
 )
 
-// 确保 Keeper 实现了 QueryServer 接口
 var _ pb.QueryServer = (*Keeper)(nil)
 
 type (
@@ -31,7 +30,6 @@ type (
 		feeCollectorName string
 		subspace         paramstypes.Subspace
 
-		// 嵌入 UnimplementedQueryServer 以实现 QueryServer 接口
 		pb.UnimplementedQueryServer
 	}
 )

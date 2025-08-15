@@ -19,7 +19,6 @@ func (k Keeper) Params(c context.Context, req *pb.QueryParamsRequest) (*pb.Query
 	ctx := sdk.UnwrapSDKContext(c)
 	params := k.GetParams(ctx)
 
-	// 转换为 protobuf 类型
 	protoParams := &pb.Params{
 		EnableBlockInflation: params.EnableBlockInflation,
 		MintDenom:            params.MintDenom,
@@ -44,7 +43,6 @@ func (k Keeper) PendingSubnetRewards(c context.Context, req *pb.QueryPendingSubn
 	ctx := sdk.UnwrapSDKContext(c)
 	pendingRewards := k.GetPendingSubnetRewards(ctx)
 
-	// 转换为 protobuf 类型
 	protoCoin := &sdk.Coin{
 		Denom:  pendingRewards.Denom,
 		Amount: pendingRewards.Amount,
