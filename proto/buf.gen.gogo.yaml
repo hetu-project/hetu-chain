@@ -1,9 +1,17 @@
 version: v1
 plugins:
-  - name: gocosmos
+  - name: go
     out: .
     opt:
-      - plugins=grpc,Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types
+      - paths=source_relative
+  - name: go-grpc
+    out: .
+    opt:
+      - paths=source_relative
   - name: grpc-gateway
     out: .
-    opt: logtostderr=true,allow_colon_final_segments=true
+    opt:
+      - logtostderr=true
+      - allow_repeated_fields_in_body=true
+      - generate_unbound_methods=true
+

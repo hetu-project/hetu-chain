@@ -19,6 +19,8 @@ import (
 	"github.com/hetu-project/hetu/v1/x/blockinflation/client/cli"
 	"github.com/hetu-project/hetu/v1/x/blockinflation/keeper"
 	"github.com/hetu-project/hetu/v1/x/blockinflation/types"
+	pb "github.com/hetu-project/hetu/v1/x/blockinflation/types/generated"
+	"google.golang.org/grpc"
 )
 
 var (
@@ -66,7 +68,14 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxConfi
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the blockinflation module.
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	// Register gRPC Gateway routes here if needed
+	if err := pb.RegisterQueryHandlerFromEndpoint(
+		context.Background(),
+		mux,
+		clientCtx.NodeURI,
+		[]grpc.DialOption{grpc.WithInsecure()},
+	); err != nil {
+		panic(err)
+	}
 }
 
 // GetTxCmd returns the root tx command for the blockinflation module.
@@ -106,7 +115,7 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 // RegisterServices registers a gRPC query service to respond to the
 // module-specific gRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	// Register gRPC services here if needed
+	pb.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 }
 
 // InitGenesis performs genesis initialization for the blockinflation module. It returns

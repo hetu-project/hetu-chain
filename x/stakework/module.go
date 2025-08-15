@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -96,10 +97,10 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 }
 
 // InitGenesis initializes the genesis state
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.RawMessage) []interface{} {
+func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.RawMessage) []abci.ValidatorUpdate {
 	// Simplified initialization, mainly setting basic state
 	InitGenesis(ctx, am.keeper)
-	return []interface{}{}
+	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis exports the genesis state
@@ -117,8 +118,8 @@ func (am AppModule) BeginBlock(ctx sdk.Context, _ interface{}) {
 }
 
 // EndBlock executes at the end of each block
-func (am AppModule) EndBlock(ctx sdk.Context) []interface{} {
-	return []interface{}{}
+func (am AppModule) EndBlock(ctx sdk.Context) []abci.ValidatorUpdate {
+	return []abci.ValidatorUpdate{}
 }
 
 // Dependency injection support

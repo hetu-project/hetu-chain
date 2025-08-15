@@ -65,6 +65,7 @@ var KeyAliases = map[string]string{
 	"targetRegsPerInterval": KeyTargetRegsPerInterval,
 	"maxRegsPerBlock":       KeyMaxRegsPerBlock,
 	"weightsRateLimit":      KeyWeightsRateLimit,
+	"weightsSetRateLimit":   KeyWeightsSetRateLimit,
 
 	// Governance parameters
 	"registrationAllowed": KeyRegistrationAllowed,
@@ -99,8 +100,20 @@ func NormalizeParamKey(key string) string {
 // NormalizeParamKeys normalizes all keys in a parameter map
 func NormalizeParamKeys(params map[string]string) map[string]string {
 	normalized := make(map[string]string, len(params))
+
+	// 1st pass: set all alias-derived keys
 	for key, value := range params {
-		normalized[NormalizeParamKey(key)] = value
+		if canon := NormalizeParamKey(key); canon != key {
+			normalized[canon] = value
+		}
 	}
+
+	// 2nd pass: set canonical keys last (canonical wins on conflicts)
+	for key, value := range params {
+		if NormalizeParamKey(key) == key {
+			normalized[key] = value
+		}
+	}
+
 	return normalized
 }

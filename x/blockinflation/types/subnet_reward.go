@@ -19,8 +19,13 @@ func CalculateSubnetRewardRatio(params Params, subnetCount uint64) math.LegacyDe
 	logStr := strconv.FormatFloat(logFloat, 'f', 18, 64) // 18 fractional digits to match LegacyDec precision
 	logValue, err := math.LegacyNewDecFromStr(logStr)
 	if err != nil {
-		// Fallback to a less precise but safe conversion if string parsing fails
-		logValue = math.LegacyNewDecWithPrec(int64(logFloat*1000000000000000000), 18)
+		// Fallback: reformat with 'g' and attempt parse; if it still fails, degrade to 0 (ratio => base)
+		alt := strconv.FormatFloat(logFloat, 'g', -1, 64)
+		if v2, err2 := math.LegacyNewDecFromStr(alt); err2 == nil {
+			logValue = v2
+		} else {
+			logValue = math.LegacyZeroDec()
+		}
 	}
 
 	// Calculate base + k * log(1 + subnet_count)

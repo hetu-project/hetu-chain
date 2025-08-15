@@ -10,9 +10,9 @@ import (
 type Subnet struct {
 	Netuid                uint16            `json:"netuid" yaml:"netuid"`
 	Owner                 string            `json:"owner" yaml:"owner"`
-	LockedAmount          string            `json:"lock_amount" yaml:"lock_amount"` // Renamed from LockAmount for consistency
-	BurnedAmount          string            `json:"burned_tao" yaml:"burned_tao"`   // Renamed from BurnedTao for consistency
-	AmmPool               string            `json:"pool" yaml:"pool"`               // Renamed from Pool for consistency
+	LockedAmount          string            `json:"locked_amount" yaml:"locked_amount"` // Renamed from LockAmount for consistency
+	BurnedAmount          string            `json:"burned_amount" yaml:"burned_amount"` // Renamed from BurnedTao for consistency
+	AmmPool               string            `json:"amm_pool" yaml:"amm_pool"`           // Renamed from Pool for consistency
 	Params                map[string]string `json:"params" yaml:"params"`
 	FirstEmissionBlock    uint64            `json:"first_emission_block" yaml:"first_emission_block"`         // First emission block number
 	Mechanism             uint8             `json:"mechanism" yaml:"mechanism"`                               // Subnet mechanism (0=stable, 1=dynamic)
@@ -41,6 +41,19 @@ func (s Subnet) GetBurnedAmountInt() (math.Int, error) {
 	amount, ok := math.NewIntFromString(s.BurnedAmount)
 	if !ok {
 		return math.ZeroInt(), fmt.Errorf("invalid burned amount: %s", s.BurnedAmount)
+	}
+	return amount, nil
+}
+
+// GetAmmPoolInt returns the AmmPool as math.Int
+func (s Subnet) GetAmmPoolInt() (math.Int, error) {
+	if s.AmmPool == "" {
+		return math.ZeroInt(), nil
+	}
+
+	amount, ok := math.NewIntFromString(s.AmmPool)
+	if !ok {
+		return math.ZeroInt(), fmt.Errorf("invalid amm pool amount: %s", s.AmmPool)
 	}
 	return amount, nil
 }

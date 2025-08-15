@@ -423,7 +423,10 @@ func NewEvmos(
 		blockinflationtypes.StoreKey,
 	)
 	tkeys := storetypes.NewTransientStoreKeys(paramstypes.TStoreKey, evmtypes.TransientKey, feemarkettypes.TransientKey)
-	memKeys := storetypes.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
+	memKeys := storetypes.NewMemoryStoreKeys(
+		capabilitytypes.MemStoreKey,
+		blockinflationtypes.MemStoreKey,
+	)
 	// load state streaming if enabled
 	if err := bApp.RegisterStreamingServices(appOpts, keys); err != nil {
 		fmt.Printf("failed to load state streaming: %s", err)

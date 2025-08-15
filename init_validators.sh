@@ -4,12 +4,7 @@
 set -e
 
 # Check arguments
-# if [ "$#" -lt 7 ]; then
-#     echo "Usage: $0 <validator0_ip> <validator1_ip> <validator2_ip> <validator3_ip> <validator4_ip> <validator5_ip> <validator6_ip>"
-#     echo "Example: $0 1.2.3.4 5.6.7.8 9.10.11.12 13.14.15.16 17.18.19.20 21.22.23.24 25.26.27.28"
-#     exit 1
-# fi
-if [ "$#" -lt 5 ]; then
+if [ "$#" -ne 5 ]; then
     echo "Usage: $0 <validator0_ip> <validator1_ip> <validator2_ip> <validator3_ip> <validator4_ip>"
     echo "Example: $0 1.2.3.4 5.6.7.8 9.10.11.12 13.14.15.16 17.18.19.20"
     exit 1
@@ -77,7 +72,7 @@ for i in $(seq 0 $((NUM_VALIDATORS - 1))); do
     fi
     echo "Cleaning up data on $TARGET_IP..."
     # ssh ubuntu@${TARGET_IP} "pkill hetud || true; rm -rf \"${HOME_PREFIX}\" \"${HOME_PREFIX}\"* 2>/dev/null || true"
-        ssh root@${TARGET_IP} "pkill hetud || true; rm -rf \"${HOME_PREFIX}\" \"${HOME_PREFIX}\"* 2>/dev/null || true"
+    ssh root@"${TARGET_IP}" 'pkill hetud || true; if [[ -z "${HOME_PREFIX:-}" || "'"$HOME_PREFIX"'" = "/" || "'"$HOME_PREFIX"'" = "." ]]; then echo "Refusing to remove HOME_PREFIX" >&2; exit 1; fi; rm -rf "'"$HOME_PREFIX"'" "'"$HOME_PREFIX"'"* 2>/dev/null || true'
 done
 
 # Initialize primary node

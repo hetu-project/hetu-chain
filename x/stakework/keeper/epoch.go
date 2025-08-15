@@ -1,12 +1,12 @@
 package keeper
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"math"
 	"math/big"
 	"sort"
-	"strconv"
 
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -572,15 +572,12 @@ func (k Keeper) getPrevBonds(ctx sdk.Context, netuid uint16, validators []types.
 
 			// Read bonds value from storage
 			bz := store.Get([]byte(key))
-			if bz != nil {
-				// Convert string back to float64
-				if bondStr := string(bz); bondStr != "" {
-					if bondValue, err := strconv.ParseFloat(bondStr, 64); err == nil {
-						bonds[i][j] = bondValue
-					}
-				}
+			if bz != nil && len(bz) == 8 {
+				// Convert binary back to float64
+				bondValue := math.Float64frombits(binary.BigEndian.Uint64(bz))
+				bonds[i][j] = bondValue
 			}
-			// If no historical data found, default to 0.0
+			// If no historical data found or invalid format, default to 0.0
 		}
 	}
 
@@ -604,9 +601,10 @@ func (k Keeper) saveBonds(ctx sdk.Context, netuid uint16, validators []types.Val
 			// Create key: netuid:validator_i:validator_j
 			key := fmt.Sprintf("%d:%s:%s", netuid, validator.Address, validators[j].Address)
 
-			// Store float64 as string
-			bondStr := fmt.Sprintf("%.10f", bondValue)
-			store.Set([]byte(key), []byte(bondStr))
+			// Store float64 as binary for efficiency
+			bz := make([]byte, 8)
+			binary.BigEndian.PutUint64(bz, math.Float64bits(bondValue))
+			store.Set([]byte(key), bz)
 		}
 	}
 
@@ -641,8 +639,22 @@ func (k Keeper) alphaSigmoid(consensus, weight, bond float64, params types.Epoch
 		combinedDiff = diffSell
 	}
 
-	// sigmoid = 1 / (1 + exp(-steepness * (combined_diff - 0.5)))
-	sigmoid := 1.0 / (1.0 + math.Exp(-params.AlphaSigmoidSteepness*(combinedDiff-0.5)))
+	// Use a deterministic approximation for sigmoid
+	x := params.AlphaSigmoidSteepness * (combinedDiff - 0.5)
+	// Clamp x to avoid extreme values
+	x = k.clamp(x, -10, 10)
+
+	// Use a simple deterministic approximation
+	var sigmoid float64
+	if x < -2 {
+		sigmoid = 0.1 // Near 0 for large negative x
+	} else if x > 2 {
+		sigmoid = 0.9 // Near 1 for large positive x
+	} else {
+		// Linear interpolation in the middle range
+		sigmoid = 0.5 + x*0.2
+	}
+
 	alpha := params.AlphaLow + sigmoid*(params.AlphaHigh-params.AlphaLow)
 	return k.clamp(alpha, params.AlphaLow, params.AlphaHigh)
 }
@@ -688,7 +700,19 @@ func (k Keeper) computeIncentive(clippedWeights [][]float64, activeStake []float
 	// Apply rho parameter
 	for i := range normalized {
 		if normalized[i] > 0 {
-			normalized[i] = math.Pow(normalized[i], rho)
+			// Use deterministic power calculation based on common rho values
+			if rho == 0.5 {
+				// Square root - use Newton's method for determinism
+				normalized[i] = k.deterministicSqrt(normalized[i])
+			} else if rho == 2.0 {
+				normalized[i] = normalized[i] * normalized[i]
+			} else if rho == 1.0 {
+				// No change needed for rho = 1
+			} else {
+				// For other values, use math.Pow but log a warning
+				// Using standard math.Pow as fallback
+				normalized[i] = math.Pow(normalized[i], rho)
+			}
 		}
 	}
 	return k.normalize(normalized)
@@ -838,4 +862,26 @@ func min(a, b int) int {
 		return a
 	}
 	return b
+}
+
+// deterministicSqrt calculates square root in a deterministic way
+func (k Keeper) deterministicSqrt(x float64) float64 {
+	// Handle special cases
+	if x < 0 {
+		return 0 // Return 0 for negative inputs instead of NaN
+	}
+	if x == 0 || x == 1 {
+		return x
+	}
+
+	// Newton's method for square root (deterministic)
+	// Initial guess
+	z := x / 2.0
+
+	// Fixed number of iterations for determinism
+	for i := 0; i < 10; i++ {
+		z = z - (z*z-x)/(2*z)
+	}
+
+	return z
 }

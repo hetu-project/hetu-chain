@@ -47,11 +47,11 @@ func GetCmdQueryParams() *cobra.Command {
 				return err
 			}
 
-			queryClient := types.NewQueryClient(clientCtx)
+			queryClient := types.NewQueryClient(clientCtx.GRPCClient)
 
 			res, err := queryClient.Params(cmd.Context(), &types.QueryParamsRequest{})
 			if err != nil {
-				return err
+				return fmt.Errorf("查询参数失败: %w", err)
 			}
 
 			// Use PrintString instead of PrintProto since our types don't implement protobuf
@@ -84,11 +84,11 @@ func GetCmdQuerySubnetRewardParams() *cobra.Command {
 				return err
 			}
 
-			queryClient := types.NewQueryClient(clientCtx)
+			queryClient := types.NewQueryClient(clientCtx.GRPCClient)
 
 			res, err := queryClient.Params(cmd.Context(), &types.QueryParamsRequest{})
 			if err != nil {
-				return err
+				return fmt.Errorf("查询子网奖励参数失败: %w", err)
 			}
 
 			// Print subnet reward specific parameters
@@ -117,11 +117,11 @@ func GetCmdQueryPendingSubnetRewards() *cobra.Command {
 				return err
 			}
 
-			queryClient := types.NewQueryClient(clientCtx)
+			queryClient := types.NewQueryClient(clientCtx.GRPCClient)
 
 			res, err := queryClient.PendingSubnetRewards(cmd.Context(), &types.QueryPendingSubnetRewardsRequest{})
 			if err != nil {
-				return err
+				return fmt.Errorf("查询待处理子网奖励失败: %w", err)
 			}
 
 			// Use PrintString instead of PrintProto since our types don't implement protobuf

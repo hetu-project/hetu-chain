@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	math "cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
@@ -124,6 +125,12 @@ func (p Params) Validate() error {
 	if err := validateSubnetOwnerCut(p.SubnetOwnerCut); err != nil {
 		return err
 	}
+
+	// cross-field invariants
+	if p.SubnetRewardBase.GT(p.SubnetRewardMaxRatio) {
+		return fmt.Errorf("subnet reward base (%s) cannot exceed max ratio (%s)", p.SubnetRewardBase, p.SubnetRewardMaxRatio)
+	}
+
 	return nil
 }
 
@@ -142,6 +149,9 @@ func validateMintDenom(i interface{}) error {
 	}
 	if v == "" {
 		return fmt.Errorf("mint denom cannot be empty")
+	}
+	if err := sdk.ValidateDenom(v); err != nil {
+		return fmt.Errorf("invalid mint denom: %w", err)
 	}
 	return nil
 }
