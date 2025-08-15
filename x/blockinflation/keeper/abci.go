@@ -15,7 +15,9 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) error {
 
 	// Mint and allocate block inflation
 	if err := k.MintAndAllocateBlockInflation(ctx); err != nil {
-		k.Logger(ctx).Error("failed to mint and allocate block inflation", "error", err.Error())
+		k.Logger(ctx).Error("failed to mint and allocate block inflation",
+			"err", err,
+			"height", ctx.BlockHeight())
 		return err
 	}
 

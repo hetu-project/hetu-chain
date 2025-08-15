@@ -277,7 +277,6 @@ func (k Keeper) RunCoinbase(ctx sdk.Context, blockEmission math.Int) error {
 			}
 			if ownerCut.IsPositive() {
 				k.Logger(ctx).Info("Owner cut distributed", "netuid", netuid, "amount", ownerCut.String())
-				// 铸造 Alpha 代币给子网所有者
 				if err := k.MintAlphaTokens(ctx, netuid, subnet.Owner, ownerCut.Uint64()); err != nil {
 					k.Logger(ctx).Error("Failed to mint alpha tokens for subnet owner",
 						"netuid", netuid,
@@ -285,7 +284,6 @@ func (k Keeper) RunCoinbase(ctx sdk.Context, blockEmission math.Int) error {
 						"amount", ownerCut.Uint64(),
 						"error", err,
 					)
-					// 继续处理，不中断流程
 				}
 			}
 		} else {
@@ -327,8 +325,14 @@ func (k Keeper) getStakeMap(ctx sdk.Context, netuid uint16, accounts []string) m
 		stakeMap[acc] = 0
 		for _, s := range stakes {
 			if s.Validator == acc {
-				amount, _ := new(big.Int).SetString(s.Amount, 10)
-				stakeMap[acc] += amount.Uint64()
+				if amount, ok := new(big.Int).SetString(s.Amount, 10); ok {
+					stakeMap[acc] += amount.Uint64()
+				} else {
+					k.Logger(ctx).Error("invalid stake amount string",
+						"netuid", netuid,
+						"validator", acc,
+						"amount", s.Amount)
+				}
 			}
 		}
 	}

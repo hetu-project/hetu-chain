@@ -4,7 +4,8 @@ import (
 	"math/big"
 )
 
-// AddBigIntString adds two big integer strings
+// AddBigIntString adds two base-10 big integer strings and returns the decimal string result.
+// Invalid inputs are treated as "0" (not recommended for financial logic).
 func AddBigIntString(a, b string) string {
 	aInt, _ := new(big.Int).SetString(a, 10)
 	bInt, _ := new(big.Int).SetString(b, 10)
@@ -12,7 +13,8 @@ func AddBigIntString(a, b string) string {
 	return result.String()
 }
 
-// SubBigIntString subtracts two big integer strings
+// SubBigIntString subtracts b from a for base-10 big integer strings and clamps negatives to "0".
+// Invalid inputs are treated as "0" (not recommended for financial logic).
 func SubBigIntString(a, b string) string {
 	aInt, _ := new(big.Int).SetString(a, 10)
 	bInt, _ := new(big.Int).SetString(b, 10)

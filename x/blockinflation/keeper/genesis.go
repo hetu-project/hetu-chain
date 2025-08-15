@@ -11,12 +11,12 @@ func (k Keeper) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data *blockinf
 	// Set parameters
 	k.SetParams(ctx, data.Params)
 
-	// Add debug information
-	k.Logger(ctx).Info("DEBUG InitGenesis: Setting params", "params", data.Params)
+	// Debug: Params being set
+	k.Logger(ctx).Debug("InitGenesis: setting params", "params", data.Params)
 
 	// Verify parameters were set correctly
 	params := k.GetParams(ctx)
-	k.Logger(ctx).Info("DEBUG InitGenesis: Retrieved params", "params", params)
+	k.Logger(ctx).Debug("InitGenesis: retrieved params", "params", params)
 
 	// Set total issuance
 	if !data.TotalIssuance.Amount.IsNil() {
@@ -32,8 +32,8 @@ func (k Keeper) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data *blockinf
 	if !data.PendingSubnetRewards.Amount.IsNil() {
 		k.SetPendingSubnetRewards(ctx, data.PendingSubnetRewards)
 	}
-	k.Logger(ctx).Debug("DEBUG InitGenesis Params", "params", data.Params)
-	k.Logger(ctx).Info("initialized blockinflation genesis state",
+
+	k.Logger(ctx).Info("blockinflation: initialized genesis state",
 		"total_issuance", data.TotalIssuance.String(),
 		"total_burned", data.TotalBurned.String(),
 		"pending_subnet_rewards", data.PendingSubnetRewards.String(),
@@ -42,11 +42,10 @@ func (k Keeper) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data *blockinf
 
 // ExportGenesis returns the blockinflation module's exported genesis.
 func (k Keeper) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) *blockinflationtypes.GenesisState {
-	genesis := blockinflationtypes.DefaultGenesisState()
-	genesis.Params = k.GetParams(ctx)
-	genesis.TotalIssuance = k.GetTotalIssuance(ctx)
-	genesis.TotalBurned = k.GetTotalBurned(ctx)
-	genesis.PendingSubnetRewards = k.GetPendingSubnetRewards(ctx)
-
-	return genesis
+	return &blockinflationtypes.GenesisState{
+		Params:               k.GetParams(ctx),
+		TotalIssuance:        k.GetTotalIssuance(ctx),
+		TotalBurned:          k.GetTotalBurned(ctx),
+		PendingSubnetRewards: k.GetPendingSubnetRewards(ctx),
+	}
 }

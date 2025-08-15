@@ -1,8 +1,6 @@
 package types
 
 import (
-	"encoding/json"
-
 	"cosmossdk.io/math"
 )
 
@@ -82,29 +80,7 @@ type NeuronInfo struct {
 	PrometheusPort         uint32 `json:"prometheus_port" yaml:"prometheus_port"`
 }
 
-// MarshalJSON implements json.Marshaler
-func (s Subnet) MarshalJSON() ([]byte, error) {
-	type Alias Subnet
-	return json.Marshal(&struct {
-		*Alias
-	}{
-		Alias: (*Alias)(&s),
-	})
-}
-
-// UnmarshalJSON implements json.Unmarshaler
-func (s *Subnet) UnmarshalJSON(data []byte) error {
-	type Alias Subnet
-	aux := &struct {
-		*Alias
-	}{
-		Alias: (*Alias)(s),
-	}
-	if err := json.Unmarshal(data, &aux); err != nil {
-		return err
-	}
-	return nil
-}
+// Default JSON marshalling is sufficient for Subnet; custom methods not required.
 
 // SubnetPriceData represents subnet price-related data
 type SubnetPriceData struct {

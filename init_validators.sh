@@ -99,7 +99,7 @@ for i in $(seq 0 $((NUM_VALIDATORS - 1))); do
         --home "${HOME_PREFIX}"
 
     echo "Adding genesis account for validator ${KEYS[$i]}..."
-    hetud add-genesis-account "${KEYS[$i]}" "${GENESIS_BALANCE}${DENOM},${GENESIS_BALANCE}gas" \
+    hetud add-genesis-account "${KEYS[$i]}" "${GENESIS_BALANCE}${DENOM}" \
         --keyring-backend="${KEYRING}" \
         --home "${HOME_PREFIX}"
 done
@@ -138,7 +138,7 @@ jq '.app_state["claims"]["params"]["duration_until_decay"]="100000s"' "$GENESIS"
 
 # Claim module account:
 # 0xA61808Fe40fEb8B3433778BBC2ecECCAA47c8c47 || hetu15cvq3ljql6utxseh0zau9m8ve2j8erz89c94rj
-jq -r --arg amount_to_claim "$amount_to_claim" '.app_state["bank"]["balances"] += [{"address":"hetu15cvq3ljql6utxseh0zau9m8ve2j8erz89c94rj","coins":[{"denom":"ahetu", "amount":$amount_to_claim}, {"denom":"gas", "amount":$amount_to_claim}]}]' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+jq -r --arg amount_to_claim "$amount_to_claim" '.app_state["bank"]["balances"] += [{"address":"hetu15cvq3ljql6utxseh0zau9m8ve2j8erz89c94rj","coins":[{"denom":"ahetu", "amount":$amount_to_claim}]}]' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
 
 # Change proposal periods to pass within a reasonable time
 sed -i.bak 's/"max_deposit_period": "172800s"/"max_deposit_period": "30s"/g' "$GENESIS"
@@ -148,10 +148,16 @@ sed -i.bak 's/"expedited_voting_period": "86400s"/"expedited_voting_period": "15
 # Create gentx directory in primary node
 mkdir -p "${HOME_PREFIX}/config/gentx"
 
+# Ensure bc is installed
+command -v bc >/dev/null 2>&1 || { echo >&2 "bc not installed."; exit 1; }
+
 # Calculate total supply including claims amount
 total_supply=$(echo "$NUM_VALIDATORS * $GENESIS_BALANCE + $amount_to_claim" | bc)
-jq -r --arg total_supply "$total_supply" '.app_state["bank"]["supply"][0]["amount"]=$total_supply' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
-jq -r --arg total_supply "$total_supply" '.app_state["bank"]["supply"][1]["amount"]=$total_supply' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+# Update only the ahetu supply entry
+jq -r --arg total_supply "$total_supply" '
+  .app_state["bank"]["supply"] |=
+  (map(if .denom == "ahetu" then .amount = $total_supply else . end))
+' "$GENESIS" >"$TMP_GENESIS" && mv "$GENESIS" "$GENESIS.bak" && mv "$TMP_GENESIS" "$GENESIS"
 
 # Create clone directories, gentx, and get node IDs
 declare -a NODE_IDS
@@ -196,7 +202,7 @@ for i in $(seq 0 $((NUM_VALIDATORS - 1))); do
         "$CONFIG_TOML"
 
     # Set minimum gas price
-    sed -i.bak 's/^minimum-gas-prices *=.*/minimum-gas-prices = "0.0001gas"/g' "$APP_TOML"
+    sed -i.bak 's/^minimum-gas-prices *=.*/minimum-gas-prices = "0.0001ahetu"/g' "$APP_TOML"
 
     # Configure API and EVM settings in app.toml
     sed -i.bak \

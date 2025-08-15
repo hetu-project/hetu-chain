@@ -323,7 +323,7 @@ func (k *Keeper) GetAccountOrEmpty(ctx sdk.Context, addr common.Address) statedb
 }
 
 // GetNonce returns the sequence number of an account, returns 0 if not exists.
-func (k Keeper) GetNonce(ctx sdk.Context, addr common.Address) uint64 {
+func (k *Keeper) GetNonce(ctx sdk.Context, addr common.Address) uint64 {
 	cosmosAddr := sdk.AccAddress(addr.Bytes())
 	acct := k.accountKeeper.GetAccount(ctx, cosmosAddr)
 	if acct == nil {

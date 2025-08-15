@@ -1,9 +1,10 @@
 package keeper
 
 import (
+	"bytes"
 	"fmt"
 	"math/big"
-	"strings"
+	"sync"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -13,6 +14,20 @@ import (
 	"github.com/hetu-project/hetu/v1/x/blockinflation/types"
 	eventabi "github.com/hetu-project/hetu/v1/x/event/abi"
 )
+
+var (
+	alphaABIOnce   sync.Once
+	alphaABIVal    abi.ABI
+	alphaABIValErr error
+)
+
+// getAlphaTokenABI returns the cached AlphaToken ABI or parses it once if not cached
+func getAlphaTokenABI() (abi.ABI, error) {
+	alphaABIOnce.Do(func() {
+		alphaABIVal, alphaABIValErr = abi.JSON(bytes.NewReader(eventabi.AlphaTokenABI))
+	})
+	return alphaABIVal, alphaABIValErr
+}
 
 // MintAlphaTokens mints alpha tokens to the specified address
 func (k Keeper) MintAlphaTokens(ctx sdk.Context, netuid uint16, recipient string, amount uint64) error {
@@ -34,10 +49,10 @@ func (k Keeper) MintAlphaTokens(ctx sdk.Context, netuid uint16, recipient string
 		return fmt.Errorf("invalid alpha token address: %s", alphaTokenAddress)
 	}
 
-	// 4. Get the AlphaToken ABI
-	alphaTokenABI, err := abi.JSON(strings.NewReader(string(eventabi.AlphaTokenABI)))
+	// 4. Get the AlphaToken ABI (cached)
+	alphaTokenABI, err := getAlphaTokenABI()
 	if err != nil {
-		return fmt.Errorf("failed to parse AlphaToken ABI: %w", err)
+		return fmt.Errorf("failed to load AlphaToken ABI: %w", err)
 	}
 
 	// 5. Convert recipient address to Ethereum address
