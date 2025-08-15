@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"math/big"
+	"strings"
 	"sync"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -37,16 +38,17 @@ func (k Keeper) MintAlphaTokens(ctx sdk.Context, netuid uint16, recipient string
 		return fmt.Errorf("subnet not found: %d", netuid)
 	}
 
-	// 2. Check if the subnet has an AlphaToken address in its params
+	// 2. Resolve and validate the subnet's AlphaToken address
 	alphaTokenAddress, ok := subnet.Params["alpha_token"]
-	if !ok || alphaTokenAddress == "" {
-		return fmt.Errorf("subnet has no alpha token address in params: %d", netuid)
+	alphaTokenAddress = strings.TrimSpace(alphaTokenAddress)
+	if !ok || alphaTokenAddress == "" || !common.IsHexAddress(alphaTokenAddress) {
+		return fmt.Errorf("invalid or missing alpha token address in subnet params: %d", netuid)
 	}
 
-	// 3. Parse the AlphaToken address
+	// 3. Parse and validate the AlphaToken address
 	alphaTokenAddr := common.HexToAddress(alphaTokenAddress)
-	if (alphaTokenAddr == common.Address{}) {
-		return fmt.Errorf("invalid alpha token address: %s", alphaTokenAddress)
+	if alphaTokenAddr == (common.Address{}) {
+		return fmt.Errorf("alpha token address cannot be the zero address: %s", alphaTokenAddress)
 	}
 
 	// 4. Get the AlphaToken ABI (cached)
@@ -55,10 +57,14 @@ func (k Keeper) MintAlphaTokens(ctx sdk.Context, netuid uint16, recipient string
 		return fmt.Errorf("failed to load AlphaToken ABI: %w", err)
 	}
 
-	// 5. Convert recipient address to Ethereum address
-	recipientAddr := common.HexToAddress(recipient)
-	if (recipientAddr == common.Address{}) {
+	// 5. Validate and convert recipient address
+	recipient = strings.TrimSpace(recipient)
+	if !common.IsHexAddress(recipient) {
 		return fmt.Errorf("invalid recipient address: %s", recipient)
+	}
+	recipientAddr := common.HexToAddress(recipient)
+	if recipientAddr == (common.Address{}) {
+		return fmt.Errorf("recipient address cannot be the zero address: %s", recipient)
 	}
 
 	// 6. Convert amount to big.Int

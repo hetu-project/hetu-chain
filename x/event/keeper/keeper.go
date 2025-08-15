@@ -422,49 +422,49 @@ func (k Keeper) handleNetworkRegistered(ctx sdk.Context, log ethTypes.Log) {
 
 	// Override Core network parameters (if event has values)
 	if event.Hyperparams.Rho != 0 {
-		params["rho"] = strconv.FormatFloat(float64(event.Hyperparams.Rho)/10000.0, 'f', -1, 64)
+		params[types.KeyRho] = strconv.FormatFloat(float64(event.Hyperparams.Rho)/10000.0, 'f', -1, 64)
 	}
 	if event.Hyperparams.Kappa != 0 {
-		params["kappa"] = fmt.Sprintf("%d", event.Hyperparams.Kappa)
+		params[types.KeyKappa] = fmt.Sprintf("%d", event.Hyperparams.Kappa)
 	}
 	if event.Hyperparams.ImmunityPeriod != 0 {
-		params["immunity_period"] = fmt.Sprintf("%d", event.Hyperparams.ImmunityPeriod)
+		params[types.KeyImmunityPeriod] = fmt.Sprintf("%d", event.Hyperparams.ImmunityPeriod)
 	}
 	if event.Hyperparams.Tempo != 0 {
-		params["tempo"] = fmt.Sprintf("%d", event.Hyperparams.Tempo)
+		params[types.KeyTempo] = fmt.Sprintf("%d", event.Hyperparams.Tempo)
 	}
 	if event.Hyperparams.MaxValidators != 0 {
-		params["max_validators"] = fmt.Sprintf("%d", event.Hyperparams.MaxValidators)
+		params[types.KeyMaxValidators] = fmt.Sprintf("%d", event.Hyperparams.MaxValidators)
 	}
 	if event.Hyperparams.ActivityCutoff != 0 {
-		params["activity_cutoff"] = fmt.Sprintf("%d", event.Hyperparams.ActivityCutoff)
+		params[types.KeyActivityCutoff] = fmt.Sprintf("%d", event.Hyperparams.ActivityCutoff)
 	}
 	if event.Hyperparams.MaxAllowedUids != 0 {
-		params["max_allowed_uids"] = fmt.Sprintf("%d", event.Hyperparams.MaxAllowedUids)
+		params[types.KeyMaxAllowedUids] = fmt.Sprintf("%d", event.Hyperparams.MaxAllowedUids)
 	}
 	if event.Hyperparams.MaxAllowedValidators != 0 {
-		params["max_allowed_validators"] = fmt.Sprintf("%d", event.Hyperparams.MaxAllowedValidators)
+		params[types.KeyMaxAllowedValidators] = fmt.Sprintf("%d", event.Hyperparams.MaxAllowedValidators)
 	}
 	if event.Hyperparams.MinAllowedWeights != 0 {
-		params["min_allowed_weights"] = fmt.Sprintf("%d", event.Hyperparams.MinAllowedWeights)
+		params[types.KeyMinAllowedWeights] = fmt.Sprintf("%d", event.Hyperparams.MinAllowedWeights)
 	}
 	if event.Hyperparams.MaxWeightsLimit != 0 {
-		params["max_weights_limit"] = fmt.Sprintf("%d", event.Hyperparams.MaxWeightsLimit)
+		params[types.KeyMaxWeightsLimit] = fmt.Sprintf("%d", event.Hyperparams.MaxWeightsLimit)
 	}
 
 	// Directly add Economic & Governance parameters
-	params["base_neuron_cost"] = event.Hyperparams.BaseNeuronCost.String()
-	params["current_difficulty"] = fmt.Sprintf("%d", event.Hyperparams.CurrentDifficulty)
-	params["target_regs_per_interval"] = fmt.Sprintf("%d", event.Hyperparams.TargetRegsPerInterval)
-	params["max_regs_per_block"] = fmt.Sprintf("%d", event.Hyperparams.MaxRegsPerBlock)
-	params["weights_rate_limit"] = fmt.Sprintf("%d", event.Hyperparams.WeightsRateLimit)
-	params["weights_set_rate_limit"] = fmt.Sprintf("%d", event.Hyperparams.WeightsRateLimit) // Compatible with stakework
-	params["registration_allowed"] = fmt.Sprintf("%t", event.Hyperparams.RegistrationAllowed)
-	params["commit_reveal_enabled"] = fmt.Sprintf("%t", event.Hyperparams.CommitRevealEnabled)
-	params["commit_reveal_period"] = fmt.Sprintf("%d", event.Hyperparams.CommitRevealPeriod)
-	params["serving_rate_limit"] = fmt.Sprintf("%d", event.Hyperparams.ServingRateLimit)
-	params["validator_threshold"] = event.Hyperparams.ValidatorThreshold.String()
-	params["neuron_threshold"] = event.Hyperparams.NeuronThreshold.String()
+	params[types.KeyBaseNeuronCost] = event.Hyperparams.BaseNeuronCost.String()
+	params[types.KeyCurrentDifficulty] = fmt.Sprintf("%d", event.Hyperparams.CurrentDifficulty)
+	params[types.KeyTargetRegsPerInterval] = fmt.Sprintf("%d", event.Hyperparams.TargetRegsPerInterval)
+	params[types.KeyMaxRegsPerBlock] = fmt.Sprintf("%d", event.Hyperparams.MaxRegsPerBlock)
+	params[types.KeyWeightsRateLimit] = fmt.Sprintf("%d", event.Hyperparams.WeightsRateLimit)
+	params[types.KeyWeightsSetRateLimit] = fmt.Sprintf("%d", event.Hyperparams.WeightsRateLimit) // Compatible with stakework
+	params[types.KeyRegistrationAllowed] = fmt.Sprintf("%t", event.Hyperparams.RegistrationAllowed)
+	params[types.KeyCommitRevealEnabled] = fmt.Sprintf("%t", event.Hyperparams.CommitRevealEnabled)
+	params[types.KeyCommitRevealPeriod] = fmt.Sprintf("%d", event.Hyperparams.CommitRevealPeriod)
+	params[types.KeyServingRateLimit] = fmt.Sprintf("%d", event.Hyperparams.ServingRateLimit)
+	params[types.KeyValidatorThreshold] = event.Hyperparams.ValidatorThreshold.String()
+	params[types.KeyNeuronThreshold] = event.Hyperparams.NeuronThreshold.String()
 
 	// Create subnet structure
 	subnet := types.Subnet{

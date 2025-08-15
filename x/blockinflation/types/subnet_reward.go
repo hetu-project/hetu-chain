@@ -2,6 +2,7 @@ package types
 
 import (
 	stdmath "math"
+	"strconv"
 
 	"cosmossdk.io/math"
 )
@@ -13,9 +14,14 @@ func CalculateSubnetRewardRatio(params Params, subnetCount uint64) math.LegacyDe
 		return math.LegacyZeroDec()
 	}
 
-	// Calculate log(1 + subnet_count) and convert to LegacyDec
-	logFloat := stdmath.Log(float64(1 + subnetCount))
-	logValue := math.LegacyNewDecFromInt(math.NewInt(int64(logFloat * 1000000))).Quo(math.LegacyNewDec(1000000))
+	// Calculate log(1 + subnet_count) with better numerical stability and convert to LegacyDec
+	logFloat := stdmath.Log1p(float64(subnetCount))
+	logStr := strconv.FormatFloat(logFloat, 'f', 18, 64) // 18 fractional digits to match LegacyDec precision
+	logValue, err := math.LegacyNewDecFromStr(logStr)
+	if err != nil {
+		// Fallback to a less precise but safe conversion if string parsing fails
+		logValue = math.LegacyNewDecWithPrec(int64(logFloat*1000000000000000000), 18)
+	}
 
 	// Calculate base + k * log(1 + subnet_count)
 	ratio := params.SubnetRewardBase.Add(params.SubnetRewardK.Mul(logValue))

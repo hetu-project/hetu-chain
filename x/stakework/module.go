@@ -113,8 +113,7 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // BeginBlock executes at the beginning of each block
 func (am AppModule) BeginBlock(ctx sdk.Context, _ interface{}) {
-	// 移除 checkAndRunEpochs 调用
-	// 依赖 blockinflation 模块的 coinbase.go 来运行 epoch
+
 }
 
 // Dependency injection support

@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -19,11 +21,13 @@ type GenesisState struct {
 
 // DefaultGenesisState returns default genesis state
 func DefaultGenesisState() *GenesisState {
+	p := DefaultParams()
+	denom := p.MintDenom
 	return &GenesisState{
-		Params:               DefaultParams(),
-		TotalIssuance:        sdk.NewCoin("ahetu", math.ZeroInt()),
-		TotalBurned:          sdk.NewCoin("ahetu", math.ZeroInt()),
-		PendingSubnetRewards: sdk.NewCoin("ahetu", math.ZeroInt()),
+		Params:               p,
+		TotalIssuance:        sdk.NewCoin(denom, math.ZeroInt()),
+		TotalBurned:          sdk.NewCoin(denom, math.ZeroInt()),
+		PendingSubnetRewards: sdk.NewCoin(denom, math.ZeroInt()),
 	}
 }
 
@@ -46,6 +50,17 @@ func (gs GenesisState) Validate() error {
 	// Validate pending subnet rewards
 	if err := gs.PendingSubnetRewards.Validate(); err != nil {
 		return err
+	}
+
+	// Ensure all coins use the configured mint denom
+	if gs.TotalIssuance.Denom != gs.Params.MintDenom {
+		return fmt.Errorf("total_issuance denom %q must match params.mint_denom %q", gs.TotalIssuance.Denom, gs.Params.MintDenom)
+	}
+	if gs.TotalBurned.Denom != gs.Params.MintDenom {
+		return fmt.Errorf("total_burned denom %q must match params.mint_denom %q", gs.TotalBurned.Denom, gs.Params.MintDenom)
+	}
+	if gs.PendingSubnetRewards.Denom != gs.Params.MintDenom {
+		return fmt.Errorf("pending_subnet_rewards denom %q must match params.mint_denom %q", gs.PendingSubnetRewards.Denom, gs.Params.MintDenom)
 	}
 
 	return nil

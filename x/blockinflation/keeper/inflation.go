@@ -50,14 +50,12 @@ func (k Keeper) CalculateBlockEmission(ctx sdk.Context) (math.Int, error) {
 	flooredLog := stdmath.Floor(logResult)
 	flooredLogInt := int64(flooredLog)
 
-	// Calculate 2^flooredLog
-	multiplier := stdmath.Pow(2.0, float64(flooredLogInt))
-
-	// Calculate block emission percentage: 1 / multiplier
-	blockEmissionPercentage := math.LegacyOneDec().Quo(math.LegacyNewDecWithPrec(int64(multiplier*1000), 3))
-
-	// Calculate actual block emission using high-precision arithmetic
-	blockEmission := defaultBlockEmissionDec.Mul(blockEmissionPercentage)
+	// Calculate actual block emission by halving default emission flooredLogInt times.
+	// This avoids float math and overflow.
+	blockEmission := defaultBlockEmissionDec
+	for i := int64(0); i < flooredLogInt; i++ {
+		blockEmission = blockEmission.Quo(math.LegacyNewDec(2))
+	}
 
 	// Convert back to math.Int with proper rounding
 	blockEmissionInt := blockEmission.TruncateInt()
@@ -69,8 +67,6 @@ func (k Keeper) CalculateBlockEmission(ctx sdk.Context) (math.Int, error) {
 		"log_arg", logArg.String(),
 		"log_result", fmt.Sprintf("%.6f", logResult),
 		"floored_log", flooredLogInt,
-		"multiplier", fmt.Sprintf("%.6f", multiplier),
-		"emission_percentage", blockEmissionPercentage.String(),
 		"block_emission", blockEmissionInt.String(),
 	)
 
@@ -159,7 +155,10 @@ func (k Keeper) MintAndAllocateBlockInflation(ctx sdk.Context) error {
 
 	// Update total issuance
 	currentIssuance := k.GetTotalIssuance(ctx)
-	newIssuance := currentIssuance.Add(mintedCoin)
+	if currentIssuance.Denom != mintedCoin.Denom {
+		return fmt.Errorf("denom mismatch: totalIssuance=%s minted=%s", currentIssuance.Denom, mintedCoin.Denom)
+	}
+	newIssuance := sdk.NewCoin(currentIssuance.Denom, currentIssuance.Amount.Add(mintedCoin.Amount))
 	k.SetTotalIssuance(ctx, newIssuance)
 
 	k.Logger(ctx).Info("minted and allocated block inflation",

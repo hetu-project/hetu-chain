@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euo pipefail
+IFS=$'\n\t'
 # Set environment variables
 KEY="dev0"
 CHAINID="hetu_560000-1"
