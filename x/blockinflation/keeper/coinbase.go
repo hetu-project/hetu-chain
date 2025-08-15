@@ -200,8 +200,19 @@ func (k Keeper) RunCoinbase(ctx sdk.Context, blockEmission math.Int) error {
 
 			k.Logger(ctx).Debug("Draining pending emission", "netuid", netuid, "pending_alpha", pendingAlpha.String(), "owner_cut", ownerCut.String())
 
+			// Check if pendingAlpha exceeds uint64 max value
+			if !pendingAlpha.IsUint64() {
+				k.Logger(ctx).Error("pending emission exceeds uint64, clamping", "netuid", netuid, "pending_alpha", pendingAlpha.String())
+			}
+
+			// Use a clamped value for emission if necessary
+			emissionForEpoch := pendingAlpha
+			if !pendingAlpha.IsUint64() {
+				emissionForEpoch = math.NewIntFromUint64(^uint64(0)) // max uint64
+			}
+
 			// Run epoch consensus
-			epochResult, err := k.stakeworkKeeper.RunEpoch(ctx, netuid, pendingAlpha.Uint64())
+			epochResult, err := k.stakeworkKeeper.RunEpoch(ctx, netuid, emissionForEpoch.Uint64())
 			if err != nil {
 				k.Logger(ctx).Error("RunEpoch failed", "netuid", netuid, "error", err)
 				continue
@@ -241,12 +252,26 @@ func (k Keeper) RunCoinbase(ctx sdk.Context, blockEmission math.Int) error {
 
 			// Dividend allocation (no parent-child relationship, direct allocation, weight by subnet stake)
 			alphaDividends := map[string]uint64{}
-			for addr, alphaDiv := range dividends {
-				var share float64
-				if totalAlphaDivs > 0 {
-					share = float64(alphaDiv) / float64(totalAlphaDivs)
+			if totalAlphaDivs > 0 && pendingValidatorAlpha > 0 {
+				var allocated uint64
+				// First pass: floor division
+				for addr, d := range dividends {
+					alloc := (uint64(d) * pendingValidatorAlpha) / uint64(totalAlphaDivs)
+					alphaDividends[addr] = alloc
+					allocated += alloc
 				}
-				alphaDividends[addr] = uint64(float64(pendingValidatorAlpha) * share)
+				// Second pass: distribute the remainder deterministically by address order
+				if allocated < pendingValidatorAlpha {
+					remainder := pendingValidatorAlpha - allocated
+					addrs := make([]string, 0, len(dividends))
+					for a := range dividends {
+						addrs = append(addrs, a)
+					}
+					sort.Strings(addrs)
+					for i := uint64(0); i < remainder && i < uint64(len(addrs)); i++ {
+						alphaDividends[addrs[i]]++
+					}
+				}
 			}
 			k.Logger(ctx).Debug("Alpha dividends", "netuid", netuid, "alpha_dividends", alphaDividends)
 

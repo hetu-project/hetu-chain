@@ -16,7 +16,6 @@
 package keeper
 
 import (
-	"fmt"
 	"math/big"
 
 	tmtypes "github.com/cometbft/cometbft/types"
@@ -184,18 +183,7 @@ func (k *Keeper) ApplyTransaction(ctx sdk.Context, tx *ethtypes.Transaction) (*t
 	}
 
 	logs := types.LogsToEthereum(res.Logs)
-	fmt.Printf("Testing event processing call 1: %v\n", logs)
-	// === Event business processing ===
-	if k.eventHandler != nil && len(logs) > 0 {
-		// []*types.Log to []types.Log
-		plainLogs := make([]ethtypes.Log, len(logs))
-		for i, l := range logs {
-			plainLogs[i] = *l
-		}
-		fmt.Printf("Testing event processing call 2: %v\n", plainLogs)
-		k.eventHandler.HandleEvmLogs(ctx, plainLogs)
-	}
-	// ===================
+	// Event processing moved below (after PostTxProcessing/commit)
 
 	// Compute block bloom filter
 	if len(logs) > 0 {
@@ -249,6 +237,16 @@ func (k *Keeper) ApplyTransaction(ctx sdk.Context, tx *ethtypes.Transaction) (*t
 			res.Logs = types.NewLogsFromEth(receipt.Logs)
 		}
 	}
+
+	// === Event business processing (run after commit & only for DeliverTx) ===
+	if k.eventHandler != nil && !ctx.IsCheckTx() && len(receipt.Logs) > 0 {
+		plainLogs := make([]ethtypes.Log, len(receipt.Logs))
+		for i, l := range receipt.Logs {
+			plainLogs[i] = *l
+		}
+		k.eventHandler.HandleEvmLogs(ctx, plainLogs)
+	}
+	// =====================================================================
 
 	// refund gas in order to match the Ethereum gas consumption instead of the default SDK one.
 	if err = k.RefundGas(ctx, msg, msg.Gas()-res.GasUsed, cfg.Params.EvmDenom); err != nil {

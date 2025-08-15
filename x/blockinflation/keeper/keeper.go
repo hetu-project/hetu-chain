@@ -85,8 +85,9 @@ func (k Keeper) GetTotalIssuance(ctx sdk.Context) sdk.Coin {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(blockinflationtypes.TotalIssuanceKey)
 	if bz == nil {
-		// Return zero coin if not found
-		return sdk.NewCoin("ahetu", math.ZeroInt())
+		// Return zero coin if not found, using configured denom
+		denom := k.GetParams(ctx).MintDenom
+		return sdk.NewCoin(denom, math.ZeroInt())
 	}
 
 	var totalIssuance sdk.Coin
@@ -106,8 +107,9 @@ func (k Keeper) GetTotalBurned(ctx sdk.Context) sdk.Coin {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(blockinflationtypes.TotalBurnedKey)
 	if bz == nil {
-		// Return zero coin if not found
-		return sdk.NewCoin("ahetu", math.ZeroInt())
+		// Return zero coin if not found, using configured denom
+		denom := k.GetParams(ctx).MintDenom
+		return sdk.NewCoin(denom, math.ZeroInt())
 	}
 
 	var totalBurned sdk.Coin
@@ -127,8 +129,9 @@ func (k Keeper) GetPendingSubnetRewards(ctx sdk.Context) sdk.Coin {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(blockinflationtypes.PendingSubnetRewardsKey)
 	if bz == nil {
-		// Return zero coin if not found
-		return sdk.NewCoin("ahetu", math.ZeroInt())
+		// Return zero coin if not found, using configured denom
+		denom := k.GetParams(ctx).MintDenom
+		return sdk.NewCoin(denom, math.ZeroInt())
 	}
 
 	var pendingRewards sdk.Coin
@@ -185,9 +188,18 @@ func (k Keeper) BurnTokens(ctx sdk.Context, amount sdk.Coin) error {
 	newBurned := currentBurned.Add(amount)
 	k.SetTotalBurned(ctx, newBurned)
 
-	// Update total issuance (decrease)
+	// Update total issuance (decrease) with underflow guard
 	currentIssuance := k.GetTotalIssuance(ctx)
-	newIssuance := currentIssuance.Sub(amount)
+	var newIssuance sdk.Coin
+	if currentIssuance.Amount.LT(amount.Amount) {
+		k.Logger(ctx).Warn("total issuance underflow on burn; saturating to zero",
+			"current_issuance", currentIssuance.String(),
+			"burn_amount", amount.String(),
+		)
+		newIssuance = sdk.NewCoin(amount.Denom, math.ZeroInt())
+	} else {
+		newIssuance = currentIssuance.Sub(amount)
+	}
 	k.SetTotalIssuance(ctx, newIssuance)
 
 	k.Logger(ctx).Info("burned tokens",

@@ -238,13 +238,9 @@ func (k Keeper) getSubnetValidators(ctx sdk.Context, netuid uint16) []types.Vali
 
 	// Process stake information
 	for _, stake := range stakes {
-		amount, _ := new(big.Int).SetString(stake.Amount, 10)
-		stakeFloat := new(big.Float).SetInt(amount)
-		stakeValue, _ := stakeFloat.Float64()
-
 		validator := types.ValidatorInfo{
 			Address: stake.Validator,
-			Stake:   stakeValue,
+			Stake:   stake.Amount, // Keep as string to avoid precision loss
 			Weights: []uint64{},
 			Active:  true, // Default active, will be updated later
 		}
@@ -308,7 +304,17 @@ func (k Keeper) getLastActiveBlock(ctx sdk.Context, netuid uint16, validator str
 func (k Keeper) getStakeWeights(ctx sdk.Context, netuid uint16, validators []types.ValidatorInfo) []float64 {
 	stake := make([]float64, len(validators))
 	for i, validator := range validators {
-		stake[i] = validator.Stake
+		// Parse string stake to big.Int, then convert to float64
+		bigIntStake, err := validator.GetStakeBigInt()
+		if err != nil {
+			k.Logger(ctx).Error("Failed to parse stake", "validator", validator.Address, "stake", validator.Stake, "error", err)
+			continue // Skip this validator or set to 0
+		}
+
+		// Convert to float64 (with potential precision loss, but needed for algorithm)
+		stakeFloat := new(big.Float).SetInt(bigIntStake)
+		stakeValue, _ := stakeFloat.Float64()
+		stake[i] = stakeValue
 	}
 	return stake
 }

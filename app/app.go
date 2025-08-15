@@ -337,7 +337,7 @@ type Evmos struct {
 	Erc20Keeper          erc20keeper.Keeper
 	EpochsKeeper         epochskeeper.Keeper
 	VestingKeeper        vestingkeeper.Keeper
-	StakeworkKeeper      stakeworkkeeper.Keeper
+	StakeworkKeeper      *stakeworkkeeper.Keeper
 	BlockInflationKeeper *blockinflationkeeper.Keeper
 
 	// the module manager
@@ -714,6 +714,13 @@ func NewEvmos(
 		globalStakingABI,
 	)
 
+	// Initialize StakeworkKeeper (must be after EventKeeper)
+	app.StakeworkKeeper = stakeworkkeeper.NewKeeper(
+		appCodec,
+		keys["stakework"],
+		app.EventKeeper,
+	)
+
 	subspace := app.GetSubspace(blockinflationtypes.ModuleName)
 	// fmt.Printf("DEBUG: blockinflation subspace is zero? %v, hasKeyTable? %v\n", reflect.ValueOf(subspace).IsZero(), subspace.HasKeyTable())
 	app.BlockInflationKeeper = blockinflationkeeper.NewKeeper(
@@ -957,13 +964,6 @@ func NewEvmos(
 		// so we have to ignore this error explicitly.
 		_ = app.tpsCounter.start(context.Background())
 	}()
-
-	// Initialize StakeworkKeeper (must be after EventKeeper)
-	app.StakeworkKeeper = stakeworkkeeper.NewKeeper(
-		appCodec,
-		keys["stakework"],
-		app.EventKeeper,
-	)
 
 	// Set EventKeeper as EVM event handler
 	app.EvmKeeper.SetEventHandler(app.EventKeeper)

@@ -406,5 +406,8 @@ func (k Keeper) AddTransientGasUsed(ctx sdk.Context, gasUsed uint64) (uint64, er
 
 // SetEventHandler sets the event processing dependency
 func (k *Keeper) SetEventHandler(handler EventHandler) {
+	if k.eventHandler != nil {
+		panic("cannot set event handler twice")
+	}
 	k.eventHandler = handler
 }

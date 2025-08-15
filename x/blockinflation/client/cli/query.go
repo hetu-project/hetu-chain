@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -91,11 +92,11 @@ func GetCmdQuerySubnetRewardParams() *cobra.Command {
 			}
 
 			// Print subnet reward specific parameters
-			fmt.Printf("Subnet Reward Base: %s\n", res.Params.SubnetRewardBase.String())
-			fmt.Printf("Subnet Reward K: %s\n", res.Params.SubnetRewardK.String())
-			fmt.Printf("Subnet Reward Max Ratio: %s\n", res.Params.SubnetRewardMaxRatio.String())
-
-			return nil
+			return clientCtx.PrintString(
+				fmt.Sprintf("Subnet Reward Base: %s\n", res.Params.SubnetRewardBase.String()) +
+					fmt.Sprintf("Subnet Reward K: %s\n", res.Params.SubnetRewardK.String()) +
+					fmt.Sprintf("Subnet Reward Max Ratio: %s\n", res.Params.SubnetRewardMaxRatio.String()),
+			)
 		},
 	}
 
@@ -141,10 +142,11 @@ func GetCmdQuerySubnetEmissionData() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Parse netuid
-			var netuid uint16
-			if _, err := fmt.Sscanf(args[0], "%d", &netuid); err != nil {
-				return fmt.Errorf("invalid netuid: %s", args[0])
+			u, err := strconv.ParseUint(args[0], 10, 16)
+			if err != nil {
+				return fmt.Errorf("invalid netuid (must be 0-65535): %s", args[0])
 			}
+			netuid := uint16(u)
 
 			// For now, just print a message since we don't have gRPC service implemented
 			fmt.Printf("Subnet emission data query for netuid %d\n", netuid)
@@ -216,10 +218,11 @@ func GetCmdQuerySubnetPrice() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Parse netuid
-			var netuid uint16
-			if _, err := fmt.Sscanf(args[0], "%d", &netuid); err != nil {
-				return fmt.Errorf("invalid netuid: %s", args[0])
+			u, err := strconv.ParseUint(args[0], 10, 16)
+			if err != nil {
+				return fmt.Errorf("invalid netuid (must be 0-65535): %s", args[0])
 			}
+			netuid := uint16(u)
 
 			// For now, just print a message since we don't have gRPC service implemented
 			fmt.Printf("Subnet price query for netuid %d - gRPC service not yet implemented\n", netuid)
@@ -242,10 +245,11 @@ func GetCmdQueryPendingEmission() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Parse netuid
-			var netuid uint16
-			if _, err := fmt.Sscanf(args[0], "%d", &netuid); err != nil {
-				return fmt.Errorf("invalid netuid: %s", args[0])
+			u, err := strconv.ParseUint(args[0], 10, 16)
+			if err != nil {
+				return fmt.Errorf("invalid netuid (must be 0-65535): %s", args[0])
 			}
+			netuid := uint16(u)
 
 			// For now, just print a message since we don't have gRPC service implemented
 			fmt.Printf("Pending emission query for netuid %d\n", netuid)

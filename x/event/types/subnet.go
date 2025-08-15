@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	"cosmossdk.io/math"
 )
 
@@ -8,13 +10,39 @@ import (
 type Subnet struct {
 	Netuid                uint16            `json:"netuid" yaml:"netuid"`
 	Owner                 string            `json:"owner" yaml:"owner"`
-	LockAmount            string            `json:"lock_amount" yaml:"lock_amount"`
-	BurnedTao             string            `json:"burned_tao" yaml:"burned_tao"`
-	Pool                  string            `json:"pool" yaml:"pool"`
+	LockedAmount          string            `json:"lock_amount" yaml:"lock_amount"` // Renamed from LockAmount for consistency
+	BurnedAmount          string            `json:"burned_tao" yaml:"burned_tao"`   // Renamed from BurnedTao for consistency
+	AmmPool               string            `json:"pool" yaml:"pool"`               // Renamed from Pool for consistency
 	Params                map[string]string `json:"params" yaml:"params"`
 	FirstEmissionBlock    uint64            `json:"first_emission_block" yaml:"first_emission_block"`         // First emission block number
 	Mechanism             uint8             `json:"mechanism" yaml:"mechanism"`                               // Subnet mechanism (0=stable, 1=dynamic)
 	EMAPriceHalvingBlocks uint64            `json:"ema_price_halving_blocks" yaml:"ema_price_halving_blocks"` // EMA price halving blocks (default 201600=4 weeks)
+}
+
+// GetLockedAmountInt returns the LockedAmount as math.Int
+func (s Subnet) GetLockedAmountInt() (math.Int, error) {
+	if s.LockedAmount == "" {
+		return math.ZeroInt(), nil
+	}
+
+	amount, ok := math.NewIntFromString(s.LockedAmount)
+	if !ok {
+		return math.ZeroInt(), fmt.Errorf("invalid locked amount: %s", s.LockedAmount)
+	}
+	return amount, nil
+}
+
+// GetBurnedAmountInt returns the BurnedAmount as math.Int
+func (s Subnet) GetBurnedAmountInt() (math.Int, error) {
+	if s.BurnedAmount == "" {
+		return math.ZeroInt(), nil
+	}
+
+	amount, ok := math.NewIntFromString(s.BurnedAmount)
+	if !ok {
+		return math.ZeroInt(), fmt.Errorf("invalid burned amount: %s", s.BurnedAmount)
+	}
+	return amount, nil
 }
 
 // SubnetHyperparams represents the hyperparameters for a subnet
@@ -64,6 +92,60 @@ type SubnetInfo struct {
 	ActivatedBlock uint64 `json:"activated_block" yaml:"activated_block"` // Activation block
 }
 
+// GetLockedAmountInt returns the LockedAmount as math.Int
+func (s SubnetInfo) GetLockedAmountInt() (math.Int, error) {
+	if s.LockedAmount == "" {
+		return math.ZeroInt(), nil
+	}
+
+	amount, ok := math.NewIntFromString(s.LockedAmount)
+	if !ok {
+		return math.ZeroInt(), fmt.Errorf("invalid locked amount: %s", s.LockedAmount)
+	}
+	return amount, nil
+}
+
+// GetBurnedAmountInt returns the BurnedAmount as math.Int
+func (s SubnetInfo) GetBurnedAmountInt() (math.Int, error) {
+	if s.BurnedAmount == "" {
+		return math.ZeroInt(), nil
+	}
+
+	amount, ok := math.NewIntFromString(s.BurnedAmount)
+	if !ok {
+		return math.ZeroInt(), fmt.Errorf("invalid burned amount: %s", s.BurnedAmount)
+	}
+	return amount, nil
+}
+
+// GetPoolInitialTaoInt returns the PoolInitialTao as math.Int
+func (s SubnetInfo) GetPoolInitialTaoInt() (math.Int, error) {
+	if s.PoolInitialTao == "" {
+		return math.ZeroInt(), nil
+	}
+
+	amount, ok := math.NewIntFromString(s.PoolInitialTao)
+	if !ok {
+		return math.ZeroInt(), fmt.Errorf("invalid pool initial tao: %s", s.PoolInitialTao)
+	}
+	return amount, nil
+}
+
+// ToSubnet converts SubnetInfo to Subnet
+func (s SubnetInfo) ToSubnet(params map[string]string, mechanism uint8, emaPriceHalvingBlocks uint64) Subnet {
+	return Subnet{
+		Netuid:                s.Netuid,
+		Owner:                 s.Owner,
+		LockedAmount:          s.LockedAmount,
+		BurnedAmount:          s.BurnedAmount,
+		AmmPool:               s.AmmPool,
+		Params:                params,
+		FirstEmissionBlock:    s.ActivatedBlock,
+		Mechanism:             mechanism,
+		EMAPriceHalvingBlocks: emaPriceHalvingBlocks,
+	}
+}
+
 // NeuronInfo represents neuron information from contract events
 type NeuronInfo struct {
 	Account                string `json:"account" yaml:"account"`
@@ -80,7 +162,18 @@ type NeuronInfo struct {
 	PrometheusPort         uint32 `json:"prometheus_port" yaml:"prometheus_port"`
 }
 
-// Default JSON marshalling is sufficient for Subnet; custom methods not required.
+// GetStakeInt returns the Stake as math.Int
+func (n NeuronInfo) GetStakeInt() (math.Int, error) {
+	if n.Stake == "" {
+		return math.ZeroInt(), nil
+	}
+
+	amount, ok := math.NewIntFromString(n.Stake)
+	if !ok {
+		return math.ZeroInt(), fmt.Errorf("invalid stake amount: %s", n.Stake)
+	}
+	return amount, nil
+}
 
 // SubnetPriceData represents subnet price-related data
 type SubnetPriceData struct {

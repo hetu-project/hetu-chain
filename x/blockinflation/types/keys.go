@@ -26,4 +26,8 @@ var (
 
 	// PendingSubnetRewardsKey defines the key for pending subnet rewards
 	PendingSubnetRewardsKey = []byte{0x03}
+
+	// PendingSubnetRewardsByNetUIDPrefix defines a map prefix for per-subnet rewards:
+	// 0x10 | netuid(2 bytes) -> rewards
+	PendingSubnetRewardsByNetUIDPrefix = []byte{0x10}
 )

@@ -74,11 +74,11 @@ func (a AppModuleBasic) GetQueryCmd() *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 
-	keeper keeper.Keeper
+	keeper *keeper.Keeper
 }
 
 // NewAppModule creates a new AppModule
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
+func NewAppModule(cdc codec.Codec, keeper *keeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
@@ -116,6 +116,11 @@ func (am AppModule) BeginBlock(ctx sdk.Context, _ interface{}) {
 
 }
 
+// EndBlock executes at the end of each block
+func (am AppModule) EndBlock(ctx sdk.Context) []interface{} {
+	return []interface{}{}
+}
+
 // Dependency injection support
 
 // IsOnePerModuleType marks as one instance per module type
@@ -125,19 +130,19 @@ func (am AppModule) IsOnePerModuleType() {}
 func (am AppModule) IsAppModule() {}
 
 // ProvideModule provides module dependencies
-func ProvideModule(in depinject.Config) (keeper.Keeper, error) {
+func ProvideModule(in depinject.Config) (*keeper.Keeper, error) {
 	// TODO: Implement proper dependency injection
-	return keeper.Keeper{}, fmt.Errorf("ProvideModule not yet implemented")
+	return nil, fmt.Errorf("ProvideModule not yet implemented")
 }
 
 // InitGenesis initializes the genesis state
-func InitGenesis(ctx sdk.Context, k keeper.Keeper) {
+func InitGenesis(ctx sdk.Context, k *keeper.Keeper) {
 	// Simplified initialization, mainly setting basic state
 	// Here you can set some basic configurations
 }
 
 // ExportGenesis exports the genesis state
-func ExportGenesis(ctx sdk.Context, k keeper.Keeper) interface{} {
+func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) interface{} {
 	// Simplified export, return empty state
 	return nil
 }

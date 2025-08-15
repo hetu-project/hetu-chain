@@ -234,9 +234,9 @@ func (k Keeper) handleSubnetRegistered(ctx sdk.Context, log ethTypes.Log) {
 	subnet := types.Subnet{
 		Netuid:                event.Netuid,
 		Owner:                 event.Owner.Hex(),
-		LockAmount:            event.LockAmount.String(),
-		BurnedTao:             event.BurnedTao.String(),
-		Pool:                  event.Pool.Hex(),
+		LockedAmount:          event.LockAmount.String(),
+		BurnedAmount:          event.BurnedTao.String(),
+		AmmPool:               event.Pool.Hex(),
 		Params:                params,
 		Mechanism:             1,      // Default dynamic mechanism
 		EMAPriceHalvingBlocks: 201600, // Default 4 weeks (201600 blocks)
@@ -470,9 +470,9 @@ func (k Keeper) handleNetworkRegistered(ctx sdk.Context, log ethTypes.Log) {
 	subnet := types.Subnet{
 		Netuid:                event.Netuid,
 		Owner:                 event.Owner.Hex(),
-		LockAmount:            event.LockedAmount.String(),
-		BurnedTao:             event.BurnedAmount.String(),
-		Pool:                  event.AmmPool.Hex(),
+		LockedAmount:          event.LockedAmount.String(),
+		BurnedAmount:          event.BurnedAmount.String(),
+		AmmPool:               event.AmmPool.Hex(),
 		Params:                params,
 		Mechanism:             1,      // Default dynamic mechanism
 		EMAPriceHalvingBlocks: 201600, // Default 4 weeks (201600 blocks)

@@ -18,13 +18,16 @@ type Keeper struct {
 	eventKeeper types.EventKeeper
 }
 
-// NewKeeper creates a new keeper
+// NewKeeper creates a new stakework keeper
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
 	eventKeeper types.EventKeeper,
-) Keeper {
-	return Keeper{
+) *Keeper {
+	if eventKeeper == nil {
+		panic("stakework keeper requires a non-nil eventKeeper")
+	}
+	return &Keeper{
 		cdc:         cdc,
 		storeKey:    storeKey,
 		eventKeeper: eventKeeper,
@@ -32,11 +35,11 @@ func NewKeeper(
 }
 
 // Logger returns the module's logger
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+func (k *Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
 // GetEventKeeper gets the event keeper
-func (k Keeper) GetEventKeeper() types.EventKeeper {
+func (k *Keeper) GetEventKeeper() types.EventKeeper {
 	return k.eventKeeper
 }

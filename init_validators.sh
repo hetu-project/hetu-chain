@@ -25,8 +25,8 @@ command -v jq >/dev/null 2>&1 || {
 
 NUM_VALIDATORS=5
 # Store validator IPs in array
-# declare -a VALIDATOR_IPS=($1 $2 $3 $4 $5 $6 $7)
-declare -a VALIDATOR_IPS=($1 $2 $3 $4 $5)
+# declare -a VALIDATOR_IPS=("$1" "$2" "$3" "$4" "$5" "$6" "$7")
+declare -a VALIDATOR_IPS=("$1" "$2" "$3" "$4" "$5")
 echo "All validator IPs: ${VALIDATOR_IPS[@]}"
 echo "Number of validators: $NUM_VALIDATORS"
 

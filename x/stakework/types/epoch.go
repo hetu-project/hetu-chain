@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"math/big"
 	"strconv"
 	"strings"
 )
@@ -15,6 +16,32 @@ type EpochResult struct {
 	Incentive []uint64    `json:"incentive"` // New: incentive allocation
 	Bonds     [][]float64 `json:"bonds"`
 	Consensus []float64   `json:"consensus"`
+}
+
+// Validate checks if EpochResult has consistent lengths across all fields
+func (e EpochResult) Validate() error {
+	n := len(e.Accounts)
+	checks := []struct {
+		name string
+		len  int
+	}{
+		{"emission", len(e.Emission)},
+		{"dividend", len(e.Dividend)},
+		{"incentive", len(e.Incentive)},
+		{"consensus", len(e.Consensus)},
+	}
+
+	for _, c := range checks {
+		if c.len != n {
+			return fmt.Errorf("epoch result length mismatch: accounts=%d %s=%d", n, c.name, c.len)
+		}
+	}
+
+	if len(e.Bonds) != n {
+		return fmt.Errorf("epoch result bonds length mismatch: accounts=%d bonds=%d", n, len(e.Bonds))
+	}
+
+	return nil
 }
 
 // EpochParams epoch parameters (parsed from event module's Subnet.Params)
@@ -270,9 +297,22 @@ func ParseEpochParams(paramMap map[string]string) (EpochParams, error) {
 // ValidatorInfo validator information (obtained from event module)
 type ValidatorInfo struct {
 	Address string   `json:"address"`
-	Stake   float64  `json:"stake"`
+	Stake   string   `json:"stake"` // bigint string to avoid precision loss
 	Weights []uint64 `json:"weights"`
 	Active  bool     `json:"active"`
+}
+
+// GetStakeBigInt returns the Stake as *big.Int
+func (v ValidatorInfo) GetStakeBigInt() (*big.Int, error) {
+	if v.Stake == "" {
+		return big.NewInt(0), nil
+	}
+
+	amount := new(big.Int)
+	if _, ok := amount.SetString(v.Stake, 10); !ok {
+		return nil, fmt.Errorf("invalid stake amount: %s", v.Stake)
+	}
+	return amount, nil
 }
 
 // SubnetEpochData subnet epoch data
