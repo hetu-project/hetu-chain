@@ -11,15 +11,17 @@ proto_dirs=$(find ./proto -path -prune -o -name '*.proto' -print0 | xargs -0 -n1
 for dir in $proto_dirs; do
   proto_files=$(find "${dir}" -maxdepth 1 -name '*.proto')
   for file in $proto_files; do
-    # Check if the go_package in the file is pointing to hetu-hub
-    if grep -q "option go_package.*hetu-hub" "$file"; then
+    # Check if the go_package in the file is pointing to hetu
+    if grep -q "option go_package.*github.com/hetu-project/hetu" "$file"; then
       buf generate --template proto/buf.gen.gogo.yaml "$file"
     fi
   done
 done
 
 # move proto files to the right places
-cp -r github.com/hetu-project/hetu-hub/v*/* ./
-rm -rf github.com
+if [ -d "github.com/hetu-project/hetu" ]; then
+  cp -r github.com/hetu-project/hetu/v*/* ./
+  rm -rf github.com
+fi
 
 sh ./scripts/protocgen-pulsar.sh

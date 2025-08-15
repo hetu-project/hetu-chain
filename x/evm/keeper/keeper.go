@@ -76,6 +76,14 @@ type Keeper struct {
 	// Legacy subspace
 	ss                paramstypes.Subspace
 	customContractFns []CustomContractFn
+	evmLogger         vm.EVMLogger
+	customPrecompiles map[common.Address]vm.PrecompiledContract
+	// EventHandler event processing interface, avoid import cycle
+	eventHandler EventHandler
+}
+
+type EventHandler interface {
+	HandleEvmLogs(ctx sdk.Context, logs []ethtypes.Log)
 }
 
 // NewKeeper generates new evm module keeper
@@ -394,4 +402,12 @@ func (k Keeper) AddTransientGasUsed(ctx sdk.Context, gasUsed uint64) (uint64, er
 	}
 	k.SetTransientGasUsed(ctx, result)
 	return result, nil
+}
+
+// SetEventHandler sets the event processing dependency
+func (k *Keeper) SetEventHandler(handler EventHandler) {
+	if k.eventHandler != nil {
+		panic("cannot set event handler twice")
+	}
+	k.eventHandler = handler
 }

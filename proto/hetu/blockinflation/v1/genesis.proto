@@ -1,0 +1,16 @@
+syntax = "proto3";
+package hetu.blockinflation.v1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "hetu/blockinflation/v1/query.proto";
+
+option go_package = "github.com/hetu-project/hetu/v1/x/blockinflation/types";
+
+// GenesisState defines the blockinflation module's genesis state.
+message GenesisState {
+  Params params = 1 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin total_issuance = 2 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin total_burned = 3 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin pending_subnet_rewards = 4 [(gogoproto.nullable) = false];
+} 

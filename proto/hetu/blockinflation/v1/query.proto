@@ -1,0 +1,75 @@
+syntax = "proto3";
+package hetu.blockinflation.v1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "google/api/annotations.proto";
+
+option go_package = "github.com/hetu-project/hetu/v1/x/blockinflation/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Params queries the parameters of the module.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/hetu/blockinflation/v1/params";
+  }
+
+  // PendingSubnetRewards queries the pending subnet rewards.
+  rpc PendingSubnetRewards(QueryPendingSubnetRewardsRequest) returns (QueryPendingSubnetRewardsResponse) {
+    option (google.api.http).get = "/hetu/blockinflation/v1/pending_subnet_rewards";
+  }
+}
+
+// QueryParamsRequest is the request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is the response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params defines the parameters of the module.
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryPendingSubnetRewardsRequest is the request type for the Query/PendingSubnetRewards RPC method.
+message QueryPendingSubnetRewardsRequest {}
+
+// QueryPendingSubnetRewardsResponse is the response type for the Query/PendingSubnetRewards RPC method.
+message QueryPendingSubnetRewardsResponse {
+  // pending_subnet_rewards defines the pending subnet rewards.
+  cosmos.base.v1beta1.Coin pending_subnet_rewards = 1 [(gogoproto.nullable) = false];
+}
+
+// Params defines the parameters for the blockinflation module.
+message Params {
+  option (gogoproto.goproto_stringer) = false;
+  
+  bool enable_block_inflation = 1;
+  string mint_denom = 2;
+  string total_supply = 3 [
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+  string default_block_emission = 4 [
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+  string subnet_reward_base = 5 [
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
+  string subnet_reward_k = 6 [
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
+  string subnet_reward_max_ratio = 7 [
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
+  string subnet_moving_alpha = 8 [
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
+  string subnet_owner_cut = 9 [
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
+} 

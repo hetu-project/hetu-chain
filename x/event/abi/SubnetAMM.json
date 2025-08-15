@@ -1,0 +1,980 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_hetuToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_alphaToken",
+        "type": "address"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_netuid",
+        "type": "uint16"
+      },
+      {
+        "internalType": "address",
+        "name": "_systemAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_subnetContract",
+        "type": "address"
+      },
+      {
+        "internalType": "enum SubnetAMM.MechanismType",
+        "name": "_mechanism",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_minimumPoolLiquidity",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "ReentrancyGuardReentrantCall",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "injector",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "hetuAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "alphaAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "LiquidityInjected",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "withdrawer",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "hetuAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "alphaAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "LiquidityWithdrawn",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "currentPrice",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "movingPrice",
+        "type": "uint256"
+      }
+    ],
+    "name": "PriceUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "subnetHetu",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "subnetAlphaIn",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "subnetAlphaOut",
+        "type": "uint256"
+      }
+    ],
+    "name": "ReservesUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "alphaAmountIn",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "hetuAmountOut",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newPrice",
+        "type": "uint256"
+      }
+    ],
+    "name": "SwapAlphaForHETU",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "hetuAmountIn",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "alphaAmountOut",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newPrice",
+        "type": "uint256"
+      }
+    ],
+    "name": "SwapHETUForAlpha",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "HALVING_TIME",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "alphaToken",
+    "outputs": [
+      {
+        "internalType": "contract IERC20",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "amountIn",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isHETUToAlpha",
+        "type": "bool"
+      }
+    ],
+    "name": "calculateSlippage",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "slippageRate",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "amountIn",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isHETUToAlpha",
+        "type": "bool"
+      }
+    ],
+    "name": "checkLargeTradeWarning",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "isLargeTrade",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "percentageOfPool",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "warning",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "createdAt",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "creator",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "currentAlphaPrice",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getAlphaPrice",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "price",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getCreatorInfo",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "_creator",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_createdAt",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_netuid",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getK",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getMovingAlphaPrice",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getPoolHealth",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "isHealthy",
+        "type": "bool"
+      },
+      {
+        "internalType": "string",
+        "name": "status",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "liquidityRatio",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getPoolInfo",
+    "outputs": [
+      {
+        "internalType": "enum SubnetAMM.MechanismType",
+        "name": "_mechanism",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_subnetHetu",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_subnetAlphaIn",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_subnetAlphaOut",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_currentPrice",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_movingPrice",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_totalVolume",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_minimumLiquidity",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getStatistics",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "_totalVolume",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_currentPrice",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_movingPrice",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_priceUpdateBlock",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_totalLiquidity",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "amountIn",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isHETUToAlpha",
+        "type": "bool"
+      }
+    ],
+    "name": "getSwapPreview",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "amountOut",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "priceImpact",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "newPrice",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isLiquiditySufficient",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getSystemInfo",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "_systemAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_subnetContract",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getTheoreticalPrice",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getTokenBalances",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "hetuBalance",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "alphaBalance",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "getUserStats",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "_userVolume",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_userVolumePercentage",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "hetuToken",
+    "outputs": [
+      {
+        "internalType": "contract IERC20",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "hetuAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "alphaAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "injectLiquidity",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "addr",
+        "type": "address"
+      }
+    ],
+    "name": "isCreator",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "addr",
+        "type": "address"
+      }
+    ],
+    "name": "isSystemAddress",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "mechanism",
+    "outputs": [
+      {
+        "internalType": "enum SubnetAMM.MechanismType",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "minimumPoolLiquidity",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "movingAlphaPrice",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "netuid",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "priceUpdateBlock",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "alphaAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "simSwapAlphaForHETU",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "hetuAmount",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "hetuAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "simSwapHETUForAlpha",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "alphaAmount",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "subnetAlphaIn",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "subnetAlphaOut",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "subnetContract",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "subnetHetu",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "alphaAmountIn",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "hetuAmountOutMin",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      }
+    ],
+    "name": "swapAlphaForHETU",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "hetuAmountOut",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "hetuAmountIn",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "alphaAmountOutMin",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      }
+    ],
+    "name": "swapHETUForAlpha",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "alphaAmountOut",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "systemAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "totalVolume",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "updateMovingPrice",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "userVolume",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "verifyReserves",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "isConsistent",
+        "type": "bool"
+      },
+      {
+        "internalType": "string",
+        "name": "message",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "hetuAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "alphaAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      }
+    ],
+    "name": "withdrawLiquidity",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]

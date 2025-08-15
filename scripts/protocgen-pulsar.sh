@@ -4,15 +4,19 @@
 set -eo pipefail
 
 echo "Cleaning API directory"
-(
-	cd api
-	find ./ -type f \( -iname \*.pulsar.go -o -iname \*.pb.go -o -iname \*.cosmos_orm.go -o -iname \*.pb.gw.go \) -delete
-	find . -empty -type d -delete
-	cd ..
-)
+if [ -d "api" ]; then
+  (
+    cd api
+    find ./ -type f \( -iname \*.pulsar.go -o -iname \*.pb.go -o -iname \*.cosmos_orm.go -o -iname \*.pb.gw.go \) -delete
+    find . -empty -type d -delete
+    cd ..
+  )
+else
+  mkdir -p api
+fi
 
 echo "Generating API module"
 (
-	cd proto
-	buf generate --template buf.gen.pulsar.yaml
+  cd proto
+  buf generate --template buf.gen.pulsar.yaml
 )

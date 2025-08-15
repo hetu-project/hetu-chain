@@ -1,0 +1,985 @@
+{
+  "contractName": "SubnetAMM",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_hetuToken",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_alphaToken",
+          "type": "address"
+        },
+        {
+          "internalType": "uint16",
+          "name": "_netuid",
+          "type": "uint16"
+        },
+        {
+          "internalType": "address",
+          "name": "_systemAddress",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_subnetContract",
+          "type": "address"
+        },
+        {
+          "internalType": "enum SubnetAMM.MechanismType",
+          "name": "_mechanism",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_minimumPoolLiquidity",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [],
+      "name": "ReentrancyGuardReentrantCall",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "injector",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "hetuAmount",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "alphaAmount",
+          "type": "uint256"
+        }
+      ],
+      "name": "LiquidityInjected",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "withdrawer",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "hetuAmount",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "alphaAmount",
+          "type": "uint256"
+        }
+      ],
+      "name": "LiquidityWithdrawn",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "currentPrice",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "movingPrice",
+          "type": "uint256"
+        }
+      ],
+      "name": "PriceUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "subnetHetu",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "subnetAlphaIn",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "subnetAlphaOut",
+          "type": "uint256"
+        }
+      ],
+      "name": "ReservesUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "alphaAmountIn",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "hetuAmountOut",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "newPrice",
+          "type": "uint256"
+        }
+      ],
+      "name": "SwapAlphaForHETU",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "hetuAmountIn",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "alphaAmountOut",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "newPrice",
+          "type": "uint256"
+        }
+      ],
+      "name": "SwapHETUForAlpha",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "HALVING_TIME",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "alphaToken",
+      "outputs": [
+        {
+          "internalType": "contract IERC20",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "amountIn",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "isHETUToAlpha",
+          "type": "bool"
+        }
+      ],
+      "name": "calculateSlippage",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "slippageRate",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "amountIn",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "isHETUToAlpha",
+          "type": "bool"
+        }
+      ],
+      "name": "checkLargeTradeWarning",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "isLargeTrade",
+          "type": "bool"
+        },
+        {
+          "internalType": "uint256",
+          "name": "percentageOfPool",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "warning",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "createdAt",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "creator",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "currentAlphaPrice",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getAlphaPrice",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "price",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getCreatorInfo",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "_creator",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_createdAt",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_netuid",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getK",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getMovingAlphaPrice",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getPoolHealth",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "isHealthy",
+          "type": "bool"
+        },
+        {
+          "internalType": "string",
+          "name": "status",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "liquidityRatio",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getPoolInfo",
+      "outputs": [
+        {
+          "internalType": "enum SubnetAMM.MechanismType",
+          "name": "_mechanism",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_subnetHetu",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_subnetAlphaIn",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_subnetAlphaOut",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_currentPrice",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_movingPrice",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_totalVolume",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_minimumLiquidity",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getStatistics",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "_totalVolume",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_currentPrice",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_movingPrice",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_priceUpdateBlock",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_totalLiquidity",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "amountIn",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "isHETUToAlpha",
+          "type": "bool"
+        }
+      ],
+      "name": "getSwapPreview",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "amountOut",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "priceImpact",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "newPrice",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "isLiquiditySufficient",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getSystemInfo",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "_systemAddress",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_subnetContract",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getTheoreticalPrice",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getTokenBalances",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "hetuBalance",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "alphaBalance",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        }
+      ],
+      "name": "getUserStats",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "_userVolume",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_userVolumePercentage",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "hetuToken",
+      "outputs": [
+        {
+          "internalType": "contract IERC20",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "hetuAmount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "alphaAmount",
+          "type": "uint256"
+        }
+      ],
+      "name": "injectLiquidity",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "addr",
+          "type": "address"
+        }
+      ],
+      "name": "isCreator",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "addr",
+          "type": "address"
+        }
+      ],
+      "name": "isSystemAddress",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "mechanism",
+      "outputs": [
+        {
+          "internalType": "enum SubnetAMM.MechanismType",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "minimumPoolLiquidity",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "movingAlphaPrice",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "netuid",
+      "outputs": [
+        {
+          "internalType": "uint16",
+          "name": "",
+          "type": "uint16"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "priceUpdateBlock",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "alphaAmount",
+          "type": "uint256"
+        }
+      ],
+      "name": "simSwapAlphaForHETU",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "hetuAmount",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "hetuAmount",
+          "type": "uint256"
+        }
+      ],
+      "name": "simSwapHETUForAlpha",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "alphaAmount",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "subnetAlphaIn",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "subnetAlphaOut",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "subnetContract",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "subnetHetu",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "alphaAmountIn",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "hetuAmountOutMin",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        }
+      ],
+      "name": "swapAlphaForHETU",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "hetuAmountOut",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "hetuAmountIn",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "alphaAmountOutMin",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        }
+      ],
+      "name": "swapHETUForAlpha",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "alphaAmountOut",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "systemAddress",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "totalVolume",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "updateMovingPrice",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "userVolume",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "verifyReserves",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "isConsistent",
+          "type": "bool"
+        },
+        {
+          "internalType": "string",
+          "name": "message",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "hetuAmount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "alphaAmount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        }
+      ],
+      "name": "withdrawLiquidity",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x6101a0346103bc57601f6127d938819003918201601f19168301916001600160401b038311848410176103c15780849260e0946040528339810103126103bc57610048816103d7565b90610055602082016103d7565b604082015161ffff811681036103bc57610071606084016103d7565b9061007e608085016103d7565b9260a08501519460028610156103bc5760c001516001600055956001600160a01b0316908115610377576001600160a01b0316908115610332576001600160a01b038416156102ed576001600160a01b038516156102a85786156102635760805260a05260c052610120526101405260e0526101005233610160524261018052436006556040516123ed90816103ec8239608051818181610372015281816107fd0152818161091a01528181610c970152818161141c0152818161156e0152611bd7015260a0518181816103e00152818161076c0152818161097001528181610ba201528181610de8015281816115010152611c2d015260c0518181816102a8015261132e015260e051818181610ed201528181610f80015281816110d701528181611701015281816118bc01528181611ff801526121cc015261010051818181610b4501528181610d9601528181610f16015281816119130152818161196d01528181611ed8015261223801526101205181818161058e0152818161065301528181610a2e01528181610e36015261138301526101405181818161086901528181610d5001528181610e5b015281816111cd01526113ba01526101605181818161020c015281816112e1015261173d0152610180518181816105d501526113050152f35b60405162461bcd60e51b815260206004820152601760248201527f414d4d3a205a45524f5f4d494e5f4c49515549444954590000000000000000006044820152606490fd5b60405162461bcd60e51b815260206004820152601860248201527f414d4d3a205a45524f5f5355424e45545f4144445245535300000000000000006044820152606490fd5b60405162461bcd60e51b815260206004820152601860248201527f414d4d3a205a45524f5f53595354454d5f4144445245535300000000000000006044820152606490fd5b60405162461bcd60e51b815260206004820152601760248201527f414d4d3a205a45524f5f414c5048415f414444524553530000000000000000006044820152606490fd5b60405162461bcd60e51b815260206004820152601660248201527f414d4d3a205a45524f5f484554555f41444452455353000000000000000000006044820152606490fd5b600080fd5b634e487b7160e01b600052604160045260246000fd5b51906001600160a01b03821682036103bc5756fe608080604052600436101561001357600080fd5b60003560e01c9081622952971461178a575080630237d05d1461176c57806302d05d3f146117275780630640954e146116e557806309c07600146116a85780630bbbc3be1461166c5780630fae53a01461148d5780631252217f1461144b57806314801567146114065780631c5d2264146113eb5780632f9ec7ba1461135557806335afba4a146112c2578063372d6b271461126e5780634e43603a146111fc5780635b42f17d146111b75780635e91554f14610f5a5780635f81a57c14610f3c57806360246c8814610ea05780636700616f14610e825780636cb69f4214610e1757806370b4c9e014610dd2578063795ec72114610db95780637ad6b6a1146106165780637bd8bc0d14610d7e57806395e17d8414610a1d578063a1dc9031146108ee578063a6769ef8146108b4578063aa764250146105f8578063bd00d6c914610897578063c1433f4414610639578063c21cb6a31461061b578063c94b387d14610616578063cc2d79f1146105f8578063cf09e0d0146105bd578063d3e848f114610578578063d422a5ae1461055a578063dbe7d6e8146102ea578063e31117b2146102cc578063e78015b11461028d578063ec5fb8821461026f578063ee39e7a0146102455763efd46065146101ec57600080fd5b34610240576020366003190112610240576020610207611812565b6040517f00000000000000000000000000000000000000000000000000000000000000006001600160a01b039081169216919091148152f35b600080fd5b346102405760003660031901126102405760206102676001546002549061186d565b604051908152f35b34610240576000366003190112610240576020600454604051908152f35b3461024057600036600319011261024057602060405161ffff7f0000000000000000000000000000000000000000000000000000000000000000168152f35b34610240576000366003190112610240576020600254604051908152f35b34610240576102f836611828565b91610301612276565b61030c811515611d89565b6103206001600160a01b0384161515611dd5565b61034061032c826118ba565b92610338841515611e15565b831015611e61565b6040516323b872dd60e01b81523360048201523060248201526044810182905260208160648160006001600160a01b037f0000000000000000000000000000000000000000000000000000000000000000165af18015610533576103da94602092859261053f575b5060405163a9059cbb60e01b81526001600160a01b039091166004820152602481019190915293849081906044820190565b038160007f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03165af192831561053357602093610508575b5061042681600154611880565b600155610435826002546118ad565b60025561044482600354611880565b60035561045381600754611880565b6007553360005260088352604060002061046e828254611880565b90556104786122bc565b600454604080519283526020830184905282015233907fa02a518f6da050145db4eb93e4551b83d1f2e3637fa192c90c50d92092733e9e9080606081015b0390a2600154600254600354604080519384526020840192909252908201527fe66cd0d1751b6e82cb9f412f722b6dea0a1eeca0fbc1b9c8c2972f16d228ee2a90606090a16001600055604051908152f35b61052790843d861161052c575b61051f81836119b2565b810190611ead565b610419565b503d610515565b6040513d6000823e3d90fd5b61055590843d861161052c5761051f81836119b2565b6103a8565b34610240576000366003190112610240576020600154604051908152f35b34610240576000366003190112610240576040517f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03168152602090f35b346102405760003660031901126102405760206040517f00000000000000000000000000000000000000000000000000000000000000008152f35b34610240576000366003190112610240576020600554604051908152f35b611852565b346102405760203660031901126102405760206102676004356121ca565b3461024057604036600319011261024057600435602435337f00000000000000000000000000000000000000000000000000000000000000006001600160a01b0316148015610865575b61068c906120ff565b610694612276565b81158015809161085c575b6106a89061213e565b6107cb575b8061073a575b6106bb6122bc565b60405191825260208201527f4fe3419516b3ee2d3f6ffdd1cae96f32f573453e6a6efad7fc0adcb47a11b49460403392a2600154600254600354604080519384526020840192909252908201527fe66cd0d1751b6e82cb9f412f722b6dea0a1eeca0fbc1b9c8c2972f16d228ee2a9080606081015b0390a16001600055005b6040516323b872dd60e01b81523360048201523060248201526044810182905260208160648160006001600160a01b037f0000000000000000000000000000000000000000000000000000000000000000165af18015610533576107ae575b506107a681600254611880565b6002556106b3565b6107c69060203d60201161052c5761051f81836119b2565b610799565b6040516323b872dd60e01b81523360048201523060248201526044810183905260208160648160006001600160a01b037f0000000000000000000000000000000000000000000000000000000000000000165af180156105335761083f575b5061083782600154611880565b6001556106ad565b6108579060203d60201161052c5761051f81836119b2565b61082a565b5081151561069f565b50337f00000000000000000000000000000000000000000000000000000000000000006001600160a01b031614610683565b346102405760003660031901126102405760206040516103e88152f35b34610240576020366003190112610240576001600160a01b036108d5611812565b1660005260086020526020604060002054604051908152f35b34610240576000366003190112610240576040516370a0823160e01b81523060048201526020816024817f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03165afa908115610533576000916109eb575b506040516370a0823160e01b8152306004820152906020826024817f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03165afa8015610533576000906109b8575b6040809350519182526020820152f35b506020823d6020116109e3575b816109d2602093836119b2565b8101031261024057604091516109a8565b3d91506109c5565b90506020813d602011610a15575b81610a06602093836119b2565b81010312610240575181610953565b3d91506109f9565b3461024057610a2b36611828565b337f00000000000000000000000000000000000000000000000000000000000000006001600160a01b0316148015610d4c575b610a67906120ff565b610a6f612276565b821580158091610d43575b610a839061213e565b610a976001600160a01b0383161515611dd5565b610c4f575b81610b24575b50610aab6122bc565b60405191825260208201527fb195a67e698c5700e4f48f7b7748dda3a206ee2767ef024b61a26d7b17b2d63a60403392a2600154600254600354604080519384526020840192909252908201527fe66cd0d1751b6e82cb9f412f722b6dea0a1eeca0fbc1b9c8c2972f16d228ee2a908060608101610730565b60025490818311610c0a5782602091610b6b610b4383610b9c966118ad565b7f0000000000000000000000000000000000000000000000000000000000000000111561217e565b60405163a9059cbb60e01b81526001600160a01b039091166004820152602481019190915291829081906044820190565b038160007f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03165af1801561053357610bed575b50610be4816002546118ad565b60025582610aa2565b610c059060203d60201161052c5761051f81836119b2565b610bd7565b60405162461bcd60e51b815260206004820152601f60248201527f414d4d3a20494e53554646494349454e545f414c5048415f52455345525645006044820152606490fd5b600154808411610cfe57610b4384610c66926118ad565b60405163a9059cbb60e01b81526001600160a01b0382166004820152602481018490526020818060448101038160007f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03165af1801561053357610ce1575b50610cd9836001546118ad565b600155610a9c565b610cf99060203d60201161052c5761051f81836119b2565b610ccc565b60405162461bcd60e51b815260206004820152601e60248201527f414d4d3a20494e53554646494349454e545f484554555f5245534552564500006044820152606490fd5b50821515610a7a565b50337f00000000000000000000000000000000000000000000000000000000000000006001600160a01b031614610a5e565b346102405760003660031901126102405760206040517f00000000000000000000000000000000000000000000000000000000000000008152f35b34610240576020610267610dcc366117b2565b90611ff2565b34610240576000366003190112610240576040517f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03168152602090f35b3461024057600036600319011261024057604080516001600160a01b037f0000000000000000000000000000000000000000000000000000000000000000811682527f0000000000000000000000000000000000000000000000000000000000000000166020820152f35b34610240576000366003190112610240576020600654604051908152f35b3461024057600036600319011261024057610100600154600254600354600454600554916007549360405195610ef6877f00000000000000000000000000000000000000000000000000000000000000006117a5565b602087015260408601526060850152608084015260a083015260c08201527f000000000000000000000000000000000000000000000000000000000000000060e0820152f35b34610240576000366003190112610240576020600754604051908152f35b3461024057610f68366117b2565b600090156110c757610f79826118ba565b90811515907f000000000000000000000000000000000000000000000000000000000000000060028110156110b157600114806110a6575b1561109757610fca610fc16120c2565b94600154611880565b610fd6846002546118ad565b6000811561108e5750670de0b6b3a7640000820291808304670de0b6b3a7640000149015171561106c576110099161188d565b905b8185611031575b50608094505b6040519384526020840152604083015215156060820152f35b9050848111156110825784611045916118ad565b612710810290808204612710149015171561106c576080946110669161188d565b85611012565b634e487b7160e01b600052601160045260246000fd5b50608093506000611066565b9150509061100b565b50608092506004546000611018565b506002541515610fb1565b634e487b7160e01b600052602160045260246000fd5b6110d0826121ca565b90811515907f000000000000000000000000000000000000000000000000000000000000000060028110156110b157600114806111ac575b15611097576111156120c2565b9361112e611125856001546118ad565b91600254611880565b670de0b6b3a7640000820291808304670de0b6b3a7640000149015171561106c576111589161188d565b9084611168575b60809450611018565b50808411156111a15761117b81856118ad565b612710810290808204612710149015171561106c5760809461119c9161188d565b61115f565b60809350600061115f565b506002541515611108565b34610240576000366003190112610240576040517f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03168152602090f35b34610240576020366003190112610240576001600160a01b0361121d611812565b16600090815260086020526040902054600754908115611263576127108102818104612710148215171561106c576040926112579161188d565b82519182526020820152f35b604091506000611257565b346102405760003660031901126102405760a0600754600454600554600654906112a560015461129f600254612298565b90611880565b926040519485526020850152604084015260608301526080820152f35b3461024057600036600319011261024057606060405160018060a01b037f00000000000000000000000000000000000000000000000000000000000000001681527f0000000000000000000000000000000000000000000000000000000000000000602082015261ffff7f0000000000000000000000000000000000000000000000000000000000000000166040820152f35b346102405760203660031901126102405760206001600160a01b03611378611812565b166001600160a01b037f00000000000000000000000000000000000000000000000000000000000000001681149081156113b8575b506040519015158152f35b7f00000000000000000000000000000000000000000000000000000000000000006001600160a01b0316149050826113ad565b34610240576000366003190112610240576114046122bc565b005b34610240576000366003190112610240576040517f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03168152602090f35b3461024057600036600319011261024057611464611ec5565b60405192151583526060602084018190528392611483918401906117d1565b9060408301520390f35b346102405761149b36611828565b916114a4612276565b6114af811515611d89565b6114c36001600160a01b0384161515611dd5565b6114cf61032c826121ca565b6040516323b872dd60e01b81523360048201523060248201526044810182905260208160648160006001600160a01b037f0000000000000000000000000000000000000000000000000000000000000000165af180156105335761156894602092859261053f575060405163a9059cbb60e01b81526001600160a01b039091166004820152602481019190915293849081906044820190565b038160007f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03165af192831561053357602093611651575b506115b481600254611880565b6002556115c3816003546118ad565b6003556115d2826001546118ad565b6001556115de81612298565b6115ea81600754611880565b60075533600052600884526116056040600020918254611880565b905561160f6122bc565b600454604080519283526020830184905282015233907f273dab603b25681430ed2e0fa2d95f28be46ce1a542d893df4b1e267a219f3999080606081016104b6565b61166790843d861161052c5761051f81836119b2565b6115a7565b3461024057600036600319011261024057611685611bbc565b906116a4604051928392151583526040602084015260408301906117d1565b0390f35b34610240576116a46116c26116bc366117b2565b906119ea565b6040939193519384931515845260208401526060604084015260608301906117d1565b34610240576000366003190112610240576020604051611725817f00000000000000000000000000000000000000000000000000000000000000006117a5565bf35b34610240576000366003190112610240576040517f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03168152602090f35b346102405760203660031901126102405760206102676004356118ba565b34610240576000366003190112610240576020906003548152f35b9060028210156110b15752565b6040906003190112610240576004359060243580151581036102405790565b919082519283825260005b8481106117fd575050826000602080949584010152601f8019910116010190565b806020809284010151828286010152016117dc565b600435906001600160a01b038216820361024057565b60609060031901126102405760043590602435906044356001600160a01b03811681036102405790565b346102405760003660031901126102405760206102676120c2565b8181029291811591840414171561106c57565b9190820180921161106c57565b8115611897570490565b634e487b7160e01b600052601260045260246000fd5b9190820391821161106c57565b7f000000000000000000000000000000000000000000000000000000000000000060028110156110b15761193a57905b60025482818111918215611907575b505061190157565b60009150565b61191192506118ad565b7f00000000000000000000000000000000000000000000000000000000000000001182386118f9565b600154801580156119a8575b6119a15761196b906119656002549361195f858461186d565b92611880565b9061188d565b7f000000000000000000000000000000000000000000000000000000000000000081106119a15761199b916118ad565b906118ea565b5050600090565b5060025415611946565b90601f8019910116810190811067ffffffffffffffff8211176119d457604052565b634e487b7160e01b600052604160045260246000fd5b9015611bb4576001545b8015611b7857612710820291808304612710149015171561106c57611a189161188d565b6107d08110611a7757600191604051611a326060826119b2565b602f81527f56657279206c617267652074726164653a2045787472656d652070726963652060208201526e1a5b5c1858dd08195e1c1958dd1959608a1b604082015290565b6103e88110611ace57600191604051611a916060826119b2565b602781527f4c617267652074726164653a204869676820707269636520696d7061637420656020820152661e1c1958dd195960ca1b604082015290565b6101f48110611b2a57600191604051611ae86060826119b2565b602c81527f4d656469756d2074726164653a204d6f64657261746520707269636520696d7060208201526b1858dd08195e1c1958dd195960a21b604082015290565b600091604051611b3b6060826119b2565b602781527f4e6f726d616c2074726164653a204c6f7720707269636520696d7061637420656020820152661e1c1958dd195960ca1b604082015290565b5050600190600090604051611b8e6040826119b2565b60168152754e6f206c697175696469747920617661696c61626c6560501b602082015290565b6002546119f4565b6040516370a0823160e01b81523060048201526020816024817f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03165afa90811561053357600091611d57575b506040516370a0823160e01b8152306004820152906020826024817f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03165afa91821561053357600092611d23575b5060015403611cec5760025403611cb557600190604051611c886040826119b2565b601781527f52657365727665732061726520636f6e73697374656e74000000000000000000602082015290565b600090604051611cc66040826119b2565b6016815275082d8e0d0c240e4cae6cae4ecca40dad2e6dac2e8c6d60531b602082015290565b50600090604051611cfe6040826119b2565b60158152740908aa8aa40e4cae6cae4ecca40dad2e6dac2e8c6d605b1b602082015290565b9091506020813d602011611d4f575b81611d3f602093836119b2565b8101031261024057519038611c66565b3d9150611d32565b90506020813d602011611d81575b81611d72602093836119b2565b81010312610240575138611c10565b3d9150611d65565b15611d9057565b60405162461bcd60e51b815260206004820152601e60248201527f414d4d3a20494e53554646494349454e545f494e5055545f414d4f554e5400006044820152606490fd5b15611ddc57565b60405162461bcd60e51b8152602060048201526011602482015270414d4d3a205a45524f5f4144445245535360781b6044820152606490fd5b15611e1c57565b60405162461bcd60e51b815260206004820152601b60248201527f414d4d3a20494e53554646494349454e545f4c495155494449545900000000006044820152606490fd5b15611e6857565b60405162461bcd60e51b815260206004820152601f60248201527f414d4d3a20494e53554646494349454e545f4f55545055545f414d4f554e54006044820152606490fd5b90816020910312610240575180151581036102405790565b6001548015808015611fe8575b611fb6577f0000000000000000000000000000000000000000000000000000000000000000908183108015611fab575b611f3457505050600190604051611f1a6040826119b2565b60078152664865616c74687960c81b602082015290606490565b60025480841015611f88575060648302928304606414171561106c57611f599161188d565b600091604051611f6a6040826119b2565b600d81526c4c6f77206c697175696469747960981b60208201529190565b606480820294508115918504141715905061106c57611fa69161188d565b611f59565b508160025410611f02565b5050600090604051611fc96040826119b2565b600c81526b4e6f206c697175696469747960a01b602082015290600090565b5060025415611ed2565b600092917f000000000000000000000000000000000000000000000000000000000000000060028110156110b157156120ba57156120945761204b61204561203c6002548461186d565b6001549061188d565b916118ba565b8082118061208b575b61205c575050565b81612069929394506118ad565b90612710820291808304612710149015171561106c576120889161188d565b90565b50811515612054565b6120b56120af6120a66001548461186d565b6002549061188d565b916121ca565b61204b565b506000925050565b60025480156120f95760015490670de0b6b3a7640000820291808304670de0b6b3a7640000149015171561106c576120889161188d565b50600090565b1561210657565b60405162461bcd60e51b815260206004820152601060248201526f414d4d3a204f4e4c595f53595354454d60801b6044820152606490fd5b1561214557565b60405162461bcd60e51b8152602060048201526011602482015270414d4d3a205a45524f5f414d4f554e545360781b6044820152606490fd5b1561218557565b60405162461bcd60e51b815260206004820152601860248201527f414d4d3a2042454c4f575f4d494e5f4c495155494449545900000000000000006044820152606490fd5b7f000000000000000000000000000000000000000000000000000000000000000060028110156110b15761221057905b6001548281811191821561190757505061190157565b600154908115801561226c575b6119a157612236906119656002549161195f838661186d565b7f000000000000000000000000000000000000000000000000000000000000000081106119a157612266916118ad565b906121fa565b506002541561221d565b600260005414612287576002600055565b633ee5aeb560e01b60005260046000fd5b60045480156122b8576122b490670de0b6b3a76400009261186d565b0490565b5090565b6122c8600654436118ad565b80156123b4576122d66120c2565b8060045560055491821560001461232b575050506004546005555b436006557f945c1c4e99aa89f648fbfe3df471b916f719e16d960fcec0737d4d56bd696838604060045460055482519182526020820152a1565b670de0b6b3a7640000810290808204670de0b6b3a76400000361106c576103e8810180911161106c5761235d9161188d565b80670de0b6b3a76400000390670de0b6b3a7640000821161106c57670de0b6b3a76400009361239f61129f926123a5958781116000146123ae5750869061186d565b9261186d565b046005556122f1565b9061186d565b5056fea2646970667358221220008fc52f1e623ec73109daf61a12ac82d71c6c8ab21e458da85730952f80b41164736f6c634300081c0033",
+  "networks": {}
+}

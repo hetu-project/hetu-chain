@@ -4,12 +4,11 @@
 set -e
 
 # Check arguments
-if [ "$#" -lt 7 ]; then
-    echo "Usage: $0 <validator0_ip> <validator1_ip> <validator2_ip> <validator3_ip> <validator4_ip> <validator5_ip> <validator6_ip>"
-    echo "Example: $0 1.2.3.4 5.6.7.8 9.10.11.12 13.14.15.16 17.18.19.20 21.22.23.24 25.26.27.28"
+if [ "$#" -ne 5 ]; then
+    echo "Usage: $0 <validator0_ip> <validator1_ip> <validator2_ip> <validator3_ip> <validator4_ip>"
+    echo "Example: $0 1.2.3.4 5.6.7.8 9.10.11.12 13.14.15.16 17.18.19.20"
     exit 1
 fi
-
 # validate dependencies are installed
 command -v jq >/dev/null 2>&1 || {
     echo >&2 "jq not installed. More info: https://stedolan.github.io/jq/download/"
@@ -17,10 +16,12 @@ command -v jq >/dev/null 2>&1 || {
 }
 
 # Set number of validators
-NUM_VALIDATORS=7
+# NUM_VALIDATORS=7
 
+NUM_VALIDATORS=5
 # Store validator IPs in array
-declare -a VALIDATOR_IPS=($1 $2 $3 $4 $5 $6 $7)
+# declare -a VALIDATOR_IPS=("$1" "$2" "$3" "$4" "$5" "$6" "$7")
+declare -a VALIDATOR_IPS=("$1" "$2" "$3" "$4" "$5")
 echo "All validator IPs: ${VALIDATOR_IPS[@]}"
 echo "Number of validators: $NUM_VALIDATORS"
 
@@ -31,8 +32,12 @@ KEYALGO="eth_secp256k1"
 DENOM="ahetu"
 HOME_PREFIX="/data/hetud"
 # Set balance and stake amounts (matching local_node.sh exactly)
-GENESIS_BALANCE="1000000000000000000000000000" # 1 million hetu
-GENTX_STAKE="1000000000000000000000000"        # 1 million hetu (1000000000000000000000000 = 10^24)
+# GENESIS_BALANCE="1000000000000000000000000000" # 1 million hetu
+# GENTX_STAKE="1000000000000000000000000"        # 1 million hetu (1000000000000000000000000 = 10^24)
+# BASEFEE=1000000000
+
+GENESIS_BALANCE="100000000000000000000" # 100 hetu
+GENTX_STAKE="10000000000000000000"        # 10 hetu (10000000000000000000 = 10^19)
 BASEFEE=1000000000
 
 # Port configuration
@@ -66,7 +71,8 @@ for i in $(seq 0 $((NUM_VALIDATORS - 1))); do
         continue
     fi
     echo "Cleaning up data on $TARGET_IP..."
-    ssh ubuntu@${TARGET_IP} "pkill hetud || true; rm -rf \"${HOME_PREFIX}\" \"${HOME_PREFIX}\"* 2>/dev/null || true"
+    # ssh ubuntu@${TARGET_IP} "pkill hetud || true; rm -rf \"${HOME_PREFIX}\" \"${HOME_PREFIX}\"* 2>/dev/null || true"
+    ssh root@"${TARGET_IP}" 'pkill hetud || true; if [[ -z "${HOME_PREFIX:-}" || "'"$HOME_PREFIX"'" = "/" || "'"$HOME_PREFIX"'" = "." ]]; then echo "Refusing to remove HOME_PREFIX" >&2; exit 1; fi; rm -rf "'"$HOME_PREFIX"'" "'"$HOME_PREFIX"'"* 2>/dev/null || true'
 done
 
 # Initialize primary node
@@ -88,7 +94,7 @@ for i in $(seq 0 $((NUM_VALIDATORS - 1))); do
         --home "${HOME_PREFIX}"
 
     echo "Adding genesis account for validator ${KEYS[$i]}..."
-    hetud add-genesis-account "${KEYS[$i]}" "${GENESIS_BALANCE}${DENOM},${GENESIS_BALANCE}gas" \
+    hetud add-genesis-account "${KEYS[$i]}" "${GENESIS_BALANCE}${DENOM}" \
         --keyring-backend="${KEYRING}" \
         --home "${HOME_PREFIX}"
 done
@@ -97,8 +103,16 @@ done
 jq '.app_state["staking"]["params"]["bond_denom"]="ahetu"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
 jq '.app_state["crisis"]["constant_fee"]["denom"]="ahetu"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
 jq '.app_state["gov"]["params"]["min_deposit"][0]["denom"]="ahetu"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
-jq '.app_state["evm"]["params"]["evm_denom"]="gas"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+jq '.app_state["evm"]["params"]["evm_denom"]="ahetu"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
 jq '.app_state["inflation"]["params"]["mint_denom"]="ahetu"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+
+# === Add blockinflation and event module genesis configuration ===
+jq '.app_state.blockinflation.params = {"enable_block_inflation": true, "mint_denom": "ahetu", "total_supply": "21000000000000000000000000", "default_block_emission": "1000000000000000000", "subnet_reward_base": "0.100000000000000000", "subnet_reward_k": "0.100000000000000000", "subnet_reward_max_ratio": "0.900000000000000000", "subnet_moving_alpha": "0.000003000000000000", "subnet_owner_cut": "0.180000000000000000"}' "$GENESIS" > "$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+jq ".app_state[\"blockinflation\"][\"total_issuance\"]={\"denom\":\"ahetu\",\"amount\":\"0\"}" "$GENESIS" > "$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+jq ".app_state[\"blockinflation\"][\"total_burned\"]={\"denom\":\"ahetu\",\"amount\":\"0\"}" "$GENESIS" > "$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+jq ".app_state[\"blockinflation\"][\"pending_subnet_rewards\"]={\"denom\":\"ahetu\",\"amount\":\"0\"}" "$GENESIS" > "$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+jq '.app_state.event = {"subnets": [], "validator_stakes": [], "delegations": [], "validator_weights": []}' "$GENESIS" > "$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+# === END Add ===
 
 # Set gas limit in genesis
 jq '.consensus_params["block"]["max_gas"]="10000000"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
@@ -119,7 +133,7 @@ jq '.app_state["claims"]["params"]["duration_until_decay"]="100000s"' "$GENESIS"
 
 # Claim module account:
 # 0xA61808Fe40fEb8B3433778BBC2ecECCAA47c8c47 || hetu15cvq3ljql6utxseh0zau9m8ve2j8erz89c94rj
-jq -r --arg amount_to_claim "$amount_to_claim" '.app_state["bank"]["balances"] += [{"address":"hetu15cvq3ljql6utxseh0zau9m8ve2j8erz89c94rj","coins":[{"denom":"ahetu", "amount":$amount_to_claim}, {"denom":"gas", "amount":$amount_to_claim}]}]' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+jq -r --arg amount_to_claim "$amount_to_claim" '.app_state["bank"]["balances"] += [{"address":"hetu15cvq3ljql6utxseh0zau9m8ve2j8erz89c94rj","coins":[{"denom":"ahetu", "amount":$amount_to_claim}]}]' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
 
 # Change proposal periods to pass within a reasonable time
 sed -i.bak 's/"max_deposit_period": "172800s"/"max_deposit_period": "30s"/g' "$GENESIS"
@@ -129,10 +143,16 @@ sed -i.bak 's/"expedited_voting_period": "86400s"/"expedited_voting_period": "15
 # Create gentx directory in primary node
 mkdir -p "${HOME_PREFIX}/config/gentx"
 
+# Ensure bc is installed
+command -v bc >/dev/null 2>&1 || { echo >&2 "bc not installed."; exit 1; }
+
 # Calculate total supply including claims amount
 total_supply=$(echo "$NUM_VALIDATORS * $GENESIS_BALANCE + $amount_to_claim" | bc)
-jq -r --arg total_supply "$total_supply" '.app_state["bank"]["supply"][0]["amount"]=$total_supply' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
-jq -r --arg total_supply "$total_supply" '.app_state["bank"]["supply"][1]["amount"]=$total_supply' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+# Update only the ahetu supply entry
+jq -r --arg total_supply "$total_supply" '
+  .app_state["bank"]["supply"] |=
+  (map(if .denom == "ahetu" then .amount = $total_supply else . end))
+' "$GENESIS" >"$TMP_GENESIS" && mv "$GENESIS" "$GENESIS.bak" && mv "$TMP_GENESIS" "$GENESIS"
 
 # Create clone directories, gentx, and get node IDs
 declare -a NODE_IDS
@@ -177,7 +197,7 @@ for i in $(seq 0 $((NUM_VALIDATORS - 1))); do
         "$CONFIG_TOML"
 
     # Set minimum gas price
-    sed -i.bak 's/^minimum-gas-prices *=.*/minimum-gas-prices = "0.0001gas"/g' "$APP_TOML"
+    sed -i.bak 's/^minimum-gas-prices *=.*/minimum-gas-prices = "0.0001ahetu"/g' "$APP_TOML"
 
     # Configure API and EVM settings in app.toml
     sed -i.bak \
@@ -199,7 +219,7 @@ for i in $(seq 0 $((NUM_VALIDATORS - 1))); do
     sed -i.bak 's/timeout_prevote_delta = ".*"/timeout_prevote_delta = "100ms"/g' "$CONFIG_TOML"
     sed -i.bak 's/timeout_precommit = ".*"/timeout_precommit = "200ms"/g' "$CONFIG_TOML"
     sed -i.bak 's/timeout_precommit_delta = ".*"/timeout_precommit_delta = "100ms"/g' "$CONFIG_TOML"
-    sed -i.bak 's/timeout_commit = ".*"/timeout_commit = "1s"/g' "$CONFIG_TOML"
+    sed -i.bak 's/timeout_commit = ".*"/timeout_commit = "12s"/g' "$CONFIG_TOML"
     sed -i.bak 's/timeout_broadcast_tx_commit = "10s"/timeout_broadcast_tx_commit = "150s"/g' "$CONFIG_TOML"
 
     # Use the corresponding validator IP
@@ -253,7 +273,8 @@ for i in $(seq 0 $((NUM_VALIDATORS - 1))); do
 
     # Configure peers
     echo "Configuring peers for node $i..."
-    sed -i.bak -e "s/^persistent_peers *=.*/persistent_peers = \"$PEERS\"/" "${CLONE_HOME}/config/config.toml"
+    echo "PEERS for node $i: $PEERS"
+    sed -i.bak -e "s|^persistent_peers *=.*|persistent_peers = \"${PEERS}\"|" "${CLONE_HOME}/config/config.toml"
 done
 
 # Copy genesis to all validators
@@ -272,9 +293,11 @@ for i in $(seq 0 $((NUM_VALIDATORS - 1))); do
     fi
     echo "Copying validator $i data to $TARGET_IP..."
     # First remove the old directory on remote
-    ssh ubuntu@${TARGET_IP} "rm -rf ${HOME_PREFIX}${i}"
+    # ssh ubuntu@${TARGET_IP} "rm -rf ${HOME_PREFIX}${i}"
+    ssh root@${TARGET_IP} "rm -rf ${HOME_PREFIX}${i}"
     # Then copy the new data
-    rsync -av "${HOME_PREFIX}${i}/" "ubuntu@${TARGET_IP}:${HOME_PREFIX}${i}/"
+    # rsync -av "${HOME_PREFIX}${i}/" "ubuntu@${TARGET_IP}:${HOME_PREFIX}${i}/"
+    rsync -av "${HOME_PREFIX}${i}/" "root@${TARGET_IP}:${HOME_PREFIX}${i}/"
 done
 
 echo "All validators initialized successfully!"

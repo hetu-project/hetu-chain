@@ -1,0 +1,98 @@
+[
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint16",
+          "name": "netuid",
+          "type": "uint16"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "validator",
+          "type": "address"
+        },
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "dest",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "weight",
+              "type": "uint256"
+            }
+          ],
+          "indexed": false,
+          "internalType": "struct Weights.Weight[]",
+          "name": "weights",
+          "type": "tuple[]"
+        }
+      ],
+      "name": "WeightsSet",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint16",
+          "name": "netuid",
+          "type": "uint16"
+        },
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "dest",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "weight",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Weights.Weight[]",
+          "name": "newWeights",
+          "type": "tuple[]"
+        }
+      ],
+      "name": "setWeights",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint16",
+          "name": "",
+          "type": "uint16"
+        },
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "weights",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ]
