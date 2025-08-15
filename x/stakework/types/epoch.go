@@ -1,7 +1,9 @@
 package types
 
 import (
+	"fmt"
 	"strconv"
+	"strings"
 )
 
 // EpochResult epoch calculation result
@@ -44,6 +46,52 @@ type EpochParams struct {
 	AlphaHigh             float64 `json:"alpha_high"`              // Alpha upper bound
 }
 
+// Validate checks if EpochParams are within valid ranges
+func (p EpochParams) Validate() error {
+	if p.Kappa < 0 || p.Kappa > 1 {
+		return fmt.Errorf("kappa must be between 0 and 1, got %f", p.Kappa)
+	}
+	if p.Alpha < 0 || p.Alpha > 1 {
+		return fmt.Errorf("alpha must be between 0 and 1, got %f", p.Alpha)
+	}
+	if p.Delta < 0 {
+		return fmt.Errorf("delta must be non-negative, got %f", p.Delta)
+	}
+	if p.Rho < 0 || p.Rho > 1 {
+		return fmt.Errorf("rho must be between 0 and 1, got %f", p.Rho)
+	}
+	if p.AlphaLow >= p.AlphaHigh {
+		return fmt.Errorf("alpha_low must be less than alpha_high")
+	}
+	if p.MinAllowedWeights > p.MaxWeightsLimit {
+		return fmt.Errorf("min_allowed_weights cannot exceed max_weights_limit")
+	}
+	if p.BondsPenalty < 0 || p.BondsPenalty > 1 {
+		return fmt.Errorf("bonds_penalty must be between 0 and 1, got %f", p.BondsPenalty)
+	}
+	if p.BondsMovingAverage < 0 || p.BondsMovingAverage > 1 {
+		return fmt.Errorf("bonds_moving_average must be between 0 and 1, got %f", p.BondsMovingAverage)
+	}
+	if p.AlphaSigmoidSteepness <= 0 {
+		return fmt.Errorf("alpha_sigmoid_steepness must be positive, got %f", p.AlphaSigmoidSteepness)
+	}
+	if p.Tempo == 0 {
+		return fmt.Errorf("tempo must be greater than 0")
+	}
+	return nil
+}
+
+// clamp01 clamps a float value to the range [0, 1]
+func clamp01(value float64) float64 {
+	if value < 0 {
+		return 0
+	}
+	if value > 1 {
+		return 1
+	}
+	return value
+}
+
 // DefaultEpochParams default parameters
 func DefaultEpochParams() EpochParams {
 	return EpochParams{
@@ -67,108 +115,156 @@ func DefaultEpochParams() EpochParams {
 }
 
 // ParseEpochParams parses parameters from event module's Subnet.Params
-func ParseEpochParams(paramMap map[string]string) EpochParams {
+func ParseEpochParams(paramMap map[string]string) (EpochParams, error) {
 	params := DefaultEpochParams()
+	var parseErrors []string
 
 	// Parse parameters (if they exist)
 	if val, exists := paramMap["kappa"]; exists {
 		if f, err := strconv.ParseFloat(val, 64); err == nil {
-			params.Kappa = f
+			params.Kappa = clamp01(f)
+		} else {
+			parseErrors = append(parseErrors, fmt.Sprintf("kappa: %v", err))
 		}
 	}
 
 	if val, exists := paramMap["alpha"]; exists {
 		if f, err := strconv.ParseFloat(val, 64); err == nil {
-			params.Alpha = f
+			params.Alpha = clamp01(f)
+		} else {
+			parseErrors = append(parseErrors, fmt.Sprintf("alpha: %v", err))
 		}
 	}
 
 	if val, exists := paramMap["delta"]; exists {
-		if f, err := strconv.ParseFloat(val, 64); err == nil {
+		if f, err := strconv.ParseFloat(val, 64); err == nil && f > 0 {
 			params.Delta = f
+		} else if err != nil {
+			parseErrors = append(parseErrors, fmt.Sprintf("delta: %v", err))
+		} else {
+			parseErrors = append(parseErrors, "delta must be positive")
 		}
 	}
 
 	if val, exists := paramMap["activity_cutoff"]; exists {
 		if f, err := strconv.ParseUint(val, 10, 64); err == nil {
 			params.ActivityCutoff = f
+		} else {
+			parseErrors = append(parseErrors, fmt.Sprintf("activity_cutoff: %v", err))
 		}
 	}
 
 	if val, exists := paramMap["immunity_period"]; exists {
 		if f, err := strconv.ParseUint(val, 10, 64); err == nil {
 			params.ImmunityPeriod = f
+		} else {
+			parseErrors = append(parseErrors, fmt.Sprintf("immunity_period: %v", err))
 		}
 	}
 
 	if val, exists := paramMap["max_weights_limit"]; exists {
 		if f, err := strconv.ParseUint(val, 10, 64); err == nil {
 			params.MaxWeightsLimit = f
+		} else {
+			parseErrors = append(parseErrors, fmt.Sprintf("max_weights_limit: %v", err))
 		}
 	}
 
 	if val, exists := paramMap["min_allowed_weights"]; exists {
 		if f, err := strconv.ParseUint(val, 10, 64); err == nil {
 			params.MinAllowedWeights = f
+		} else {
+			parseErrors = append(parseErrors, fmt.Sprintf("min_allowed_weights: %v", err))
 		}
 	}
 
 	if val, exists := paramMap["weights_set_rate_limit"]; exists {
 		if f, err := strconv.ParseUint(val, 10, 64); err == nil {
 			params.WeightsSetRateLimit = f
+		} else {
+			parseErrors = append(parseErrors, fmt.Sprintf("weights_set_rate_limit: %v", err))
 		}
 	}
 
 	if val, exists := paramMap["tempo"]; exists {
-		if f, err := strconv.ParseUint(val, 10, 64); err == nil {
+		if f, err := strconv.ParseUint(val, 10, 64); err == nil && f > 0 {
 			params.Tempo = f
+		} else if err != nil {
+			parseErrors = append(parseErrors, fmt.Sprintf("tempo: %v", err))
+		} else {
+			parseErrors = append(parseErrors, "tempo must be positive")
 		}
 	}
 
 	if val, exists := paramMap["bonds_penalty"]; exists {
 		if f, err := strconv.ParseFloat(val, 64); err == nil {
-			params.BondsPenalty = f
+			params.BondsPenalty = clamp01(f)
+		} else {
+			parseErrors = append(parseErrors, fmt.Sprintf("bonds_penalty: %v", err))
 		}
 	}
 
 	if val, exists := paramMap["bonds_moving_average"]; exists {
 		if f, err := strconv.ParseFloat(val, 64); err == nil {
-			params.BondsMovingAverage = f
+			params.BondsMovingAverage = clamp01(f)
+		} else {
+			parseErrors = append(parseErrors, fmt.Sprintf("bonds_moving_average: %v", err))
 		}
 	}
 
 	// Parse new parameters
 	if val, exists := paramMap["rho"]; exists {
 		if f, err := strconv.ParseFloat(val, 64); err == nil {
-			params.Rho = f
+			params.Rho = clamp01(f)
+		} else {
+			parseErrors = append(parseErrors, fmt.Sprintf("rho: %v", err))
 		}
 	}
 
 	if val, exists := paramMap["liquid_alpha_enabled"]; exists {
 		if b, err := strconv.ParseBool(val); err == nil {
 			params.LiquidAlphaEnabled = b
+		} else {
+			parseErrors = append(parseErrors, fmt.Sprintf("liquid_alpha_enabled: %v", err))
 		}
 	}
 
 	if val, exists := paramMap["alpha_sigmoid_steepness"]; exists {
-		if f, err := strconv.ParseFloat(val, 64); err == nil {
+		if f, err := strconv.ParseFloat(val, 64); err == nil && f > 0 {
 			params.AlphaSigmoidSteepness = f
+		} else if err != nil {
+			parseErrors = append(parseErrors, fmt.Sprintf("alpha_sigmoid_steepness: %v", err))
+		} else {
+			parseErrors = append(parseErrors, "alpha_sigmoid_steepness must be positive")
 		}
 	}
 
 	if val, exists := paramMap["alpha_low"]; exists {
 		if f, err := strconv.ParseFloat(val, 64); err == nil {
-			params.AlphaLow = f
+			params.AlphaLow = clamp01(f)
+		} else {
+			parseErrors = append(parseErrors, fmt.Sprintf("alpha_low: %v", err))
 		}
 	}
 
 	if val, exists := paramMap["alpha_high"]; exists {
 		if f, err := strconv.ParseFloat(val, 64); err == nil {
-			params.AlphaHigh = f
+			params.AlphaHigh = clamp01(f)
+		} else {
+			parseErrors = append(parseErrors, fmt.Sprintf("alpha_high: %v", err))
 		}
 	}
 
-	return params
+	// Validate the final parameters
+	if err := params.Validate(); err != nil {
+		parseErrors = append(parseErrors, fmt.Sprintf("validation: %v", err))
+	}
+
+	if len(parseErrors) > 0 {
+		return params, fmt.Errorf("parameter parsing errors: %s", strings.Join(parseErrors, "; "))
+	}
+
+	return params, nil
 }
 
 // ValidatorInfo validator information (obtained from event module)

@@ -2,6 +2,7 @@ package stakework
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
@@ -112,25 +113,8 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // BeginBlock executes at the beginning of each block
 func (am AppModule) BeginBlock(ctx sdk.Context, _ interface{}) {
-	// Check if epochs need to be run
-	am.checkAndRunEpochs(ctx)
-}
-
-// checkAndRunEpochs checks and runs epochs
-func (am AppModule) checkAndRunEpochs(ctx sdk.Context) {
-	// Get all subnets
-	subnets := am.keeper.GetEventKeeper().GetAllSubnets(ctx)
-
-	for _, subnet := range subnets {
-		// Attempt to run epoch
-		_, err := am.keeper.RunEpoch(ctx, subnet.Netuid, 1000000) // Default 1M rao emission
-		if err != nil {
-			// If not an error due to time not being due, log it
-			if err != keeper.ErrEpochNotDue {
-				ctx.Logger().Error("Failed to run epoch", "netuid", subnet.Netuid, "error", err)
-			}
-		}
-	}
+	// 移除 checkAndRunEpochs 调用
+	// 依赖 blockinflation 模块的 coinbase.go 来运行 epoch
 }
 
 // Dependency injection support
@@ -143,9 +127,8 @@ func (am AppModule) IsAppModule() {}
 
 // ProvideModule provides module dependencies
 func ProvideModule(in depinject.Config) (keeper.Keeper, error) {
-	// This needs to be implemented based on the actual dependency injection configuration
-	// For now, return a simple implementation
-	return keeper.Keeper{}, nil
+	// TODO: Implement proper dependency injection
+	return keeper.Keeper{}, fmt.Errorf("ProvideModule not yet implemented")
 }
 
 // InitGenesis initializes the genesis state

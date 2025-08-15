@@ -179,7 +179,11 @@ func (k Keeper) RunCoinbase(ctx sdk.Context, blockEmission math.Int) error {
 			k.Logger(ctx).Error("subnet not found", "netuid", netuid)
 			continue
 		}
-		params := stakeworktypes.ParseEpochParams(subnet.Params)
+		params, err := stakeworktypes.ParseEpochParams(subnet.Params)
+		if err != nil {
+			k.Logger(ctx).Error("failed to parse epoch parameters", "netuid", netuid, "err", err)
+			continue
+		}
 		tempo := params.Tempo
 		if k.stakeworkKeeper.ShouldRunEpoch(ctx, netuid, tempo) {
 			k.Logger(ctx).Debug("Epoch triggered", "netuid", netuid, "block", ctx.BlockHeight())

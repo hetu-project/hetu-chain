@@ -125,7 +125,7 @@ type EpochParams struct {
 ### 1. Run Epoch
 
 ```go
-result, err := k.RunEpoch(ctx, netuid, raoEmission)
+result, err := k.RunEpoch(ctx, netuid, ahetuEmission)
 if err != nil {
     return err
 }

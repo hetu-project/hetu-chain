@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"strconv"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
@@ -25,6 +26,7 @@ import (
 )
 
 // ----------- Event topic constants -----------
+// Deprecated: Use Keeper instance fields (k.topicXXX) instead of these global constants
 var (
 	// Legacy events remain unchanged (backward compatibility)
 	SubnetRegisteredTopic  = crypto.Keccak256Hash([]byte("SubnetRegistered(address,uint16,uint256,uint256,address,string)")).Hex()
@@ -61,6 +63,23 @@ type Keeper struct {
 	subnetManagerABI abi.ABI
 	neuronManagerABI abi.ABI
 	globalStakingABI abi.ABI
+
+	// Event topic IDs
+	topicSubnetRegistered        string
+	topicStakedSelf              string
+	topicUnstakedSelf            string
+	topicStakedDelegated         string
+	topicUnstakedDelegated       string
+	topicWeightsSet              string
+	topicNetworkRegistered       string
+	topicSubnetActivated         string
+	topicNetworkConfigUpdated    string
+	topicNeuronRegistered        string
+	topicNeuronDeregistered      string
+	topicNeuronStakeChanged      string
+	topicServiceUpdated          string
+	topicSubnetAllocationChanged string
+	topicDeallocatedFromSubnet   string
 }
 
 // ----------- Keeper initialization -----------
@@ -75,7 +94,7 @@ func NewKeeper(
 	neuronManagerABI abi.ABI,
 	globalStakingABI abi.ABI,
 ) *Keeper {
-	return &Keeper{
+	k := &Keeper{
 		cdc:                 cdc,
 		storeKey:            storeKey,
 		subnetRegistryABI:   subnetRegistryABI,
@@ -86,6 +105,24 @@ func NewKeeper(
 		neuronManagerABI:    neuronManagerABI,
 		globalStakingABI:    globalStakingABI,
 	}
+	// Legacy events
+	k.topicSubnetRegistered = k.subnetRegistryABI.Events["SubnetRegistered"].ID.Hex()
+	k.topicStakedSelf = k.stakingSelfABI.Events["Staked"].ID.Hex()
+	k.topicUnstakedSelf = k.stakingSelfABI.Events["Unstaked"].ID.Hex()
+	k.topicStakedDelegated = k.stakingDelegatedABI.Events["Staked"].ID.Hex()
+	k.topicUnstakedDelegated = k.stakingDelegatedABI.Events["Unstaked"].ID.Hex()
+	k.topicWeightsSet = k.weightsABI.Events["WeightsSet"].ID.Hex()
+	// New events
+	k.topicNetworkRegistered = k.subnetManagerABI.Events["NetworkRegistered"].ID.Hex()
+	k.topicSubnetActivated = k.subnetManagerABI.Events["SubnetActivated"].ID.Hex()
+	k.topicNetworkConfigUpdated = k.subnetManagerABI.Events["NetworkConfigUpdated"].ID.Hex()
+	k.topicNeuronRegistered = k.neuronManagerABI.Events["NeuronRegistered"].ID.Hex()
+	k.topicNeuronDeregistered = k.neuronManagerABI.Events["NeuronDeregistered"].ID.Hex()
+	k.topicNeuronStakeChanged = k.neuronManagerABI.Events["StakeAllocationChanged"].ID.Hex()
+	k.topicServiceUpdated = k.neuronManagerABI.Events["ServiceUpdated"].ID.Hex()
+	k.topicSubnetAllocationChanged = k.globalStakingABI.Events["SubnetAllocationChanged"].ID.Hex()
+	k.topicDeallocatedFromSubnet = k.globalStakingABI.Events["DeallocatedFromSubnet"].ID.Hex()
+	return k
 }
 
 // ----------- Logger -----------
@@ -106,51 +143,51 @@ func (k *Keeper) HandleEvmLogs(ctx sdk.Context, logs []ethTypes.Log) {
 
 		switch topic {
 		// Legacy events (maintain compatibility)
-		case SubnetRegisteredTopic:
+		case k.topicSubnetRegistered:
 			k.Logger(ctx).Debug("Identified SubnetRegistered event")
 			k.handleSubnetRegistered(ctx, log)
-		case StakedSelfTopic:
+		case k.topicStakedSelf:
 			k.Logger(ctx).Debug("Identified StakedSelf event")
 			k.handleStaked(ctx, log)
-		case UnstakedSelfTopic:
+		case k.topicUnstakedSelf:
 			k.Logger(ctx).Debug("Identified UnstakedSelf event")
 			k.handleUnstaked(ctx, log)
-		case StakedDelegatedTopic:
+		case k.topicStakedDelegated:
 			k.Logger(ctx).Debug("Identified StakedDelegated event")
 			k.handleDelegatedStaked(ctx, log)
-		case UnstakedDelegatedTopic:
+		case k.topicUnstakedDelegated:
 			k.Logger(ctx).Debug("Identified UnstakedDelegated event")
 			k.handleDelegatedUnstaked(ctx, log)
-		case WeightsSetTopic:
+		case k.topicWeightsSet:
 			k.Logger(ctx).Debug("Identified WeightsSet event")
 			k.handleWeightsSet(ctx, log)
 
 		// New events
-		case NetworkRegisteredTopic:
+		case k.topicNetworkRegistered:
 			k.Logger(ctx).Debug("Identified NetworkRegistered event")
 			k.handleNetworkRegistered(ctx, log)
-		case SubnetActivatedTopic:
+		case k.topicSubnetActivated:
 			k.Logger(ctx).Debug("Identified SubnetActivated event")
 			k.handleSubnetActivated(ctx, log)
-		case NetworkConfigUpdatedTopic:
+		case k.topicNetworkConfigUpdated:
 			k.Logger(ctx).Debug("Identified NetworkConfigUpdated event")
 			k.handleNetworkConfigUpdated(ctx, log)
-		case NeuronRegisteredTopic:
+		case k.topicNeuronRegistered:
 			k.Logger(ctx).Debug("Identified NeuronRegistered event")
 			k.handleNeuronRegistered(ctx, log)
-		case NeuronDeregisteredTopic:
+		case k.topicNeuronDeregistered:
 			k.Logger(ctx).Debug("Identified NeuronDeregistered event")
 			k.handleNeuronDeregistered(ctx, log)
-		case NeuronStakeChangedTopic:
+		case k.topicNeuronStakeChanged:
 			k.Logger(ctx).Debug("Identified NeuronStakeChanged event")
 			k.handleNeuronStakeChanged(ctx, log)
-		case ServiceUpdatedTopic:
+		case k.topicServiceUpdated:
 			k.Logger(ctx).Debug("Identified ServiceUpdated event")
 			k.handleServiceUpdated(ctx, log)
-		case SubnetAllocationChangedTopic:
+		case k.topicSubnetAllocationChanged:
 			k.Logger(ctx).Debug("Identified SubnetAllocationChanged event")
 			k.handleSubnetAllocationChanged(ctx, log)
-		case DeallocatedFromSubnetTopic:
+		case k.topicDeallocatedFromSubnet:
 			k.Logger(ctx).Debug("Identified DeallocatedFromSubnet event")
 			k.handleDeallocatedFromSubnet(ctx, log)
 		default:
@@ -385,10 +422,10 @@ func (k Keeper) handleNetworkRegistered(ctx sdk.Context, log ethTypes.Log) {
 
 	// Override Core network parameters (if event has values)
 	if event.Hyperparams.Rho != 0 {
-		params["rho"] = fmt.Sprintf("%.1f", float64(event.Hyperparams.Rho)/10000.0) // uint16 to float64, assuming original value is scaled by 10000
+		params["rho"] = strconv.FormatFloat(float64(event.Hyperparams.Rho)/10000.0, 'f', -1, 64)
 	}
 	if event.Hyperparams.Kappa != 0 {
-		params["kappa"] = fmt.Sprintf("%.1f", float64(event.Hyperparams.Kappa)/10000.0) // uint16 to float64, assuming original value is scaled by 10000
+		params["kappa"] = fmt.Sprintf("%d", event.Hyperparams.Kappa)
 	}
 	if event.Hyperparams.ImmunityPeriod != 0 {
 		params["immunity_period"] = fmt.Sprintf("%d", event.Hyperparams.ImmunityPeriod)

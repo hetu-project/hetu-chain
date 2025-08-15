@@ -18,8 +18,15 @@ echo "Home directory: $HETUD_HOME"
 # Build the binary
 # go build ./cmd/hetud
 
-# Clear the home folder
-rm -rf "$HETUD_HOME"
+# Clear the home folder (guarded)
+if [[ -z "${HETUD_HOME:-}" || "$HETUD_HOME" = "/" ]]; then
+  echo "Refusing to remove HETUD_HOME=$HETUD_HOME"
+  exit 1
+fi
+echo "About to remove $HETUD_HOME (override with SKIP_RESET=1 to skip)"
+if [[ "${SKIP_RESET:-0}" != "1" ]]; then
+  rm -rf "$HETUD_HOME"
+fi
 
 # Initialize configuration
 # hetud config keyring-backend "$KEYRING"
@@ -64,7 +71,12 @@ jq ".consensus_params[\"block\"][\"time_iota_ms\"]=\"30000\"" "$GENESIS" > "$TMP
 jq ".consensus_params[\"block\"][\"max_gas\"]=\"10000000\"" "$GENESIS" > "$TMPGENESIS" && mv "$TMPGENESIS" "$GENESIS"
 
 # Modify the configuration file
-sed -i '' 's/create_empty_blocks = true/create_empty_blocks = false/g' "$ETHCONFIG"
+# Cross-platform in-place sed
+if sed --version >/dev/null 2>&1; then
+  sed -i 's/create_empty_blocks = true/create_empty_blocks = false/g' "$ETHCONFIG"   # GNU sed
+else
+  sed -i '' 's/create_empty_blocks = true/create_empty_blocks = false/g' "$ETHCONFIG" # BSD sed (macOS)
+fi
 
 # Allocate genesis accounts
 hetud add-genesis-account "$KEY" 100000000000000000000000000ahetu --keyring-backend "$KEYRING" --home "$HETUD_HOME"
@@ -73,10 +85,10 @@ hetud add-genesis-account "$KEY" 100000000000000000000000000ahetu --keyring-back
 hetud gentx "$KEY" 2000000000000000000000ahetu --keyring-backend "$KEYRING" --chain-id "$CHAINID" --home "$HETUD_HOME" --fees 1000000ahetu --gas 200000
 
 # Collect genesis transactions
-hetud collect-gentxs
+hetud collect-gentxs --home "$HETUD_HOME"
 
 # Validate genesis file
-hetud validate-genesis
+hetud validate-genesis --home "$HETUD_HOME"
 
 # Configure P2P for external connections
 # Get the node ID

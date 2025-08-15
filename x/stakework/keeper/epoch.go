@@ -33,7 +33,11 @@ func (k Keeper) RunEpoch(ctx sdk.Context, netuid uint16, raoEmission uint64) (*t
 	logger.Debug("Retrieved subnet data", "netuid", netuid, "subnet", subnet)
 
 	// 2. Parse subnet parameters
-	params := types.ParseEpochParams(subnet.Params)
+	params, err := types.ParseEpochParams(subnet.Params)
+	if err != nil {
+		logger.Error("Failed to parse epoch parameters", "netuid", netuid, "err", err)
+		return nil, fmt.Errorf("failed to parse epoch parameters: %w", err)
+	}
 	logger.Debug("Parsed subnet parameters",
 		"kappa", params.Kappa,
 		"alpha", params.Alpha,
@@ -540,7 +544,8 @@ func (k Keeper) distributeEmission(normIncentive, normDividends []float64, raoEm
 	emission := make([]uint64, n)
 
 	for i := 0; i < n; i++ {
-		emission[i] = uint64(normIncentive[i]*float64(raoEmission)) + uint64(normDividends[i]*float64(raoEmission))
+		// emission[i] = uint64(normIncentive[i]*float64(raoEmission)) + uint64(normDividends[i]*float64(raoEmission))
+		emission[i] = uint64((normIncentive[i] + normDividends[i]) * float64(raoEmission))
 	}
 
 	return emission
