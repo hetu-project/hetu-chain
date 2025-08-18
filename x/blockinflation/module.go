@@ -71,7 +71,7 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *r
 	if err := pb.RegisterQueryHandlerFromEndpoint(
 		context.Background(),
 		mux,
-		clientCtx.NodeURI,
+		"localhost:9090", // Use the gRPC server address directly
 		[]grpc.DialOption{grpc.WithInsecure()},
 	); err != nil {
 		panic(err)

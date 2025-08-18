@@ -50,6 +50,8 @@ type EventKeeper interface {
 	AddSubnetAlphaOutEmission(ctx sdk.Context, netuid uint16, amount math.Int)
 	AddSubnetTaoInEmission(ctx sdk.Context, netuid uint16, amount math.Int)
 	SetSubnetAlphaOut(ctx sdk.Context, netuid uint16, amount math.Int)
+	SetSubnetAlphaIn(ctx sdk.Context, netuid uint16, amount math.Int)
+	SetSubnetTaoIn(ctx sdk.Context, netuid uint16, amount math.Int)
 
 	// Emission related
 	GetPendingEmission(ctx sdk.Context, netuid uint16) math.Int

@@ -205,12 +205,12 @@ func (k Keeper) handleSubnetRegistered(ctx sdk.Context, log ethTypes.Log) {
 	k.Logger(ctx).Debug("Starting to process SubnetRegistered event", "contract_address", log.Address.Hex(), "block_height", log.BlockNumber)
 
 	var event struct {
-		Owner      common.Address
-		Netuid     uint16
-		LockAmount *big.Int
-		BurnedTao  *big.Int
-		Pool       common.Address
-		Param      string
+		Owner        common.Address
+		Netuid       uint16
+		LockedAmount *big.Int
+		BurnedAmount *big.Int
+		AmmPool      common.Address
+		Param        string
 	}
 	if err := k.subnetRegistryABI.UnpackIntoInterface(&event, "SubnetRegistered", log.Data); err != nil {
 		k.Logger(ctx).Error("Failed to parse SubnetRegistered event", "error", err, "contract_address", log.Address.Hex())
@@ -220,9 +220,9 @@ func (k Keeper) handleSubnetRegistered(ctx sdk.Context, log ethTypes.Log) {
 	k.Logger(ctx).Debug("Successfully parsed SubnetRegistered event",
 		"netuid", event.Netuid,
 		"owner", event.Owner.Hex(),
-		"lockAmount", event.LockAmount.String(),
-		"burnedTao", event.BurnedTao.String(),
-		"pool", event.Pool.Hex(),
+		"lockAmount", event.LockedAmount.String(),
+		"burnedTao", event.BurnedAmount.String(),
+		"pool", event.AmmPool.Hex(),
 		"param", event.Param)
 
 	params := types.DefaultParamsMap() // Default parameters map implemented in types
@@ -234,9 +234,9 @@ func (k Keeper) handleSubnetRegistered(ctx sdk.Context, log ethTypes.Log) {
 	subnet := types.Subnet{
 		Netuid:                event.Netuid,
 		Owner:                 event.Owner.Hex(),
-		LockedAmount:          event.LockAmount.String(),
-		BurnedAmount:          event.BurnedTao.String(),
-		AmmPool:               event.Pool.Hex(),
+		LockedAmount:          event.LockedAmount.String(),
+		BurnedAmount:          event.BurnedAmount.String(),
+		AmmPool:               event.AmmPool.Hex(),
 		Params:                params,
 		Mechanism:             1,      // Default dynamic mechanism
 		EMAPriceHalvingBlocks: 201600, // Default 4 weeks (201600 blocks)
@@ -1111,6 +1111,23 @@ func (k Keeper) SetSubnetMovingPrice(ctx sdk.Context, netuid uint16, price math.
 
 // GetSubnetMovingPrice gets the moving price for a subnet
 func (k Keeper) GetSubnetMovingPrice(ctx sdk.Context, netuid uint16) math.LegacyDec {
+	// Root subnet always has price 1.0
+	if netuid == 0 {
+		return math.LegacyNewDec(1)
+	}
+
+	// Get subnet mechanism
+	subnet, exists := k.GetSubnet(ctx, netuid)
+	if !exists {
+		return math.LegacyNewDec(1) // Default to 1.0
+	}
+
+	// Stable mechanism (0) always has price 1.0
+	if subnet.Mechanism == 0 {
+		return math.LegacyNewDec(1)
+	}
+
+	// Dynamic mechanism: return moving price
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("moving_price:"))
 	bz := store.Get(uint16ToBytes(netuid))
 	if bz == nil {
@@ -1123,48 +1140,7 @@ func (k Keeper) GetSubnetMovingPrice(ctx sdk.Context, netuid uint16) math.Legacy
 	return price
 }
 
-// SetSubnetTAO sets the TAO amount for a subnet
-func (k Keeper) SetSubnetTAO(ctx sdk.Context, netuid uint16, amount math.Int) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("subnet_tao:"))
-	amountBytes := []byte(amount.String())
-	store.Set(uint16ToBytes(netuid), amountBytes)
-}
-
-// GetSubnetTAO gets the TAO amount for a subnet
-func (k Keeper) GetSubnetTAO(ctx sdk.Context, netuid uint16) math.Int {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("subnet_tao:"))
-	bz := store.Get(uint16ToBytes(netuid))
-	if bz == nil {
-		return math.ZeroInt()
-	}
-	amount, ok := math.NewIntFromString(string(bz))
-	if !ok {
-		return math.ZeroInt()
-	}
-	return amount
-}
-
 // SetSubnetAlphaIn sets the Alpha in amount for a subnet
-func (k Keeper) SetSubnetAlphaIn(ctx sdk.Context, netuid uint16, amount math.Int) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("subnet_alpha_in:"))
-	amountBytes := []byte(amount.String())
-	store.Set(uint16ToBytes(netuid), amountBytes)
-}
-
-// GetSubnetAlphaIn gets the Alpha in amount for a subnet
-func (k Keeper) GetSubnetAlphaIn(ctx sdk.Context, netuid uint16) math.Int {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("subnet_alpha_in:"))
-	bz := store.Get(uint16ToBytes(netuid))
-	if bz == nil {
-		return math.ZeroInt()
-	}
-	amount, ok := math.NewIntFromString(string(bz))
-	if !ok {
-		return math.ZeroInt()
-	}
-	return amount
-}
-
 // SetSubnetAlphaOut sets the Alpha out amount for a subnet
 func (k Keeper) SetSubnetAlphaOut(ctx sdk.Context, netuid uint16, amount math.Int) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("subnet_alpha_out:"))
@@ -1247,7 +1223,7 @@ func (k Keeper) GetAlphaPrice(ctx sdk.Context, netuid uint16) math.LegacyDec {
 	}
 
 	// Dynamic mechanism: price = TAO / AlphaIn
-	subnetTAO := k.GetSubnetTAO(ctx, netuid)
+	subnetTAO := k.GetSubnetTaoIn(ctx, netuid)
 	subnetAlphaIn := k.GetSubnetAlphaIn(ctx, netuid)
 
 	if subnetAlphaIn.IsZero() {
@@ -1280,7 +1256,16 @@ func (k Keeper) GetMovingAlphaPrice(ctx sdk.Context, netuid uint16) math.LegacyD
 	}
 
 	// Dynamic mechanism: return moving price
-	return k.GetSubnetMovingPrice(ctx, netuid)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("moving_price:"))
+	bz := store.Get(uint16ToBytes(netuid))
+	if bz == nil {
+		return math.LegacyNewDec(1) // Default to 1.0
+	}
+	price, err := math.LegacyNewDecFromStr(string(bz))
+	if err != nil {
+		return math.LegacyNewDec(1) // Default to 1.0 on error
+	}
+	return price
 }
 
 // UpdateMovingPrice updates the moving price for a subnet
@@ -1374,9 +1359,9 @@ func (k Keeper) AddSubnetAlphaOut(ctx sdk.Context, netuid uint16, amount math.In
 
 // AddSubnetTAO adds amount to the TAO amount for a subnet
 func (k Keeper) AddSubnetTAO(ctx sdk.Context, netuid uint16, amount math.Int) {
-	currentAmount := k.GetSubnetTAO(ctx, netuid)
+	currentAmount := k.GetSubnetTaoIn(ctx, netuid)
 	newAmount := currentAmount.Add(amount)
-	k.SetSubnetTAO(ctx, netuid, newAmount)
+	k.SetSubnetTaoIn(ctx, netuid, newAmount)
 
 	k.Logger(ctx).Debug("Added to subnet TAO",
 		"netuid", netuid,
@@ -1589,4 +1574,37 @@ func (k Keeper) GetLastMechanismStepBlock(ctx sdk.Context, netuid uint16) int64 
 		return 0
 	}
 	return int64(binary.BigEndian.Uint64(bz))
+}
+
+// GetSubnetTaoIn gets the TAO amount for a subnet
+func (k Keeper) GetSubnetTaoIn(ctx sdk.Context, netuid uint16) math.Int {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("subnet_tao:"))
+	bz := store.Get(uint16ToBytes(netuid))
+	if bz == nil {
+		return math.ZeroInt()
+	}
+	amount, ok := math.NewIntFromString(string(bz))
+	if !ok {
+		return math.ZeroInt()
+	}
+	return amount
+}
+
+// GetSubnetAlphaIn gets the Alpha in amount for a subnet
+func (k Keeper) GetSubnetAlphaIn(ctx sdk.Context, netuid uint16) math.Int {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("subnet_alpha_in:"))
+	bz := store.Get(uint16ToBytes(netuid))
+	if bz == nil {
+		return math.ZeroInt()
+	}
+	amount, ok := math.NewIntFromString(string(bz))
+	if !ok {
+		return math.ZeroInt()
+	}
+	return amount
+}
+
+// GetSubnetTAO gets the TAO amount for a subnet (alias for GetSubnetTaoIn)
+func (k Keeper) GetSubnetTAO(ctx sdk.Context, netuid uint16) math.Int {
+	return k.GetSubnetTaoIn(ctx, netuid)
 }

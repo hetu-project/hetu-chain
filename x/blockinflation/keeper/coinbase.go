@@ -326,6 +326,16 @@ func (k Keeper) RunCoinbase(ctx sdk.Context, blockEmission math.Int) error {
 	// TODO: Implement epoch-based emission draining
 	k.Logger(ctx).Debug("Pending emission drained")
 
+	// --- 9. 同步 AMM 池状态
+	for _, netuid := range subnetsToEmitTo {
+		if err := k.SyncAMMPoolState(ctx, netuid); err != nil {
+			k.Logger(ctx).Error("Failed to sync AMM pool state",
+				"netuid", netuid,
+				"error", err,
+			)
+		}
+	}
+
 	// Emit event for coinbase execution
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(

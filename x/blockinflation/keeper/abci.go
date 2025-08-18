@@ -21,5 +21,11 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) error {
 		return err
 	}
 
+	// 每 100 个区块同步一次所有子网的 AMM 池状态
+	if ctx.BlockHeight()%100 == 0 {
+		k.Logger(ctx).Info("Periodic AMM pool sync", "height", ctx.BlockHeight())
+		k.SyncAllAMMPools(ctx)
+	}
+
 	return nil
 }

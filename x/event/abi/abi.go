@@ -27,3 +27,6 @@ var GlobalStakingABI []byte
 
 //go:embed AlphaToken.json
 var AlphaTokenABI []byte
+
+//go:embed SubnetAMM.json
+var SubnetAMMABI []byte
