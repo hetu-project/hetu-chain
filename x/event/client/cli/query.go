@@ -8,14 +8,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/hetu-project/hetu/v1/x/subnet/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module
 func GetQueryCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:                        types.ModuleName,
-		Short:                      fmt.Sprintf("Querying commands for the %s module", types.ModuleName),
+		Use:                        "subnet",
+		Short:                      "Querying commands for the subnet",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
@@ -43,27 +42,17 @@ func GetCmdQuerySubnets() *cobra.Command {
 				return err
 			}
 
-			queryClient := types.NewQueryClient(clientCtx)
-
-			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			// Create a REST client
+			route := fmt.Sprintf("custom/event/subnets")
+			res, _, err := clientCtx.QueryWithData(route, nil)
 			if err != nil {
 				return err
 			}
 
-			req := &types.QuerySubnetsRequest{
-				Pagination: pageReq,
-			}
-
-			res, err := queryClient.Subnets(cmd.Context(), req)
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
+			return clientCtx.PrintString(string(res))
 		},
 	}
 
-	flags.AddPaginationFlagsToCmd(cmd, "subnets")
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
@@ -81,23 +70,19 @@ func GetCmdQuerySubnet() *cobra.Command {
 				return err
 			}
 
-			netuid, err := strconv.ParseUint(args[0], 10, 32)
+			netuid, err := strconv.ParseUint(args[0], 10, 16)
 			if err != nil {
 				return fmt.Errorf("invalid netuid: %w", err)
 			}
 
-			queryClient := types.NewQueryClient(clientCtx)
-
-			req := &types.QuerySubnetRequest{
-				Netuid: uint32(netuid),
-			}
-
-			res, err := queryClient.Subnet(cmd.Context(), req)
+			// Create a REST client
+			route := fmt.Sprintf("custom/event/subnet/%d", netuid)
+			res, _, err := clientCtx.QueryWithData(route, nil)
 			if err != nil {
 				return err
 			}
 
-			return clientCtx.PrintProto(res)
+			return clientCtx.PrintString(string(res))
 		},
 	}
 
@@ -118,33 +103,22 @@ func GetCmdQuerySubnetNeurons() *cobra.Command {
 				return err
 			}
 
-			netuid, err := strconv.ParseUint(args[0], 10, 32)
+			netuid, err := strconv.ParseUint(args[0], 10, 16)
 			if err != nil {
 				return fmt.Errorf("invalid netuid: %w", err)
 			}
 
-			queryClient := types.NewQueryClient(clientCtx)
-
-			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			// Create a REST client
+			route := fmt.Sprintf("custom/event/subnet/%d/neurons", netuid)
+			res, _, err := clientCtx.QueryWithData(route, nil)
 			if err != nil {
 				return err
 			}
 
-			req := &types.QuerySubnetNeuronsRequest{
-				Netuid:     uint32(netuid),
-				Pagination: pageReq,
-			}
-
-			res, err := queryClient.SubnetNeurons(cmd.Context(), req)
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
+			return clientCtx.PrintString(string(res))
 		},
 	}
 
-	flags.AddPaginationFlagsToCmd(cmd, "neurons")
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
@@ -162,23 +136,19 @@ func GetCmdQuerySubnetPool() *cobra.Command {
 				return err
 			}
 
-			netuid, err := strconv.ParseUint(args[0], 10, 32)
+			netuid, err := strconv.ParseUint(args[0], 10, 16)
 			if err != nil {
 				return fmt.Errorf("invalid netuid: %w", err)
 			}
 
-			queryClient := types.NewQueryClient(clientCtx)
-
-			req := &types.QuerySubnetPoolRequest{
-				Netuid: uint32(netuid),
-			}
-
-			res, err := queryClient.SubnetPool(cmd.Context(), req)
+			// Create a REST client
+			route := fmt.Sprintf("custom/event/subnet/%d/pool", netuid)
+			res, _, err := clientCtx.QueryWithData(route, nil)
 			if err != nil {
 				return err
 			}
 
-			return clientCtx.PrintProto(res)
+			return clientCtx.PrintString(string(res))
 		},
 	}
 

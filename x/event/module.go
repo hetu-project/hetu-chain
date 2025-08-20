@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
@@ -21,8 +20,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
+	"github.com/hetu-project/hetu/v1/x/event/client/cli"
 	"github.com/hetu-project/hetu/v1/x/event/keeper"
 	"github.com/hetu-project/hetu/v1/x/event/types"
+	pb "github.com/hetu-project/hetu/v1/x/event/types/generated"
+	"google.golang.org/grpc"
 )
 
 var (
@@ -49,7 +51,9 @@ func (AppModuleBasic) Name() string {
 	return types.ModuleName
 }
 
-func (AppModuleBasic) RegisterLegacyAminoCodec(_ *codec.LegacyAmino)   {}
+func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	types.RegisterLegacyAminoCodec(cdc)
+}
 func (AppModuleBasic) RegisterInterfaces(_ cdctypes.InterfaceRegistry) {}
 
 func (AppModuleBasic) DefaultGenesis(_ codec.JSONCodec) json.RawMessage {
@@ -68,10 +72,22 @@ func (AppModuleBasic) ValidateGenesis(_ codec.JSONCodec, _ client.TxEncodingConf
 	return genState.Validate()
 }
 
-func (AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router)                        {}
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {}
-func (AppModuleBasic) GetTxCmd() *cobra.Command                                                  { return nil }
-func (AppModuleBasic) GetQueryCmd() *cobra.Command                                               { return nil }
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+	if err := pb.RegisterQueryHandlerFromEndpoint(
+		context.Background(),
+		mux,
+		"localhost:9090", // Use the gRPC server address directly
+		[]grpc.DialOption{grpc.WithInsecure()},
+	); err != nil {
+		panic(err)
+	}
+}
+
+func (AppModuleBasic) GetTxCmd() *cobra.Command { return nil }
+
+func (AppModuleBasic) GetQueryCmd() *cobra.Command {
+	return cli.GetQueryCmd()
+}
 
 // ----------------------------------------------------------------------------
 // AppModule
@@ -93,8 +109,24 @@ func (am AppModule) Name() string {
 	return am.AppModuleBasic.Name()
 }
 
-func (AppModule) QuerierRoute() string                          { return "" }
-func (am AppModule) RegisterServices(cfg module.Configurator)   {}
+// QuerierRoute returns the event module's querier route name
+func (am AppModule) QuerierRoute() string {
+	return "event"
+}
+
+func (am AppModule) RegisterServices(cfg module.Configurator) {
+	// 注册gRPC查询服务
+	pb.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServer(am.keeper))
+
+	// 注册legacy querier
+	queryRouter := cfg.QueryServer().(interface {
+		RegisterLegacyHandler(string, func(sdk.Context, []string, abci.RequestQuery) ([]byte, error))
+	})
+	legacyAmino := codec.NewLegacyAmino()
+	types.RegisterLegacyAminoCodec(legacyAmino)
+	queryRouter.RegisterLegacyHandler(types.ModuleName, keeper.NewLegacyQuerier(am.keeper, legacyAmino))
+}
+
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 func (am AppModule) InitGenesis(ctx sdk.Context, _ codec.JSONCodec, gs json.RawMessage) []abci.ValidatorUpdate {
