@@ -30,3 +30,6 @@ var AlphaTokenABI []byte
 
 //go:embed SubnetAMM.json
 var SubnetAMMABI []byte
+
+//go:embed WHETU.json
+var WHETUABI []byte

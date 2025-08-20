@@ -735,6 +735,7 @@ func NewEvmos(
 		app.EventKeeper,
 		app.StakeworkKeeper,
 		app.Erc20Keeper,
+		app.EvmKeeper,
 		authtypes.FeeCollectorName,
 		subspace,
 	)

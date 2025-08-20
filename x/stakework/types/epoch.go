@@ -5,15 +5,17 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
+
+	"cosmossdk.io/math"
 )
 
 // EpochResult epoch calculation result
 type EpochResult struct {
 	Netuid    uint16      `json:"netuid"`
 	Accounts  []string    `json:"accounts"`
-	Emission  []uint64    `json:"emission"`
-	Dividend  []uint64    `json:"dividend"`
-	Incentive []uint64    `json:"incentive"` // New: incentive allocation
+	Emission  []math.Int  `json:"emission"`
+	Dividend  []math.Int  `json:"dividend"`
+	Incentive []math.Int  `json:"incentive"` // New: incentive allocation
 	Bonds     [][]float64 `json:"bonds"`
 	Consensus []float64   `json:"consensus"`
 }
@@ -320,5 +322,5 @@ type SubnetEpochData struct {
 	Netuid     uint16          `json:"netuid"`
 	Validators []ValidatorInfo `json:"validators"`
 	Params     EpochParams     `json:"params"`
-	Emission   uint64          `json:"emission"`
+	Emission   math.Int        `json:"emission"`
 }

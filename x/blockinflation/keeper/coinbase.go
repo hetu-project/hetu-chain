@@ -23,10 +23,20 @@ func (k Keeper) CalculateAlphaEmission(ctx sdk.Context, netuid uint16) (math.Int
 	// Get subnet Alpha issuance: SubnetAlphaIn + SubnetAlphaOut
 	subnetAlphaIn := k.eventKeeper.GetSubnetAlphaIn(ctx, netuid)
 	subnetAlphaOut := k.eventKeeper.GetSubnetAlphaOut(ctx, netuid)
+
+	// 添加详细日志
+	k.Logger(ctx).Debug("Alpha issuance components",
+		"netuid", netuid,
+		"subnet_alpha_in", subnetAlphaIn.String(),
+		"subnet_alpha_out", subnetAlphaOut.String())
+
 	alphaIssuance := subnetAlphaIn.Add(subnetAlphaOut)
 
 	// Check if we have any Alpha issuance
 	if !alphaIssuance.IsPositive() {
+		k.Logger(ctx).Debug("Alpha issuance is zero or negative, returning zero emission",
+			"netuid", netuid,
+			"alpha_issuance", alphaIssuance.String())
 		return math.ZeroInt(), nil
 	}
 
@@ -35,12 +45,28 @@ func (k Keeper) CalculateAlphaEmission(ctx sdk.Context, netuid uint16) (math.Int
 	totalSupplyDec := params.TotalSupply.ToLegacyDec()
 	defaultBlockEmissionDec := params.DefaultBlockEmission.ToLegacyDec()
 
+	// 添加详细日志
+	k.Logger(ctx).Debug("Alpha emission calculation parameters",
+		"netuid", netuid,
+		"alpha_issuance_dec", alphaIssuanceDec.String(),
+		"total_supply_dec", totalSupplyDec.String(),
+		"default_block_emission_dec", defaultBlockEmissionDec.String())
+
 	// Calculate the ratio: alpha_issuance / (2 * total_supply)
 	twoTimesTotalSupply := totalSupplyDec.Mul(math.LegacyNewDec(2))
 	ratio := alphaIssuanceDec.Quo(twoTimesTotalSupply)
 
+	// 添加详细日志
+	k.Logger(ctx).Debug("Alpha emission ratio calculation",
+		"netuid", netuid,
+		"two_times_total_supply", twoTimesTotalSupply.String(),
+		"ratio", ratio.String())
+
 	// If ratio >= 1.0, return 0
 	if ratio.GTE(math.LegacyOneDec()) {
+		k.Logger(ctx).Debug("Ratio >= 1.0, returning zero emission",
+			"netuid", netuid,
+			"ratio", ratio.String())
 		return math.ZeroInt(), nil
 	}
 
@@ -48,10 +74,19 @@ func (k Keeper) CalculateAlphaEmission(ctx sdk.Context, netuid uint16) (math.Int
 	// logArg = 1 / (1 - ratio)
 	oneMinusRatio := math.LegacyOneDec().Sub(ratio)
 	if oneMinusRatio.LTE(math.LegacyZeroDec()) {
+		k.Logger(ctx).Debug("1 - ratio <= 0, returning zero emission",
+			"netuid", netuid,
+			"one_minus_ratio", oneMinusRatio.String())
 		return math.ZeroInt(), nil
 	}
 
 	logArg := math.LegacyOneDec().Quo(oneMinusRatio)
+
+	// 添加详细日志
+	k.Logger(ctx).Debug("Log argument calculation",
+		"netuid", netuid,
+		"one_minus_ratio", oneMinusRatio.String(),
+		"log_arg", logArg.String())
 
 	// Convert to float64 for log2 calculation (this is the only place we need float64)
 	logArgFloat := logArg.MustFloat64()
@@ -61,11 +96,24 @@ func (k Keeper) CalculateAlphaEmission(ctx sdk.Context, netuid uint16) (math.Int
 	flooredLog := stdmath.Floor(logResult)
 	flooredLogInt := int64(flooredLog)
 
+	// 添加详细日志
+	k.Logger(ctx).Debug("Log calculation",
+		"netuid", netuid,
+		"log_arg_float", logArgFloat,
+		"log_result", logResult,
+		"floored_log", flooredLogInt)
+
 	// Calculate 2^flooredLog
 	multiplier := stdmath.Pow(2.0, float64(flooredLogInt))
 
 	// Calculate block emission percentage: 1 / multiplier
 	blockEmissionPercentage := math.LegacyOneDec().Quo(math.LegacyNewDecWithPrec(int64(multiplier*1000), 3))
+
+	// 添加详细日志
+	k.Logger(ctx).Debug("Emission percentage calculation",
+		"netuid", netuid,
+		"multiplier", multiplier,
+		"block_emission_percentage", blockEmissionPercentage.String())
 
 	// Calculate actual Alpha emission using high-precision arithmetic
 	alphaEmission := defaultBlockEmissionDec.Mul(blockEmissionPercentage)
@@ -138,6 +186,17 @@ func (k Keeper) RunCoinbase(ctx sdk.Context, blockEmission math.Int) error {
 		return err
 	}
 
+	// --- 新增: 同步链上状态到合约，只注入HETU代币
+	for netuid, reward := range rewards {
+		if err := k.SyncChainStateToContract(ctx, netuid, reward); err != nil {
+			k.Logger(ctx).Error("Failed to sync chain state to contract",
+				"netuid", netuid,
+				"error", err,
+			)
+			// 继续处理其他子网，不要因为同步失败而中断整个流程
+		}
+	}
+
 	// --- 5. Calculate owner cuts and update alpha_out
 	// Calculate owner cuts and subtract from alpha_out
 	if err := k.CalculateOwnerCuts(ctx, rewards); err != nil {
@@ -200,36 +259,27 @@ func (k Keeper) RunCoinbase(ctx sdk.Context, blockEmission math.Int) error {
 
 			k.Logger(ctx).Debug("Draining pending emission", "netuid", netuid, "pending_alpha", pendingAlpha.String(), "owner_cut", ownerCut.String())
 
-			// Check if pendingAlpha exceeds uint64 max value
-			if !pendingAlpha.IsUint64() {
-				k.Logger(ctx).Error("pending emission exceeds uint64, clamping", "netuid", netuid, "pending_alpha", pendingAlpha.String())
-			}
-
-			// Use a clamped value for emission if necessary
-			emissionForEpoch := pendingAlpha
-			if !pendingAlpha.IsUint64() {
-				emissionForEpoch = math.NewIntFromUint64(^uint64(0)) // max uint64
-			}
-
 			// Run epoch consensus
-			epochResult, err := k.stakeworkKeeper.RunEpoch(ctx, netuid, emissionForEpoch.Uint64())
+			epochResult, err := k.stakeworkKeeper.RunEpoch(ctx, netuid, pendingAlpha)
 			if err != nil {
 				k.Logger(ctx).Error("RunEpoch failed", "netuid", netuid, "error", err)
 				continue
 			}
 
 			// Calculate incentive sum
-			incentiveSum := uint64(0)
+			incentiveSum := math.ZeroInt()
 			for _, v := range epochResult.Incentive {
-				incentiveSum += v
+				incentiveSum = incentiveSum.Add(v)
 			}
 
 			// Calculate validator-allocatable alpha
-			var pendingValidatorAlpha uint64
-			if incentiveSum != 0 {
-				pendingValidatorAlpha = pendingAlpha.Uint64() / 2
+			var pendingValidatorAlpha math.Int
+			if !incentiveSum.IsZero() {
+				// 分配一半给验证者
+				pendingValidatorAlpha = pendingAlpha.QuoRaw(2)
 			} else {
-				pendingValidatorAlpha = pendingAlpha.Uint64()
+				// 全部分配给验证者
+				pendingValidatorAlpha = pendingAlpha
 			}
 
 			// Build dividend account list
@@ -241,42 +291,53 @@ func (k Keeper) RunCoinbase(ctx sdk.Context, blockEmission math.Int) error {
 			k.Logger(ctx).Debug("Stake map", "netuid", netuid, "stake_map", stakeMap)
 
 			// Calculate dividends
-			dividends := map[string]uint64{}
+			dividends := make(map[string]math.Int)
 			for i, addr := range epochResult.Accounts {
 				dividends[addr] = epochResult.Dividend[i]
 			}
-			totalAlphaDivs := uint64(0)
+			totalAlphaDivs := math.ZeroInt()
 			for _, v := range dividends {
-				totalAlphaDivs += v
+				totalAlphaDivs = totalAlphaDivs.Add(v)
 			}
 
 			// Dividend allocation (no parent-child relationship, direct allocation, weight by subnet stake)
-			alphaDividends := map[string]uint64{}
-			if totalAlphaDivs > 0 && pendingValidatorAlpha > 0 {
-				var allocated uint64
-				// First pass: floor division
+			alphaDividends := make(map[string]math.Int)
+			if !totalAlphaDivs.IsZero() && !pendingValidatorAlpha.IsZero() {
+				// 按比例分配
 				for addr, d := range dividends {
-					alloc := (uint64(d) * pendingValidatorAlpha) / uint64(totalAlphaDivs)
+					// 计算分配比例: d / totalAlphaDivs * pendingValidatorAlpha
+					ratio := math.LegacyNewDecFromInt(d).QuoInt(totalAlphaDivs)
+					alloc := ratio.MulInt(pendingValidatorAlpha).TruncateInt()
 					alphaDividends[addr] = alloc
-					allocated += alloc
 				}
-				// Second pass: distribute the remainder deterministically by address order
-				if allocated < pendingValidatorAlpha {
-					remainder := pendingValidatorAlpha - allocated
+
+				// 检查是否有剩余未分配的奖励
+				allocated := math.ZeroInt()
+				for _, amount := range alphaDividends {
+					allocated = allocated.Add(amount)
+				}
+
+				// 如果有剩余，按地址顺序分配
+				if allocated.LT(pendingValidatorAlpha) {
+					remainder := pendingValidatorAlpha.Sub(allocated)
 					addrs := make([]string, 0, len(dividends))
 					for a := range dividends {
 						addrs = append(addrs, a)
 					}
 					sort.Strings(addrs)
-					for i := uint64(0); i < remainder && i < uint64(len(addrs)); i++ {
-						alphaDividends[addrs[i]]++
+
+					// 每个地址分配1个单位，直到分完
+					oneUnit := math.NewInt(1)
+					for i := 0; i < len(addrs) && !remainder.IsZero(); i++ {
+						alphaDividends[addrs[i]] = alphaDividends[addrs[i]].Add(oneUnit)
+						remainder = remainder.Sub(oneUnit)
 					}
 				}
 			}
 			k.Logger(ctx).Debug("Alpha dividends", "netuid", netuid, "alpha_dividends", alphaDividends)
 
 			// Incentive allocation
-			incentives := map[string]uint64{}
+			incentives := make(map[string]math.Int)
 			for i, addr := range epochResult.Accounts {
 				incentives[addr] = epochResult.Incentive[i]
 			}
@@ -284,22 +345,22 @@ func (k Keeper) RunCoinbase(ctx sdk.Context, blockEmission math.Int) error {
 
 			// Log distribution
 			for addr, amount := range alphaDividends {
-				k.Logger(ctx).Info("Alpha dividend distributed", "netuid", netuid, "account", addr, "amount", amount)
-				if err := k.MintAlphaTokens(ctx, netuid, addr, new(big.Int).SetUint64(amount)); err != nil {
+				k.Logger(ctx).Info("Alpha dividend distributed", "netuid", netuid, "account", addr, "amount", amount.String())
+				if err := k.MintAlphaTokens(ctx, netuid, addr, amount.BigInt()); err != nil {
 					k.Logger(ctx).Error("Failed to mint alpha tokens for validator dividend",
 						"netuid", netuid,
 						"address", addr,
-						"amount", amount,
+						"amount", amount.String(),
 						"error", err,
 					)
 				}
 			}
 			for addr, amount := range incentives {
-				if err := k.MintAlphaTokens(ctx, netuid, addr, new(big.Int).SetUint64(amount)); err != nil {
+				if err := k.MintAlphaTokens(ctx, netuid, addr, amount.BigInt()); err != nil {
 					k.Logger(ctx).Error("Failed to mint alpha tokens for incentives",
 						"netuid", netuid,
 						"address", addr,
-						"amount", amount,
+						"amount", amount.String(),
 						"error", err,
 					)
 				}

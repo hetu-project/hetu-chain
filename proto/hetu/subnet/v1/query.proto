@@ -1,0 +1,243 @@
+syntax = "proto3";
+package hetu.subnet.v1;
+
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "google/api/annotations.proto";
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+
+option go_package = "github.com/hetu-project/hetu/v1/x/subnet/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Subnets returns all subnets with pagination
+  rpc Subnets(QuerySubnetsRequest) returns (QuerySubnetsResponse) {
+    option (google.api.http).get = "/hetu/subnet/v1/subnets";
+  }
+
+  // Subnet returns subnet info by ID
+  rpc Subnet(QuerySubnetRequest) returns (QuerySubnetResponse) {
+    option (google.api.http).get = "/hetu/subnet/v1/subnets/{netuid}";
+  }
+
+  // SubnetNeurons returns all neurons in a subnet with pagination
+  rpc SubnetNeurons(QuerySubnetNeuronsRequest) returns (QuerySubnetNeuronsResponse) {
+    option (google.api.http).get = "/hetu/subnet/v1/subnets/{netuid}/neurons";
+  }
+
+  // SubnetPool returns pool info for a subnet
+  rpc SubnetPool(QuerySubnetPoolRequest) returns (QuerySubnetPoolResponse) {
+    option (google.api.http).get = "/hetu/subnet/v1/subnets/{netuid}/pool";
+  }
+}
+
+// QuerySubnetsRequest is request type for the Query/Subnets RPC method
+message QuerySubnetsRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QuerySubnetsResponse is response type for the Query/Subnets RPC method
+message QuerySubnetsResponse {
+  repeated SubnetInfo subnets = 1 [(gogoproto.nullable) = false];
+  
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QuerySubnetRequest is request type for the Query/Subnet RPC method
+message QuerySubnetRequest {
+  uint32 netuid = 1;
+}
+
+// QuerySubnetResponse is response type for the Query/Subnet RPC method
+message QuerySubnetResponse {
+  SubnetInfo subnet = 1 [(gogoproto.nullable) = false];
+  SubnetHyperparams hyperparams = 2 [(gogoproto.nullable) = false];
+}
+
+// QuerySubnetNeuronsRequest is request type for the Query/SubnetNeurons RPC method
+message QuerySubnetNeuronsRequest {
+  uint32 netuid = 1;
+  
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QuerySubnetNeuronsResponse is response type for the Query/SubnetNeurons RPC method
+message QuerySubnetNeuronsResponse {
+  repeated NeuronInfo neurons = 1 [(gogoproto.nullable) = false];
+  
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QuerySubnetPoolRequest is request type for the Query/SubnetPool RPC method
+message QuerySubnetPoolRequest {
+  uint32 netuid = 1;
+}
+
+// QuerySubnetPoolResponse is response type for the Query/SubnetPool RPC method
+message QuerySubnetPoolResponse {
+  PoolInfo pool = 1 [(gogoproto.nullable) = false];
+}
+
+// SubnetInfo defines the basic information of a subnet
+message SubnetInfo {
+  uint32 netuid = 1;
+  string owner = 2;
+  string alpha_token = 3;
+  string amm_pool = 4;
+  string name = 5;
+  string description = 6;
+  bool is_active = 7;
+  uint64 created_at = 8;
+  string locked_amount = 9 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+  string pool_initial_tao = 10 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+  string burned_amount = 11 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// SubnetHyperparams defines the hyperparameters of a subnet
+message SubnetHyperparams {
+  uint64 tempo = 1;
+  uint32 subnet_emission_value = 2;
+  string subnet_owner_cut = 3 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  uint32 max_allowed_validators = 4;
+  uint32 max_allowed_uids = 5;
+  uint32 immunity_period = 6;
+  uint32 min_allowed_weights = 7;
+  uint32 max_weight_limit = 8;
+  string max_weight_age = 9 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  string weight_consensus = 10 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  uint32 weight_max_age = 11;
+  string scaling_law_power = 12 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  string validator_exclude_quantile = 13 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  string validator_prune_len = 14 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  string validator_logits_divergence = 15 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  uint32 blocks_since_last_step = 16;
+  uint64 last_mechanism_step_block = 17;
+  uint32 blocks_per_step = 18;
+  uint32 bonds_moving_average = 19;
+  string subnet_moving_alpha = 20 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  uint32 ema_price_halving_blocks = 21;
+}
+
+// NeuronInfo defines the information of a neuron in a subnet
+message NeuronInfo {
+  string uid = 1;
+  string hotkey = 2;
+  string coldkey = 3;
+  string stake = 4 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+  uint64 last_update = 5;
+  uint32 rank = 6;
+  string emission = 7 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+  string incentive = 8 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+  string trust = 9 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  string consensus = 10 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  string dividends = 11 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+  bool is_active = 12;
+}
+
+// PoolInfo defines the information of a subnet pool
+message PoolInfo {
+  uint32 netuid = 1;
+  string tao_in = 2 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+  string alpha_in = 3 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+  string alpha_out = 4 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+  string current_price = 5 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  string moving_price = 6 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  string total_volume = 7 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+  uint32 mechanism_type = 8;
+} 
