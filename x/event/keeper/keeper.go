@@ -1557,9 +1557,19 @@ func (k Keeper) GetSubnetMovingPrice(ctx sdk.Context, netuid uint16) math.Legacy
 // SetSubnetAlphaIn sets the Alpha in amount for a subnet
 // SetSubnetAlphaOut sets the Alpha out amount for a subnet
 func (k Keeper) SetSubnetAlphaOut(ctx sdk.Context, netuid uint16, amount math.Int) {
+	k.Logger(ctx).Debug("SetSubnetAlphaOut - called",
+		"netuid", netuid,
+		"amount", amount.String(),
+	)
+
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("subnet_alpha_out:"))
 	amountBytes := []byte(amount.String())
 	store.Set(uint16ToBytes(netuid), amountBytes)
+
+	k.Logger(ctx).Debug("SetSubnetAlphaOut - completed",
+		"netuid", netuid,
+		"amount", amount.String(),
+	)
 }
 
 // GetSubnetAlphaOut gets the Alpha out amount for a subnet
@@ -1567,12 +1577,25 @@ func (k Keeper) GetSubnetAlphaOut(ctx sdk.Context, netuid uint16) math.Int {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte("subnet_alpha_out:"))
 	bz := store.Get(uint16ToBytes(netuid))
 	if bz == nil {
+		k.Logger(ctx).Debug("GetSubnetAlphaOut - key not found, returning zero",
+			"netuid", netuid,
+		)
 		return math.ZeroInt()
 	}
 	amount, ok := math.NewIntFromString(string(bz))
 	if !ok {
+		k.Logger(ctx).Debug("GetSubnetAlphaOut - failed to parse amount, returning zero",
+			"netuid", netuid,
+			"bytes", string(bz),
+		)
 		return math.ZeroInt()
 	}
+
+	k.Logger(ctx).Debug("GetSubnetAlphaOut - returning amount",
+		"netuid", netuid,
+		"amount", amount.String(),
+	)
+
 	return amount
 }
 
@@ -1760,8 +1783,27 @@ func (k Keeper) AddSubnetAlphaIn(ctx sdk.Context, netuid uint16, amount math.Int
 
 // AddSubnetAlphaOut adds amount to the Alpha out amount for a subnet
 func (k Keeper) AddSubnetAlphaOut(ctx sdk.Context, netuid uint16, amount math.Int) {
+	k.Logger(ctx).Debug("AddSubnetAlphaOut - starting",
+		"netuid", netuid,
+		"amount_to_add", amount.String(),
+	)
+
 	currentAmount := k.GetSubnetAlphaOut(ctx, netuid)
+
+	k.Logger(ctx).Debug("AddSubnetAlphaOut - current amount",
+		"netuid", netuid,
+		"current_amount", currentAmount.String(),
+	)
+
 	newAmount := currentAmount.Add(amount)
+
+	k.Logger(ctx).Debug("AddSubnetAlphaOut - calculated new amount",
+		"netuid", netuid,
+		"current_amount", currentAmount.String(),
+		"amount_to_add", amount.String(),
+		"new_amount", newAmount.String(),
+	)
+
 	k.SetSubnetAlphaOut(ctx, netuid, newAmount)
 
 	k.Logger(ctx).Debug("Added to subnet Alpha out",

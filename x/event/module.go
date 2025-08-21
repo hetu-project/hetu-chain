@@ -23,8 +23,6 @@ import (
 	"github.com/hetu-project/hetu/v1/x/event/client/cli"
 	"github.com/hetu-project/hetu/v1/x/event/keeper"
 	"github.com/hetu-project/hetu/v1/x/event/types"
-	pb "github.com/hetu-project/hetu/v1/x/event/types/generated"
-	"google.golang.org/grpc"
 )
 
 var (
@@ -73,11 +71,10 @@ func (AppModuleBasic) ValidateGenesis(_ codec.JSONCodec, _ client.TxEncodingConf
 }
 
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	if err := pb.RegisterQueryHandlerFromEndpoint(
+	if err := types.RegisterQueryHandlerClient(
 		context.Background(),
 		mux,
-		"localhost:9090", // Use the gRPC server address directly
-		[]grpc.DialOption{grpc.WithInsecure()},
+		types.NewQueryClient(clientCtx),
 	); err != nil {
 		panic(err)
 	}
@@ -116,15 +113,7 @@ func (am AppModule) QuerierRoute() string {
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	// 注册gRPC查询服务
-	pb.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServer(am.keeper))
-
-	// 注册legacy querier
-	queryRouter := cfg.QueryServer().(interface {
-		RegisterLegacyHandler(string, func(sdk.Context, []string, abci.RequestQuery) ([]byte, error))
-	})
-	legacyAmino := codec.NewLegacyAmino()
-	types.RegisterLegacyAminoCodec(legacyAmino)
-	queryRouter.RegisterLegacyHandler(types.ModuleName, keeper.NewLegacyQuerier(am.keeper, legacyAmino))
+	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServer(am.keeper))
 }
 
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}

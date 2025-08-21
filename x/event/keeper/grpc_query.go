@@ -137,11 +137,19 @@ func (q QueryServer) SubnetPool(ctx context.Context, req *eventtypes.QuerySubnet
 		return nil, status.Errorf(codes.NotFound, "subnet with netuid %d not found", req.Netuid)
 	}
 
+	// 获取子网的TaoIn、AlphaIn和AlphaOut值
+	subnetTaoIn := q.Keeper.GetSubnetTaoIn(sdkCtx, uint16(req.Netuid))
+	subnetAlphaIn := q.Keeper.GetSubnetAlphaIn(sdkCtx, uint16(req.Netuid))
+	subnetAlphaOut := q.Keeper.GetSubnetAlphaOut(sdkCtx, uint16(req.Netuid))
+
 	return &eventtypes.QuerySubnetPoolResponse{
-		Netuid:       uint32(subnet.Netuid),
-		AmmPool:      subnet.AmmPool,
-		LockedAmount: subnet.LockedAmount,
-		BurnedAmount: subnet.BurnedAmount,
+		Netuid:         uint32(subnet.Netuid),
+		AmmPool:        subnet.AmmPool,
+		LockedAmount:   subnet.LockedAmount,
+		BurnedAmount:   subnet.BurnedAmount,
+		SubnetTaoIn:    subnetTaoIn.String(),
+		SubnetAlphaIn:  subnetAlphaIn.String(),
+		SubnetAlphaOut: subnetAlphaOut.String(),
 	}, nil
 }
 

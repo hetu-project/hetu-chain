@@ -152,38 +152,34 @@ func (k Keeper) SyncAMMPoolState(ctx sdk.Context, netuid uint16) error {
 	// 7. 检查链上状态与合约状态是否一致
 	contractTaoIn := math.NewIntFromBigInt(subnetHetu)
 	contractAlphaIn := math.NewIntFromBigInt(subnetAlphaIn)
-	contractAlphaOut := math.NewIntFromBigInt(subnetAlphaOut)
+	// 不再使用合约的AlphaOut值
+	// contractAlphaOut := math.NewIntFromBigInt(subnetAlphaOut)
 
-	// 检查是否需要更新链上状态
-	needUpdateChain := !currentTaoIn.Equal(contractTaoIn) ||
-		!currentAlphaIn.Equal(contractAlphaIn) ||
-		!currentAlphaOut.Equal(contractAlphaOut)
+	// 8. 只更新TaoIn和AlphaIn，不更新AlphaOut
 
-	// 8. 如果不一致，更新链上状态以匹配合约状态
-	if needUpdateChain {
-		k.Logger(ctx).Info("Updating chain state to match contract",
+	// 8.1 处理TaoIn
+	if !currentTaoIn.Equal(contractTaoIn) {
+		k.Logger(ctx).Info("Updating chain TaoIn to match contract",
 			"netuid", netuid,
 			"old_tao_in", currentTaoIn.String(),
-			"new_tao_in", contractTaoIn.String(),
-			"old_alpha_in", currentAlphaIn.String(),
-			"new_alpha_in", contractAlphaIn.String(),
-			"old_alpha_out", currentAlphaOut.String(),
-			"new_alpha_out", contractAlphaOut.String())
-
-		// 更新链上状态
+			"new_tao_in", contractTaoIn.String())
 		k.eventKeeper.SetSubnetTaoIn(ctx, netuid, contractTaoIn)
-		k.eventKeeper.SetSubnetAlphaIn(ctx, netuid, contractAlphaIn)
-		k.eventKeeper.SetSubnetAlphaOut(ctx, netuid, contractAlphaOut)
-
-		// 记录日志
-		k.Logger(ctx).Info("Synced chain state with contract",
-			"netuid", netuid,
-			"tao_in", contractTaoIn.String(),
-			"alpha_in", contractAlphaIn.String(),
-			"alpha_out", contractAlphaOut.String())
-	} else {
-		k.Logger(ctx).Debug("Chain state already matches contract state", "netuid", netuid)
 	}
+
+	// 8.2 处理AlphaIn
+	if !currentAlphaIn.Equal(contractAlphaIn) {
+		k.Logger(ctx).Info("Updating chain AlphaIn to match contract",
+			"netuid", netuid,
+			"old_alpha_in", currentAlphaIn.String(),
+			"new_alpha_in", contractAlphaIn.String())
+		k.eventKeeper.SetSubnetAlphaIn(ctx, netuid, contractAlphaIn)
+	}
+
+	// 8.3 不再处理AlphaOut，保留链上值
+	k.Logger(ctx).Debug("Keeping chain AlphaOut value (not syncing from contract)",
+		"netuid", netuid,
+		"chain_alpha_out", currentAlphaOut.String(),
+		"contract_alpha_out", subnetAlphaOut.String())
 
 	// 9. 更新移动平均价格
 	// 获取当前移动平均价格

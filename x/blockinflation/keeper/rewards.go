@@ -249,10 +249,24 @@ func (k Keeper) CalculateOwnerCuts(ctx sdk.Context, rewards map[uint16]types.Sub
 		alphaOut := reward.AlphaOut
 		ownerCut := math.LegacyNewDecFromInt(alphaOut).Mul(cutPercent).TruncateInt()
 
+		// 添加日志：记录初始的reward.AlphaOut值和计算的ownerCut
+		k.Logger(ctx).Debug("Owner cut calculation - initial values",
+			"netuid", netuid,
+			"reward_alpha_out_initial", alphaOut.String(),
+			"cut_percent", cutPercent.String(),
+			"owner_cut", ownerCut.String(),
+		)
+
 		// Update the reward struct
 		reward.OwnerCut = ownerCut
 		reward.AlphaOut = alphaOut.Sub(ownerCut) // Subtract owner cut from alpha_out
 		rewards[netuid] = reward
+
+		// 添加日志：记录更新后的reward.AlphaOut值
+		k.Logger(ctx).Debug("Owner cut calculation - updated reward",
+			"netuid", netuid,
+			"reward_alpha_out_after_cut", reward.AlphaOut.String(),
+		)
 
 		// Step 5.3: Add to pending owner cut pool (for later distribution)
 		if ownerCut.IsPositive() {
@@ -263,11 +277,37 @@ func (k Keeper) CalculateOwnerCuts(ctx sdk.Context, rewards map[uint16]types.Sub
 		// This is equivalent to removing the owner cut from the pool
 		if ownerCut.IsPositive() {
 			currentAlphaOut := k.eventKeeper.GetSubnetAlphaOut(ctx, netuid)
+
+			// 添加日志：记录当前的subnet_alpha_out值
+			k.Logger(ctx).Debug("Owner cut calculation - current alpha out",
+				"netuid", netuid,
+				"current_alpha_out", currentAlphaOut.String(),
+				"owner_cut", ownerCut.String(),
+			)
+
 			newAlphaOut := currentAlphaOut.Sub(ownerCut)
+
+			// 添加日志：记录计算的newAlphaOut值和是否为负
+			k.Logger(ctx).Debug("Owner cut calculation - new alpha out",
+				"netuid", netuid,
+				"new_alpha_out_before_check", newAlphaOut.String(),
+				"is_negative", newAlphaOut.IsNegative(),
+			)
+
 			if newAlphaOut.IsNegative() {
+				k.Logger(ctx).Debug("Owner cut calculation - resetting negative alpha out to zero",
+					"netuid", netuid,
+					"negative_value", newAlphaOut.String(),
+				)
 				newAlphaOut = math.ZeroInt() // Prevent negative values
 			}
 			k.eventKeeper.SetSubnetAlphaOut(ctx, netuid, newAlphaOut)
+
+			// 添加日志：记录最终设置的subnet_alpha_out值
+			k.Logger(ctx).Debug("Owner cut calculation - final alpha out",
+				"netuid", netuid,
+				"final_alpha_out", newAlphaOut.String(),
+			)
 		}
 
 		k.Logger(ctx).Debug("Owner cut calculated",
