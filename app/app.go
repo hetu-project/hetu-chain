@@ -254,6 +254,7 @@ var (
 		inflation.AppModuleBasic{},
 		erc20.AppModuleBasic{},
 		blockinflation.AppModuleBasic{},
+		event.AppModuleBasic{},
 		ratelimit.AppModuleBasic{},
 	)
 

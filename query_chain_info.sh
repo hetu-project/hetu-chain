@@ -6,8 +6,13 @@
 echo "=== Hetu Chain Information inquiry ==="
 echo ""
 
+# Set the node URL
+NODE_URL=${NODE_URL:-"http://localhost:26657"}
+NODE_STATUS_URL="${NODE_URL%/}/status"
+NODE_FLAG="--node $NODE_URL"
+
 # Check if the node is running
-if ! curl -s http://localhost:26657/status > /dev/null; then
+if ! curl -s "$NODE_STATUS_URL" > /dev/null; then
     echo "❌ The node is not running, please start the node first:"
     echo "   ./local_node.sh"
     echo ""
@@ -15,10 +20,6 @@ if ! curl -s http://localhost:26657/status > /dev/null; then
     echo "   export NODE_URL=https://your-rpc-endpoint"
     exit 1
 fi
-
-# Set the node URL
-NODE_URL=${NODE_URL:-"http://localhost:26657"}
-NODE_FLAG="--node $NODE_URL"
 
 echo "🔗 Connect to the node: $NODE_URL"
 echo ""
