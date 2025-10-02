@@ -4,10 +4,12 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"math"
+	stdmath "math"
 	"math/big"
 	"sort"
+	"strconv"
 
+	cosmosmath "cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/hetu-project/hetu/v1/x/stakework/types"
@@ -20,9 +22,9 @@ var (
 )
 
 // RunEpoch runs the complete Bittensor epoch algorithm
-func (k Keeper) RunEpoch(ctx sdk.Context, netuid uint16, raoEmission uint64) (*types.EpochResult, error) {
+func (k Keeper) RunEpoch(ctx sdk.Context, netuid uint16, raoEmission cosmosmath.Int) (*types.EpochResult, error) {
 	logger := k.Logger(ctx)
-	logger.Debug("Starting epoch calculation", "netuid", netuid, "emission", raoEmission)
+	logger.Debug("Starting epoch calculation", "netuid", netuid, "emission", raoEmission.String())
 
 	// 1. Get subnet data
 	subnet, found := k.eventKeeper.GetSubnet(ctx, netuid)
@@ -64,8 +66,9 @@ func (k Keeper) RunEpoch(ctx sdk.Context, netuid uint16, raoEmission uint64) (*t
 		return &types.EpochResult{
 			Netuid:    netuid,
 			Accounts:  []string{},
-			Emission:  []uint64{},
-			Dividend:  []uint64{},
+			Emission:  []cosmosmath.Int{},
+			Dividend:  []cosmosmath.Int{},
+			Incentive: []cosmosmath.Int{},
 			Bonds:     [][]float64{},
 			Consensus: []float64{},
 		}, nil
@@ -161,22 +164,26 @@ func (k Keeper) RunEpoch(ctx sdk.Context, netuid uint16, raoEmission uint64) (*t
 		"normalized_incentive_sum", k.sumArray(normIncentive))
 
 	// 15. Distribute emission
+	// Use math.Int to pass directly without converting to uint64
 	emission := k.distributeEmission(normIncentive, normDividends, raoEmission)
-	totalEmission := uint64(0)
+
+	// Calculate the total emission using math.Int
+	totalEmission := cosmosmath.ZeroInt()
 	for _, e := range emission {
-		totalEmission += e
+		totalEmission = totalEmission.Add(e)
 	}
+
 	logger.Debug("Distributed emission",
-		"total_emission", totalEmission,
-		"target_emission", raoEmission)
+		"total_emission", totalEmission.String(),
+		"target_emission", raoEmission.String())
 
 	// 16. Build result
 	result := &types.EpochResult{
 		Netuid:    netuid,
 		Accounts:  make([]string, len(validators)),
 		Emission:  emission,
-		Dividend:  make([]uint64, len(validators)),
-		Incentive: make([]uint64, len(validators)),
+		Dividend:  make([]cosmosmath.Int, len(validators)),
+		Incentive: make([]cosmosmath.Int, len(validators)),
 		Bonds:     bonds,
 		Consensus: consensus,
 	}
@@ -184,8 +191,20 @@ func (k Keeper) RunEpoch(ctx sdk.Context, netuid uint16, raoEmission uint64) (*t
 	// Populate account addresses, dividends, and incentive
 	for i, validator := range validators {
 		result.Accounts[i] = validator.Address
-		result.Dividend[i] = uint64(normDividends[i] * float64(raoEmission))
-		result.Incentive[i] = uint64(normIncentive[i] * float64(raoEmission))
+		// Calculate the reward amount
+		incentiveFloat := normIncentive[i]
+		dividendsFloat := normDividends[i]
+
+		// Convert floating-point numbers to Dec with high precision
+		incentiveDec := cosmosmath.LegacyMustNewDecFromStr(strconv.FormatFloat(incentiveFloat, 'f', 18, 64))
+		dividendsDec := cosmosmath.LegacyMustNewDecFromStr(strconv.FormatFloat(dividendsFloat, 'f', 18, 64))
+
+		result.Dividend[i] = cosmosmath.NewIntFromBigInt(
+			dividendsDec.MulInt(raoEmission).TruncateInt().BigInt(),
+		)
+		result.Incentive[i] = cosmosmath.NewIntFromBigInt(
+			incentiveDec.MulInt(raoEmission).TruncateInt().BigInt(),
+		)
 	}
 
 	// 17. Save bonds to storage
@@ -545,13 +564,22 @@ func (k Keeper) normalizeDividends(dividends []float64, active []bool) []float64
 }
 
 // distributeEmission distributes emission
-func (k Keeper) distributeEmission(normIncentive, normDividends []float64, raoEmission uint64) []uint64 {
+func (k Keeper) distributeEmission(normIncentive, normDividends []float64, raoEmission cosmosmath.Int) []cosmosmath.Int {
 	n := len(normIncentive)
-	emission := make([]uint64, n)
+	emission := make([]cosmosmath.Int, n)
 
 	for i := 0; i < n; i++ {
-		// emission[i] = uint64(normIncentive[i]*float64(raoEmission)) + uint64(normDividends[i]*float64(raoEmission))
-		emission[i] = uint64((normIncentive[i] + normDividends[i]) * float64(raoEmission))
+		// Using high-precision calculations
+		incentiveDec := cosmosmath.LegacyMustNewDecFromStr(strconv.FormatFloat(normIncentive[i], 'f', 18, 64))
+		dividendsDec := cosmosmath.LegacyMustNewDecFromStr(strconv.FormatFloat(normDividends[i], 'f', 18, 64))
+
+		// Calculate the total share
+		totalShare := incentiveDec.Add(dividendsDec)
+
+		// Calculate the reward amount
+		emission[i] = cosmosmath.NewIntFromBigInt(
+			totalShare.MulInt(raoEmission).TruncateInt().BigInt(),
+		)
 	}
 
 	return emission
@@ -574,7 +602,7 @@ func (k Keeper) getPrevBonds(ctx sdk.Context, netuid uint16, validators []types.
 			bz := store.Get([]byte(key))
 			if bz != nil && len(bz) == 8 {
 				// Convert binary back to float64
-				bondValue := math.Float64frombits(binary.BigEndian.Uint64(bz))
+				bondValue := stdmath.Float64frombits(binary.BigEndian.Uint64(bz))
 				bonds[i][j] = bondValue
 			}
 			// If no historical data found or invalid format, default to 0.0
@@ -603,7 +631,7 @@ func (k Keeper) saveBonds(ctx sdk.Context, netuid uint16, validators []types.Val
 
 			// Store float64 as binary for efficiency
 			bz := make([]byte, 8)
-			binary.BigEndian.PutUint64(bz, math.Float64bits(bondValue))
+			binary.BigEndian.PutUint64(bz, stdmath.Float64bits(bondValue))
 			store.Set([]byte(key), bz)
 		}
 	}
@@ -711,7 +739,7 @@ func (k Keeper) computeIncentive(clippedWeights [][]float64, activeStake []float
 			} else {
 				// For other values, use math.Pow but log a warning
 				// Using standard math.Pow as fallback
-				normalized[i] = math.Pow(normalized[i], rho)
+				normalized[i] = stdmath.Pow(normalized[i], rho)
 			}
 		}
 	}

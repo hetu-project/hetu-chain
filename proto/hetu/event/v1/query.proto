@@ -1,0 +1,118 @@
+syntax = "proto3";
+package hetu.event.v1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+
+option go_package = "github.com/hetu-project/hetu/v1/x/event/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Subnets returns all subnets with pagination
+  rpc Subnets(QuerySubnetsRequest) returns (QuerySubnetsResponse) {
+    option (google.api.http).get = "/hetu/event/v1/subnets";
+  }
+  // Subnet returns subnet info by ID
+  rpc Subnet(QuerySubnetRequest) returns (QuerySubnetResponse) {
+    option (google.api.http).get = "/hetu/event/v1/subnet/{netuid}";
+  }
+  // SubnetNeurons returns all neurons in a subnet
+  rpc SubnetNeurons(QuerySubnetNeuronsRequest) returns (QuerySubnetNeuronsResponse) {
+    option (google.api.http).get = "/hetu/event/v1/subnet/{netuid}/neurons";
+  }
+  // SubnetPool returns pool info for a subnet
+  rpc SubnetPool(QuerySubnetPoolRequest) returns (QuerySubnetPoolResponse) {
+    option (google.api.http).get = "/hetu/event/v1/subnet/{netuid}/pool";
+  }
+  // ValidatorWeights returns weights for a validator in a subnet
+  rpc ValidatorWeights(QueryValidatorWeightsRequest) returns (QueryValidatorWeightsResponse) {
+    option (google.api.http).get = "/hetu/event/v1/subnet/{netuid}/validator/{validator}/weights";
+  }
+}
+
+// QuerySubnetsRequest is the request type for the Query/Subnets RPC method
+message QuerySubnetsRequest {}
+
+// QuerySubnetsResponse is the response type for the Query/Subnets RPC method
+message QuerySubnetsResponse {
+  repeated SubnetInfo subnets = 1 [(gogoproto.nullable) = false];
+}
+
+// QuerySubnetRequest is the request type for the Query/Subnet RPC method
+message QuerySubnetRequest {
+  uint32 netuid = 1;
+}
+
+// QuerySubnetResponse is the response type for the Query/Subnet RPC method
+message QuerySubnetResponse {
+  SubnetInfo subnet = 1 [(gogoproto.nullable) = false];
+}
+
+// QuerySubnetNeuronsRequest is the request type for the Query/SubnetNeurons RPC method
+message QuerySubnetNeuronsRequest {
+  uint32 netuid = 1;
+}
+
+// QuerySubnetNeuronsResponse is the response type for the Query/SubnetNeurons RPC method
+message QuerySubnetNeuronsResponse {
+  repeated NeuronInfo neurons = 1 [(gogoproto.nullable) = false];
+}
+
+// QuerySubnetPoolRequest is the request type for the Query/SubnetPool RPC method
+message QuerySubnetPoolRequest {
+  uint32 netuid = 1;
+}
+
+// QuerySubnetPoolResponse is the response type for the Query/SubnetPool RPC method
+message QuerySubnetPoolResponse {
+  uint32 netuid = 1;
+  string amm_pool = 2;
+  string locked_amount = 3;
+  string burned_amount = 4;
+}
+
+// QueryValidatorWeightsRequest is the request type for the Query/ValidatorWeights RPC method
+message QueryValidatorWeightsRequest {
+  uint32 netuid = 1;
+  string validator = 2;
+}
+
+// QueryValidatorWeightsResponse is the response type for the Query/ValidatorWeights RPC method
+message QueryValidatorWeightsResponse {
+  uint32 netuid = 1;
+  string validator = 2;
+  repeated string weights = 3;
+}
+
+// SubnetInfo represents subnet information
+message SubnetInfo {
+  uint32 netuid = 1;
+  string owner = 2;
+  string alpha_token = 3;
+  string amm_pool = 4;
+  string locked_amount = 5;
+  string pool_initial_tao = 6;
+  string burned_amount = 7;
+  uint64 created_at = 8;
+  bool is_active = 9;
+  string name = 10;
+  string description = 11;
+  uint64 activated_at = 12;
+  uint64 activated_block = 13;
+}
+
+// NeuronInfo represents neuron information
+message NeuronInfo {
+  string account = 1;
+  uint32 netuid = 2;
+  bool is_active = 3;
+  bool is_validator = 4;
+  bool requested_validator_role = 5;
+  string stake = 6;
+  uint64 registration_block = 7;
+  uint64 last_update = 8;
+  string axon_endpoint = 9;
+  uint32 axon_port = 10;
+  string prometheus_endpoint = 11;
+  uint32 prometheus_port = 12;
+} 

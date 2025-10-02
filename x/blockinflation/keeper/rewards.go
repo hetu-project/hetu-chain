@@ -1,27 +1,30 @@
 package keeper
 
 import (
+	"fmt"
+
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/hetu-project/hetu/v1/x/blockinflation/types"
 )
 
-// SubnetRewards represents the calculated rewards for a subnet
-type SubnetRewards struct {
-	Netuid   uint16
-	TaoIn    math.Int
-	AlphaIn  math.Int
-	AlphaOut math.Int
-	OwnerCut math.Int // Owner cut amount
-}
-
 // CalculateSubnetRewards calculates rewards for all subnets participating in emission
-func (k Keeper) CalculateSubnetRewards(ctx sdk.Context, blockEmission math.Int, subnetsToEmitTo []uint16) (map[uint16]SubnetRewards, error) {
-	rewards := make(map[uint16]SubnetRewards)
+func (k Keeper) CalculateSubnetRewards(ctx sdk.Context, blockEmission math.Int, subnetsToEmitTo []uint16) (map[uint16]types.SubnetRewards, error) {
+	rewards := make(map[uint16]types.SubnetRewards)
+
+	k.Logger(ctx).Debug("Starting subnet rewards calculation",
+		"block_emission", blockEmission.String(),
+		"subnets_count", len(subnetsToEmitTo),
+		"subnets", fmt.Sprintf("%v", subnetsToEmitTo))
 
 	// Step 1: Calculate total moving prices
 	totalMovingPrices := math.LegacyZeroDec()
 	for _, netuid := range subnetsToEmitTo {
 		movingPrice := k.eventKeeper.GetMovingAlphaPrice(ctx, netuid)
+		k.Logger(ctx).Debug("Individual subnet moving price",
+			"netuid", netuid,
+			"moving_price", movingPrice.String())
 		totalMovingPrices = totalMovingPrices.Add(movingPrice)
 	}
 
@@ -33,13 +36,38 @@ func (k Keeper) CalculateSubnetRewards(ctx sdk.Context, blockEmission math.Int, 
 		price := k.eventKeeper.GetAlphaPrice(ctx, netuid)
 		movingPrice := k.eventKeeper.GetMovingAlphaPrice(ctx, netuid)
 
+		// Add more detailed logs
+		k.Logger(ctx).Debug("Subnet price details",
+			"netuid", netuid,
+			"price", price.String(),
+			"moving_price", movingPrice.String())
+
+		// Retrieve and record the alpha_in and alpha_out of the subnet
+		subnetAlphaIn := k.eventKeeper.GetSubnetAlphaIn(ctx, netuid)
+		subnetAlphaOut := k.eventKeeper.GetSubnetAlphaOut(ctx, netuid)
+		subnetTao := k.eventKeeper.GetSubnetTAO(ctx, netuid)
+
+		k.Logger(ctx).Debug("Subnet current state",
+			"netuid", netuid,
+			"subnet_alpha_in", subnetAlphaIn.String(),
+			"subnet_alpha_out", subnetAlphaOut.String(),
+			"subnet_tao", subnetTao.String())
+
 		// Calculate TAO reward (tao_in)
 		var taoIn math.Int
 		if totalMovingPrices.IsZero() {
+			k.Logger(ctx).Debug("Total moving prices is zero, tao_in will be zero",
+				"netuid", netuid)
 			taoIn = math.ZeroInt()
 		} else {
 			taoInRatio := movingPrice.Quo(totalMovingPrices)
 			taoIn = math.LegacyNewDecFromInt(blockEmission).Mul(taoInRatio).TruncateInt()
+
+			k.Logger(ctx).Debug("Calculated tao_in",
+				"netuid", netuid,
+				"tao_in_ratio", taoInRatio.String(),
+				"block_emission", blockEmission.String(),
+				"tao_in", taoIn.String())
 		}
 
 		// Calculate Alpha emission
@@ -49,15 +77,36 @@ func (k Keeper) CalculateSubnetRewards(ctx sdk.Context, blockEmission math.Int, 
 			alphaEmission = math.ZeroInt()
 		}
 
+		k.Logger(ctx).Debug("Alpha emission calculated",
+			"netuid", netuid,
+			"alpha_emission", alphaEmission.String())
+
 		// Calculate Alpha in (alpha_in)
 		var alphaIn math.Int
 		if price.IsZero() {
+			k.Logger(ctx).Debug("Price is zero, alpha_in equals alpha_emission",
+				"netuid", netuid,
+				"alpha_emission", alphaEmission.String())
 			alphaIn = alphaEmission
 		} else {
 			idealAlphaIn := math.LegacyNewDecFromInt(taoIn).Quo(price).TruncateInt()
+			k.Logger(ctx).Debug("Ideal alpha_in calculation",
+				"netuid", netuid,
+				"tao_in", taoIn.String(),
+				"price", price.String(),
+				"ideal_alpha_in", idealAlphaIn.String(),
+				"alpha_emission", alphaEmission.String())
+
 			if idealAlphaIn.GT(alphaEmission) {
+				k.Logger(ctx).Debug("Ideal alpha_in > alpha_emission, capping at alpha_emission",
+					"netuid", netuid,
+					"ideal_alpha_in", idealAlphaIn.String(),
+					"alpha_emission", alphaEmission.String())
 				alphaIn = alphaEmission
 			} else {
+				k.Logger(ctx).Debug("Using ideal alpha_in",
+					"netuid", netuid,
+					"ideal_alpha_in", idealAlphaIn.String())
 				alphaIn = idealAlphaIn
 			}
 		}
@@ -65,7 +114,11 @@ func (k Keeper) CalculateSubnetRewards(ctx sdk.Context, blockEmission math.Int, 
 		// Alpha out equals Alpha emission
 		alphaOut := alphaEmission
 
-		rewards[netuid] = SubnetRewards{
+		k.Logger(ctx).Debug("Final alpha_out value",
+			"netuid", netuid,
+			"alpha_out", alphaOut.String())
+
+		rewards[netuid] = types.SubnetRewards{
 			Netuid:   netuid,
 			TaoIn:    taoIn,
 			AlphaIn:  alphaIn,
@@ -88,35 +141,94 @@ func (k Keeper) CalculateSubnetRewards(ctx sdk.Context, blockEmission math.Int, 
 // ApplySubnetRewards applies the calculated rewards to subnets
 // This implements step 4 of the coinbase logic: injection
 // Note: This uses the original alpha_out (before owner cut deduction)
-func (k Keeper) ApplySubnetRewards(ctx sdk.Context, rewards map[uint16]SubnetRewards) error {
+func (k Keeper) ApplySubnetRewards(ctx sdk.Context, rewards map[uint16]types.SubnetRewards) error {
 	for netuid, reward := range rewards {
 		// Step 4: Injection - Add rewards to subnet pools
+		k.Logger(ctx).Debug("Applying subnet rewards",
+			"netuid", netuid,
+			"tao_in", reward.TaoIn.String(),
+			"alpha_in", reward.AlphaIn.String(),
+			"alpha_out", reward.AlphaOut.String())
+
+		// Get the current value for comparison before and after
+		currentAlphaIn := k.eventKeeper.GetSubnetAlphaIn(ctx, netuid)
+		currentAlphaOut := k.eventKeeper.GetSubnetAlphaOut(ctx, netuid)
+		currentTaoIn := k.eventKeeper.GetSubnetTAO(ctx, netuid)
+
+		k.Logger(ctx).Debug("Current subnet state before applying rewards",
+			"netuid", netuid,
+			"current_alpha_in", currentAlphaIn.String(),
+			"current_alpha_out", currentAlphaOut.String(),
+			"current_tao_in", currentTaoIn.String())
 
 		// Add alpha_in to subnet Alpha in pool (for liquidity)
 		if reward.AlphaIn.IsPositive() {
+			k.Logger(ctx).Debug("Adding to subnet Alpha in",
+				"netuid", netuid,
+				"adding_amount", reward.AlphaIn.String(),
+				"current_amount", currentAlphaIn.String(),
+				"new_amount", currentAlphaIn.Add(reward.AlphaIn).String())
+
 			k.eventKeeper.AddSubnetAlphaIn(ctx, netuid, reward.AlphaIn)
 			k.eventKeeper.AddSubnetAlphaInEmission(ctx, netuid, reward.AlphaIn)
+		} else {
+			k.Logger(ctx).Debug("Skipping alpha_in addition, value not positive",
+				"netuid", netuid,
+				"alpha_in", reward.AlphaIn.String())
 		}
 
 		// Add alpha_out to subnet Alpha out pool (for distribution)
 		// Note: This is the original alpha_out before owner cut deduction
 		if reward.AlphaOut.IsPositive() {
+			k.Logger(ctx).Debug("Adding to subnet Alpha out",
+				"netuid", netuid,
+				"adding_amount", reward.AlphaOut.String(),
+				"current_amount", currentAlphaOut.String(),
+				"new_amount", currentAlphaOut.Add(reward.AlphaOut).String())
+
 			k.eventKeeper.AddSubnetAlphaOut(ctx, netuid, reward.AlphaOut)
 			k.eventKeeper.AddSubnetAlphaOutEmission(ctx, netuid, reward.AlphaOut)
+		} else {
+			k.Logger(ctx).Debug("Skipping alpha_out addition, value not positive",
+				"netuid", netuid,
+				"alpha_out", reward.AlphaOut.String())
 		}
 
 		// Add tao_in to subnet TAO pool
 		if reward.TaoIn.IsPositive() {
+			k.Logger(ctx).Debug("Adding to subnet TAO",
+				"netuid", netuid,
+				"adding_amount", reward.TaoIn.String(),
+				"current_amount", currentTaoIn.String(),
+				"new_amount", currentTaoIn.Add(reward.TaoIn).String())
+
 			k.eventKeeper.AddSubnetTAO(ctx, netuid, reward.TaoIn)
 			k.eventKeeper.AddSubnetTaoInEmission(ctx, netuid, reward.TaoIn)
+		} else {
+			k.Logger(ctx).Debug("Skipping tao_in addition, value not positive",
+				"netuid", netuid,
+				"tao_in", reward.TaoIn.String())
 		}
+
+		// Obtain updated values for confirmation
+		updatedAlphaIn := k.eventKeeper.GetSubnetAlphaIn(ctx, netuid)
+		updatedAlphaOut := k.eventKeeper.GetSubnetAlphaOut(ctx, netuid)
+		updatedTaoIn := k.eventKeeper.GetSubnetTAO(ctx, netuid)
+
+		k.Logger(ctx).Debug("Updated subnet state after applying rewards",
+			"netuid", netuid,
+			"updated_alpha_in", updatedAlphaIn.String(),
+			"updated_alpha_out", updatedAlphaOut.String(),
+			"updated_tao_in", updatedTaoIn.String(),
+			"alpha_in_change", updatedAlphaIn.Sub(currentAlphaIn).String(),
+			"alpha_out_change", updatedAlphaOut.Sub(currentAlphaOut).String(),
+			"tao_in_change", updatedTaoIn.Sub(currentTaoIn).String())
 
 		k.Logger(ctx).Info("Injected subnet rewards",
 			"netuid", netuid,
 			"tao_in", reward.TaoIn.String(),
 			"alpha_in", reward.AlphaIn.String(),
-			"alpha_out", reward.AlphaOut.String(),
-		)
+			"alpha_out", reward.AlphaOut.String())
 	}
 
 	return nil
@@ -124,7 +236,7 @@ func (k Keeper) ApplySubnetRewards(ctx sdk.Context, rewards map[uint16]SubnetRew
 
 // CalculateOwnerCuts calculates owner cuts for all subnets and updates alpha_out
 // This implements step 5 of the coinbase logic: owner cuts
-func (k Keeper) CalculateOwnerCuts(ctx sdk.Context, rewards map[uint16]SubnetRewards) error {
+func (k Keeper) CalculateOwnerCuts(ctx sdk.Context, rewards map[uint16]types.SubnetRewards) error {
 	params := k.GetParams(ctx)
 	cutPercent := params.SubnetOwnerCut
 
@@ -137,10 +249,24 @@ func (k Keeper) CalculateOwnerCuts(ctx sdk.Context, rewards map[uint16]SubnetRew
 		alphaOut := reward.AlphaOut
 		ownerCut := math.LegacyNewDecFromInt(alphaOut).Mul(cutPercent).TruncateInt()
 
+		// Add log: Record the initial reward.AlphaOut value and calculated ownerCut
+		k.Logger(ctx).Debug("Owner cut calculation - initial values",
+			"netuid", netuid,
+			"reward_alpha_out_initial", alphaOut.String(),
+			"cut_percent", cutPercent.String(),
+			"owner_cut", ownerCut.String(),
+		)
+
 		// Update the reward struct
 		reward.OwnerCut = ownerCut
 		reward.AlphaOut = alphaOut.Sub(ownerCut) // Subtract owner cut from alpha_out
 		rewards[netuid] = reward
+
+		// Add log: Record the updated reward.AlphaOut value
+		k.Logger(ctx).Debug("Owner cut calculation - updated reward",
+			"netuid", netuid,
+			"reward_alpha_out_after_cut", reward.AlphaOut.String(),
+		)
 
 		// Step 5.3: Add to pending owner cut pool (for later distribution)
 		if ownerCut.IsPositive() {
@@ -151,11 +277,37 @@ func (k Keeper) CalculateOwnerCuts(ctx sdk.Context, rewards map[uint16]SubnetRew
 		// This is equivalent to removing the owner cut from the pool
 		if ownerCut.IsPositive() {
 			currentAlphaOut := k.eventKeeper.GetSubnetAlphaOut(ctx, netuid)
+
+			// Add log: Record the current subnet-alpha_out value
+			k.Logger(ctx).Debug("Owner cut calculation - current alpha out",
+				"netuid", netuid,
+				"current_alpha_out", currentAlphaOut.String(),
+				"owner_cut", ownerCut.String(),
+			)
+
 			newAlphaOut := currentAlphaOut.Sub(ownerCut)
+
+			// Add log: Record the calculated newAlphaOut value and whether it is negative
+			k.Logger(ctx).Debug("Owner cut calculation - new alpha out",
+				"netuid", netuid,
+				"new_alpha_out_before_check", newAlphaOut.String(),
+				"is_negative", newAlphaOut.IsNegative(),
+			)
+
 			if newAlphaOut.IsNegative() {
+				k.Logger(ctx).Debug("Owner cut calculation - resetting negative alpha out to zero",
+					"netuid", netuid,
+					"negative_value", newAlphaOut.String(),
+				)
 				newAlphaOut = math.ZeroInt() // Prevent negative values
 			}
 			k.eventKeeper.SetSubnetAlphaOut(ctx, netuid, newAlphaOut)
+
+			// Add log: Record the final subnet-alpha_out value set
+			k.Logger(ctx).Debug("Owner cut calculation - final alpha out",
+				"netuid", netuid,
+				"final_alpha_out", newAlphaOut.String(),
+			)
 		}
 
 		k.Logger(ctx).Debug("Owner cut calculated",
@@ -173,7 +325,7 @@ func (k Keeper) CalculateOwnerCuts(ctx sdk.Context, rewards map[uint16]SubnetRew
 // AddToPendingEmission adds alpha_out to pending emission for each subnet
 // This implements step 6 of the coinbase logic: add alpha_out to pending emission
 // Since there's no root subnet, we add alpha_out to each subnet's pending emission
-func (k Keeper) AddToPendingEmission(ctx sdk.Context, rewards map[uint16]SubnetRewards) error {
+func (k Keeper) AddToPendingEmission(ctx sdk.Context, rewards map[uint16]types.SubnetRewards) error {
 	for netuid, reward := range rewards {
 		// Step 6: Add alpha_out to pending emission for this subnet
 		// pending_alpha = alpha_out_i

@@ -147,6 +147,7 @@ import (
 	evmostypes "github.com/hetu-project/hetu/v1/types"
 	"github.com/hetu-project/hetu/v1/x/blockinflation"
 	blockinflationkeeper "github.com/hetu-project/hetu/v1/x/blockinflation/keeper"
+	"github.com/hetu-project/hetu/v1/x/event"
 	"github.com/hetu-project/hetu/v1/x/evm"
 	evmkeeper "github.com/hetu-project/hetu/v1/x/evm/keeper"
 	evmtypes "github.com/hetu-project/hetu/v1/x/evm/types"
@@ -193,6 +194,7 @@ import (
 	blockinflationtypes "github.com/hetu-project/hetu/v1/x/blockinflation/types"
 	eventabi "github.com/hetu-project/hetu/v1/x/event/abi"
 	eventkeeper "github.com/hetu-project/hetu/v1/x/event/keeper"
+	eventtypes "github.com/hetu-project/hetu/v1/x/event/types"
 )
 
 func init() {
@@ -252,6 +254,7 @@ var (
 		inflation.AppModuleBasic{},
 		erc20.AppModuleBasic{},
 		blockinflation.AppModuleBasic{},
+		event.AppModuleBasic{},
 		ratelimit.AppModuleBasic{},
 	)
 
@@ -735,6 +738,7 @@ func NewEvmos(
 		app.EventKeeper,
 		app.StakeworkKeeper,
 		app.Erc20Keeper,
+		app.EvmKeeper,
 		authtypes.FeeCollectorName,
 		subspace,
 	)
@@ -784,6 +788,7 @@ func NewEvmos(
 		vesting.NewAppModule(app.VestingKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
 		stakework.NewAppModule(appCodec, app.StakeworkKeeper),
 		blockinflation.NewAppModule(*app.BlockInflationKeeper),
+		event.NewAppModule(appCodec, *app.EventKeeper),
 	)
 	// BasicModuleManager defines the module BasicManager which is in charge of setting up basic,
 	// non-dependant module elements, such as codec registration and genesis verification.
@@ -846,6 +851,7 @@ func NewEvmos(
 		inflationtypes.ModuleName,
 		erc20types.ModuleName,
 		stakeworktypes.ModuleName,
+		eventtypes.ModuleName,
 	)
 	// NOTE: fee market module must go last in order to retrieve the block gas used.
 	app.mm.SetOrderEndBlockers(
@@ -878,6 +884,7 @@ func NewEvmos(
 		erc20types.ModuleName,
 		blockinflationtypes.ModuleName, // Block inflation module
 		stakeworktypes.ModuleName,
+		eventtypes.ModuleName,
 	)
 	// NOTE: The genutils module must occur after staking so that pools are
 	// properly initialized with tokens from genesis accounts.
@@ -921,6 +928,7 @@ func NewEvmos(
 		// NOTE: crisis module must go at the end to check for invariants on each module
 		crisistypes.ModuleName,
 		stakeworktypes.ModuleName,
+		eventtypes.ModuleName,
 	)
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
 	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())

@@ -21,5 +21,14 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) error {
 		return err
 	}
 
+	// Synchronize the AMM pool status of all subnets every 20 blocks (previously 100 blocks)
+	if ctx.BlockHeight()%20 == 0 {
+		k.Logger(ctx).Info("Periodic AMM pool sync", "height", ctx.BlockHeight())
+		k.SyncAllAMMPools(ctx)
+	}
+
+	// Handling subnet registration events
+	k.ProcessBeginBlockEvents(ctx)
+
 	return nil
 }
