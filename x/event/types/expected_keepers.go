@@ -34,6 +34,7 @@ type EventKeeper interface {
 	// Price related
 	GetAlphaPrice(ctx sdk.Context, netuid uint16) math.LegacyDec
 	GetMovingAlphaPrice(ctx sdk.Context, netuid uint16) math.LegacyDec
+	SetSubnetMovingPrice(ctx sdk.Context, netuid uint16, price math.LegacyDec)
 	UpdateMovingPrice(ctx sdk.Context, netuid uint16, movingAlpha math.LegacyDec, halvingBlocks uint64)
 
 	// Alpha/TAO tracking

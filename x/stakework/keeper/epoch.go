@@ -7,6 +7,7 @@ import (
 	stdmath "math"
 	"math/big"
 	"sort"
+	"strconv"
 
 	cosmosmath "cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
@@ -194,9 +195,9 @@ func (k Keeper) RunEpoch(ctx sdk.Context, netuid uint16, raoEmission cosmosmath.
 		incentiveFloat := normIncentive[i]
 		dividendsFloat := normDividends[i]
 
-		// Convert floating-point numbers to Dec
-		incentiveDec := cosmosmath.LegacyMustNewDecFromStr(fmt.Sprintf("%f", incentiveFloat))
-		dividendsDec := cosmosmath.LegacyMustNewDecFromStr(fmt.Sprintf("%f", dividendsFloat))
+		// Convert floating-point numbers to Dec with high precision
+		incentiveDec := cosmosmath.LegacyMustNewDecFromStr(strconv.FormatFloat(incentiveFloat, 'f', 18, 64))
+		dividendsDec := cosmosmath.LegacyMustNewDecFromStr(strconv.FormatFloat(dividendsFloat, 'f', 18, 64))
 
 		result.Dividend[i] = cosmosmath.NewIntFromBigInt(
 			dividendsDec.MulInt(raoEmission).TruncateInt().BigInt(),
@@ -569,8 +570,8 @@ func (k Keeper) distributeEmission(normIncentive, normDividends []float64, raoEm
 
 	for i := 0; i < n; i++ {
 		// Using high-precision calculations
-		incentiveDec := cosmosmath.LegacyMustNewDecFromStr(fmt.Sprintf("%f", normIncentive[i]))
-		dividendsDec := cosmosmath.LegacyMustNewDecFromStr(fmt.Sprintf("%f", normDividends[i]))
+		incentiveDec := cosmosmath.LegacyMustNewDecFromStr(strconv.FormatFloat(normIncentive[i], 'f', 18, 64))
+		dividendsDec := cosmosmath.LegacyMustNewDecFromStr(strconv.FormatFloat(normDividends[i], 'f', 18, 64))
 
 		// Calculate the total share
 		totalShare := incentiveDec.Add(dividendsDec)

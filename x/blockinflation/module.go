@@ -13,6 +13,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"cosmossdk.io/core/appmodule"
 
@@ -20,7 +22,6 @@ import (
 	"github.com/hetu-project/hetu/v1/x/blockinflation/keeper"
 	"github.com/hetu-project/hetu/v1/x/blockinflation/types"
 	pb "github.com/hetu-project/hetu/v1/x/blockinflation/types/generated"
-	"google.golang.org/grpc"
 )
 
 var (
@@ -71,8 +72,8 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *r
 	if err := pb.RegisterQueryHandlerFromEndpoint(
 		context.Background(),
 		mux,
-		"localhost:9090", // Use the gRPC server address directly
-		[]grpc.DialOption{grpc.WithInsecure()},
+		clientCtx.GRPCClient.Target(),
+		[]grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())},
 	); err != nil {
 		panic(err)
 	}

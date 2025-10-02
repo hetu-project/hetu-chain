@@ -121,11 +121,12 @@ func (k Keeper) SyncAMMPoolState(ctx sdk.Context, netuid uint16) error {
 	// Note: The parsing method here depends on the specific encoding of the return value
 	// Here, it is assumed that the return values are 8 uint256 values arranged in order
 	// Note: The parsing method here depends on the specific encoding of the return value
-	// Here it is assumed that the return value is an 8 uint256 values in order
-	// Note: The parsing method here depends on the specific encoding of the return value
-	// Here it is assumed that the return value is an 8 uint256 values in order
-	// Note: The parsing method here depends on the specific encoding of the return value
-	// Here it is assumed that the return value is an 8 uint256 values in order
+	// Ensure we have enough data for 8 return values (8 * 32 bytes = 256 bytes)
+	if len(result.Ret) < 256 {
+		return fmt.Errorf("insufficient return data: expected 256 bytes, got %d", len(result.Ret))
+	}
+
+	// Parse all 8 return values as defined in the ABI (1×uint8 + 7×uint256)
 	mechanismType := new(big.Int).SetBytes(result.Ret[0:32])    // The first uint256- Mechanism type
 	subnetHetu := new(big.Int).SetBytes(result.Ret[32:64])      // The second uint256 - TAO number
 	subnetAlphaIn := new(big.Int).SetBytes(result.Ret[64:96])   // The third uint256 - AlphaIn number
@@ -133,11 +134,13 @@ func (k Keeper) SyncAMMPoolState(ctx sdk.Context, netuid uint16) error {
 	currentPrice := new(big.Int).SetBytes(result.Ret[128:160])  // The fifth uint256 - Current price
 	movingPrice := new(big.Int).SetBytes(result.Ret[160:192])   // The sixth uint256 - Moving average price
 	totalVolume := new(big.Int).SetBytes(result.Ret[192:224])   // The seventh uint256 - Total volume
+	reserved := new(big.Int).SetBytes(result.Ret[224:256])      // The eighth uint256 - Reserved field
 
 	k.Logger(ctx).Debug("Parsed values from result",
 		"netuid", netuid,
 		"mechanism_type", mechanismType.String(),
 		"subnet_hetu", subnetHetu.String(),
+		"reserved", reserved.String(),
 		"subnet_alpha_in", subnetAlphaIn.String(),
 		"subnet_alpha_out", subnetAlphaOut.String(),
 		"current_price", currentPrice.String(),
@@ -204,7 +207,17 @@ func (k Keeper) SyncAMMPoolState(ctx sdk.Context, netuid uint16) error {
 		halvingBlocks := subnet.EMAPriceHalvingBlocks
 		// Use the moving average price of the contract as the basis, call UpdateMovingPrice to update
 		params := k.GetParams(ctx)
+
+		// Apply the contract moving price to the chain state
+		// First, set the current moving price from the contract to ensure synchronization
+		k.eventKeeper.SetSubnetMovingPrice(ctx, netuid, contractMovingPriceDec)
+
+		// Then apply the EMA update for future price movements
 		k.eventKeeper.UpdateMovingPrice(ctx, netuid, params.SubnetMovingAlpha, halvingBlocks)
+
+		k.Logger(ctx).Info("Successfully synchronized moving price from contract",
+			"netuid", netuid,
+			"contract_moving_price", contractMovingPriceDec.String())
 	}
 
 	return nil
@@ -279,8 +292,8 @@ func (k Keeper) SyncChainStateToContract(ctx sdk.Context, netuid uint16, reward 
 	moduleAddress := authtypes.NewModuleAddress(blockinflationtypes.ModuleName)
 	ammPoolAddr := common.HexToAddress(ammPoolAddress)
 
-	// Only inject liquidity when TaoIn is positive
-	if reward.TaoIn.IsPositive() {
+	// Only inject liquidity when both legs are positive
+	if reward.TaoIn.IsPositive() && reward.AlphaIn.IsPositive() {
 		// Calculate the amount of AlphaIn to inject
 		alphaInAmount := reward.AlphaIn
 
@@ -300,14 +313,18 @@ func (k Keeper) SyncChainStateToContract(ctx sdk.Context, netuid uint16, reward 
 
 		// 1. Mint the Cosmos native HETU token
 		params := k.GetParams(ctx)
-		err = k.bankKeeper.MintCoins(
-			ctx,
-			blockinflationtypes.ModuleName,
-			sdk.NewCoins(sdk.NewCoin(params.MintDenom, reward.TaoIn)),
-		)
-		if err != nil {
+		minted := sdk.NewCoins(sdk.NewCoin(params.MintDenom, reward.TaoIn))
+		if err := k.bankKeeper.MintCoins(ctx, blockinflationtypes.ModuleName, minted); err != nil {
 			return fmt.Errorf("failed to mint HETU tokens: %w", err)
 		}
+
+		// Setup rollback mechanism to prevent supply inflation on failure
+		rollback := true
+		defer func() {
+			if rollback {
+				_ = k.bankKeeper.BurnCoins(ctx, blockinflationtypes.ModuleName, minted)
+			}
+		}()
 
 		// 2. Convert the native HETU to WHETU
 		// Use the deposit function of the WHETU contract, need to send the native HETU
@@ -606,6 +623,9 @@ func (k Keeper) SyncChainStateToContract(ctx sdk.Context, netuid uint16, reward 
 			"tao_in", reward.TaoIn.String(),
 			"alpha_in", alphaInAmount.String(),
 			"amm_pool_address", ammPoolAddr.Hex())
+
+		// Mark success to prevent rollback
+		rollback = false
 	}
 
 	return nil
@@ -625,8 +645,8 @@ func getWHETUAddress() string {
 		return viper.GetString("whetu_contract_address")
 	}
 
-	// 3. If none are found, return the hardcoded address (only for testing, the production environment should be configured)
-	return "0x6AE1198a992b550aa56626f236E7CBd62a785C1F" // Replace with the actual deployed WHETU contract address
+	// 3. No fallback. Force explicit configuration via on-chain params/state.
+	return ""
 }
 
 // Standard ERC20 ABI
