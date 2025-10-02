@@ -30,7 +30,7 @@ $ hetud tx add-minter 1 0x6bF0ECa02A91Ffe3260e3104CF449CCaa1CedbE0 --from=<key-n
 			if err != nil {
 				return err
 			}
-			_ = clientCtx // 暂时不使用，但将来会用于发送交易
+			_ = clientCtx
 
 			// Parse netuid
 			netuid, err := strconv.ParseUint(args[0], 10, 16)

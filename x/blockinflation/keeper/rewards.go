@@ -36,13 +36,13 @@ func (k Keeper) CalculateSubnetRewards(ctx sdk.Context, blockEmission math.Int, 
 		price := k.eventKeeper.GetAlphaPrice(ctx, netuid)
 		movingPrice := k.eventKeeper.GetMovingAlphaPrice(ctx, netuid)
 
-		// 添加更详细的日志
+		// Add more detailed logs
 		k.Logger(ctx).Debug("Subnet price details",
 			"netuid", netuid,
 			"price", price.String(),
 			"moving_price", movingPrice.String())
 
-		// 获取并记录子网的alpha_in和alpha_out
+		// Retrieve and record the alpha_in and alpha_out of the subnet
 		subnetAlphaIn := k.eventKeeper.GetSubnetAlphaIn(ctx, netuid)
 		subnetAlphaOut := k.eventKeeper.GetSubnetAlphaOut(ctx, netuid)
 		subnetTao := k.eventKeeper.GetSubnetTAO(ctx, netuid)
@@ -150,7 +150,7 @@ func (k Keeper) ApplySubnetRewards(ctx sdk.Context, rewards map[uint16]types.Sub
 			"alpha_in", reward.AlphaIn.String(),
 			"alpha_out", reward.AlphaOut.String())
 
-		// 获取当前值，用于前后对比
+		// Get the current value for comparison before and after
 		currentAlphaIn := k.eventKeeper.GetSubnetAlphaIn(ctx, netuid)
 		currentAlphaOut := k.eventKeeper.GetSubnetAlphaOut(ctx, netuid)
 		currentTaoIn := k.eventKeeper.GetSubnetTAO(ctx, netuid)
@@ -210,7 +210,7 @@ func (k Keeper) ApplySubnetRewards(ctx sdk.Context, rewards map[uint16]types.Sub
 				"tao_in", reward.TaoIn.String())
 		}
 
-		// 获取更新后的值，用于确认
+		// Obtain updated values for confirmation
 		updatedAlphaIn := k.eventKeeper.GetSubnetAlphaIn(ctx, netuid)
 		updatedAlphaOut := k.eventKeeper.GetSubnetAlphaOut(ctx, netuid)
 		updatedTaoIn := k.eventKeeper.GetSubnetTAO(ctx, netuid)
@@ -249,7 +249,7 @@ func (k Keeper) CalculateOwnerCuts(ctx sdk.Context, rewards map[uint16]types.Sub
 		alphaOut := reward.AlphaOut
 		ownerCut := math.LegacyNewDecFromInt(alphaOut).Mul(cutPercent).TruncateInt()
 
-		// 添加日志：记录初始的reward.AlphaOut值和计算的ownerCut
+		// Add log: Record the initial reward.AlphaOut value and calculated ownerCut
 		k.Logger(ctx).Debug("Owner cut calculation - initial values",
 			"netuid", netuid,
 			"reward_alpha_out_initial", alphaOut.String(),
@@ -262,7 +262,7 @@ func (k Keeper) CalculateOwnerCuts(ctx sdk.Context, rewards map[uint16]types.Sub
 		reward.AlphaOut = alphaOut.Sub(ownerCut) // Subtract owner cut from alpha_out
 		rewards[netuid] = reward
 
-		// 添加日志：记录更新后的reward.AlphaOut值
+		// Add log: Record the updated reward.AlphaOut value
 		k.Logger(ctx).Debug("Owner cut calculation - updated reward",
 			"netuid", netuid,
 			"reward_alpha_out_after_cut", reward.AlphaOut.String(),
@@ -278,7 +278,7 @@ func (k Keeper) CalculateOwnerCuts(ctx sdk.Context, rewards map[uint16]types.Sub
 		if ownerCut.IsPositive() {
 			currentAlphaOut := k.eventKeeper.GetSubnetAlphaOut(ctx, netuid)
 
-			// 添加日志：记录当前的subnet_alpha_out值
+			// Add log: Record the current subnet-alpha_out value
 			k.Logger(ctx).Debug("Owner cut calculation - current alpha out",
 				"netuid", netuid,
 				"current_alpha_out", currentAlphaOut.String(),
@@ -287,7 +287,7 @@ func (k Keeper) CalculateOwnerCuts(ctx sdk.Context, rewards map[uint16]types.Sub
 
 			newAlphaOut := currentAlphaOut.Sub(ownerCut)
 
-			// 添加日志：记录计算的newAlphaOut值和是否为负
+			// Add log: Record the calculated newAlphaOut value and whether it is negative
 			k.Logger(ctx).Debug("Owner cut calculation - new alpha out",
 				"netuid", netuid,
 				"new_alpha_out_before_check", newAlphaOut.String(),
@@ -303,7 +303,7 @@ func (k Keeper) CalculateOwnerCuts(ctx sdk.Context, rewards map[uint16]types.Sub
 			}
 			k.eventKeeper.SetSubnetAlphaOut(ctx, netuid, newAlphaOut)
 
-			// 添加日志：记录最终设置的subnet_alpha_out值
+			// Add log: Record the final subnet-alpha_out value set
 			k.Logger(ctx).Debug("Owner cut calculation - final alpha out",
 				"netuid", netuid,
 				"final_alpha_out", newAlphaOut.String(),

@@ -112,7 +112,7 @@ func (am AppModule) QuerierRoute() string {
 }
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	// 注册gRPC查询服务
+	// Register gRPC Query Service
 	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServer(am.keeper))
 }
 

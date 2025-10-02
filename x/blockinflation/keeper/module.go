@@ -6,23 +6,23 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// ProcessBeginBlockEvents 处理BeginBlock事件，包括子网注册事件
+// ProcessBeginBlockEvents Handling BeginBlock events, including subnet registration events
 func (k Keeper) ProcessBeginBlockEvents(ctx sdk.Context) {
-	// 处理事件
+	// Process events
 	for _, event := range ctx.EventManager().Events() {
-		// 检查是否是子网注册事件
+		// Check if it is a subnet registration event
 		if event.Type == "subnet_registered_sync_amm" {
 			k.handleSubnetRegisteredEvent(ctx, event)
 		}
 	}
 }
 
-// 处理子网注册事件
+// Handle the subnet registration event
 func (k Keeper) handleSubnetRegisteredEvent(ctx sdk.Context, event sdk.Event) {
 	var netuid uint16
 	var ammPoolAddress string
 
-	// 从事件属性中提取信息
+	// Extract information from the event attributes
 	for _, attr := range event.Attributes {
 		if string(attr.Key) == "netuid" {
 			netuIdStr := string(attr.Value)
@@ -39,13 +39,13 @@ func (k Keeper) handleSubnetRegisteredEvent(ctx sdk.Context, event sdk.Event) {
 		}
 	}
 
-	// 如果提取到了有效的netuid和ammPoolAddress，立即同步AMM池状态
+	// If a valid netuid and ammPoolAddress are extracted, immediately sync the AMM pool state
 	if netuid > 0 && ammPoolAddress != "" {
 		k.Logger(ctx).Info("Detected subnet registration, triggering AMM pool sync",
 			"netuid", netuid,
 			"amm_pool_address", ammPoolAddress)
 
-		// 调用处理函数
+		// Call the handling function
 		k.HandleSubnetRegisteredEvent(ctx, netuid, ammPoolAddress)
 	}
 }

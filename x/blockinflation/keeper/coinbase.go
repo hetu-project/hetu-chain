@@ -24,7 +24,7 @@ func (k Keeper) CalculateAlphaEmission(ctx sdk.Context, netuid uint16) (math.Int
 	subnetAlphaIn := k.eventKeeper.GetSubnetAlphaIn(ctx, netuid)
 	subnetAlphaOut := k.eventKeeper.GetSubnetAlphaOut(ctx, netuid)
 
-	// 添加详细日志
+	// Add detailed logs
 	k.Logger(ctx).Debug("Alpha issuance components",
 		"netuid", netuid,
 		"subnet_alpha_in", subnetAlphaIn.String(),
@@ -45,7 +45,7 @@ func (k Keeper) CalculateAlphaEmission(ctx sdk.Context, netuid uint16) (math.Int
 	totalSupplyDec := params.TotalSupply.ToLegacyDec()
 	defaultBlockEmissionDec := params.DefaultBlockEmission.ToLegacyDec()
 
-	// 添加详细日志
+	// Add detailed logs
 	k.Logger(ctx).Debug("Alpha emission calculation parameters",
 		"netuid", netuid,
 		"alpha_issuance_dec", alphaIssuanceDec.String(),
@@ -56,7 +56,7 @@ func (k Keeper) CalculateAlphaEmission(ctx sdk.Context, netuid uint16) (math.Int
 	twoTimesTotalSupply := totalSupplyDec.Mul(math.LegacyNewDec(2))
 	ratio := alphaIssuanceDec.Quo(twoTimesTotalSupply)
 
-	// 添加详细日志
+	// Add detailed logs
 	k.Logger(ctx).Debug("Alpha emission ratio calculation",
 		"netuid", netuid,
 		"two_times_total_supply", twoTimesTotalSupply.String(),
@@ -82,7 +82,7 @@ func (k Keeper) CalculateAlphaEmission(ctx sdk.Context, netuid uint16) (math.Int
 
 	logArg := math.LegacyOneDec().Quo(oneMinusRatio)
 
-	// 添加详细日志
+	// Add detailed logs
 	k.Logger(ctx).Debug("Log argument calculation",
 		"netuid", netuid,
 		"one_minus_ratio", oneMinusRatio.String(),
@@ -96,7 +96,7 @@ func (k Keeper) CalculateAlphaEmission(ctx sdk.Context, netuid uint16) (math.Int
 	flooredLog := stdmath.Floor(logResult)
 	flooredLogInt := int64(flooredLog)
 
-	// 添加详细日志
+	// Add detailed logs
 	k.Logger(ctx).Debug("Log calculation",
 		"netuid", netuid,
 		"log_arg_float", logArgFloat,
@@ -109,7 +109,7 @@ func (k Keeper) CalculateAlphaEmission(ctx sdk.Context, netuid uint16) (math.Int
 	// Calculate block emission percentage: 1 / multiplier
 	blockEmissionPercentage := math.LegacyOneDec().Quo(math.LegacyNewDecWithPrec(int64(multiplier*1000), 3))
 
-	// 添加详细日志
+	// Add detailed logs
 	k.Logger(ctx).Debug("Emission percentage calculation",
 		"netuid", netuid,
 		"multiplier", multiplier,
@@ -186,14 +186,14 @@ func (k Keeper) RunCoinbase(ctx sdk.Context, blockEmission math.Int) error {
 		return err
 	}
 
-	// --- 新增: 同步链上状态到合约，只注入HETU代币
+	// --- New: Sync the chain state to the contract, only inject the HETU token
 	for netuid, reward := range rewards {
 		if err := k.SyncChainStateToContract(ctx, netuid, reward); err != nil {
 			k.Logger(ctx).Error("Failed to sync chain state to contract",
 				"netuid", netuid,
 				"error", err,
 			)
-			// 继续处理其他子网，不要因为同步失败而中断整个流程
+			// Continue to process other subnets, don't interrupt the entire process because of the synchronization failure
 		}
 	}
 
@@ -275,10 +275,10 @@ func (k Keeper) RunCoinbase(ctx sdk.Context, blockEmission math.Int) error {
 			// Calculate validator-allocatable alpha
 			var pendingValidatorAlpha math.Int
 			if !incentiveSum.IsZero() {
-				// 分配一半给验证者
+				// Allocate half to the validator
 				pendingValidatorAlpha = pendingAlpha.QuoRaw(2)
 			} else {
-				// 全部分配给验证者
+				// Allocate all to the validator
 				pendingValidatorAlpha = pendingAlpha
 			}
 
@@ -303,21 +303,21 @@ func (k Keeper) RunCoinbase(ctx sdk.Context, blockEmission math.Int) error {
 			// Dividend allocation (no parent-child relationship, direct allocation, weight by subnet stake)
 			alphaDividends := make(map[string]math.Int)
 			if !totalAlphaDivs.IsZero() && !pendingValidatorAlpha.IsZero() {
-				// 按比例分配
+				// Allocate proportionally
 				for addr, d := range dividends {
-					// 计算分配比例: d / totalAlphaDivs * pendingValidatorAlpha
+					// Calculate the allocation ratio: d / totalAlphaDivs * pendingValidatorAlpha
 					ratio := math.LegacyNewDecFromInt(d).QuoInt(totalAlphaDivs)
 					alloc := ratio.MulInt(pendingValidatorAlpha).TruncateInt()
 					alphaDividends[addr] = alloc
 				}
 
-				// 检查是否有剩余未分配的奖励
+				// Check if there are any remaining undistributed rewards
 				allocated := math.ZeroInt()
 				for _, amount := range alphaDividends {
 					allocated = allocated.Add(amount)
 				}
 
-				// 如果有剩余，按地址顺序分配
+				// If there are remaining, allocate in address order
 				if allocated.LT(pendingValidatorAlpha) {
 					remainder := pendingValidatorAlpha.Sub(allocated)
 					addrs := make([]string, 0, len(dividends))
@@ -326,7 +326,7 @@ func (k Keeper) RunCoinbase(ctx sdk.Context, blockEmission math.Int) error {
 					}
 					sort.Strings(addrs)
 
-					// 每个地址分配1个单位，直到分完
+					// Allocate 1 unit to each address until finished
 					oneUnit := math.NewInt(1)
 					for i := 0; i < len(addrs) && !remainder.IsZero(); i++ {
 						alphaDividends[addrs[i]] = alphaDividends[addrs[i]].Add(oneUnit)
@@ -387,7 +387,7 @@ func (k Keeper) RunCoinbase(ctx sdk.Context, blockEmission math.Int) error {
 	// TODO: Implement epoch-based emission draining
 	k.Logger(ctx).Debug("Pending emission drained")
 
-	// --- 9. 同步 AMM 池状态
+	// --- 9. Sync the AMM pool state
 	for _, netuid := range subnetsToEmitTo {
 		if err := k.SyncAMMPoolState(ctx, netuid); err != nil {
 			k.Logger(ctx).Error("Failed to sync AMM pool state",

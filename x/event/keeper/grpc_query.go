@@ -137,7 +137,7 @@ func (q QueryServer) SubnetPool(ctx context.Context, req *eventtypes.QuerySubnet
 		return nil, status.Errorf(codes.NotFound, "subnet with netuid %d not found", req.Netuid)
 	}
 
-	// 获取子网的TaoIn、AlphaIn和AlphaOut值
+	// Obtain the TaoIn, AlphaIn, and AlphaOut values of the subnet
 	subnetTaoIn := q.Keeper.GetSubnetTaoIn(sdkCtx, uint16(req.Netuid))
 	subnetAlphaIn := q.Keeper.GetSubnetAlphaIn(sdkCtx, uint16(req.Netuid))
 	subnetAlphaOut := q.Keeper.GetSubnetAlphaOut(sdkCtx, uint16(req.Netuid))
@@ -165,7 +165,7 @@ func (q QueryServer) ValidatorWeights(ctx context.Context, req *eventtypes.Query
 		return nil, status.Errorf(codes.NotFound, "validator weight for netuid %d and validator %s not found", req.Netuid, req.Validator)
 	}
 
-	// 将 map[string]uint64 转换为 []string
+	// Convert map [string] uint64 to [] string
 	weights := make([]string, 0, len(weight.Weights))
 	for uid, w := range weight.Weights {
 		weights = append(weights, fmt.Sprintf("%s:%d", uid, w))

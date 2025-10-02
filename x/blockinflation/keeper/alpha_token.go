@@ -57,23 +57,23 @@ func getSubnetAMMABI() (abi.ABI, error) {
 	return subnetAMMABIVal, subnetAMMABIValErr
 }
 
-// checkIfAuthorizedMinter 检查地址是否为授权铸造者
+// checkIfAuthorizedMinter Check if the address is an authorized foundry
 func (k Keeper) checkIfAuthorizedMinter(ctx sdk.Context, alphaTokenABI abi.ABI, alphaTokenAddr common.Address, minterAddr common.Address) (bool, error) {
-	// 使用合约自身地址作为调用者，这是一个有效的地址
+	// Using the contract's own address as the caller is a valid address
 	result, err := k.erc20Keeper.CallEVM(
 		ctx,
 		alphaTokenABI,
-		alphaTokenAddr, // 使用合约自身地址作为调用者，确保地址存在
-		alphaTokenAddr, // 合约地址
-		false,          // 只读调用
+		alphaTokenAddr, // Use the contract's own address as the caller to ensure that the address exists
+		alphaTokenAddr, // contract address
+		false,          // Read only call
 		"authorized_minters",
-		minterAddr, // 要检查的地址作为参数
+		minterAddr, // The address to be checked as a parameter
 	)
 	if err != nil {
 		return false, fmt.Errorf("failed to check if address is authorized minter: %w", err)
 	}
 
-	// 记录详细日志，帮助调试
+	// Record detailed logs to assist in debugging
 	k.Logger(ctx).Debug("authorized_minters check result",
 		"token_address", alphaTokenAddr.Hex(),
 		"minter_address", minterAddr.Hex(),
@@ -81,10 +81,10 @@ func (k Keeper) checkIfAuthorizedMinter(ctx sdk.Context, alphaTokenABI abi.ABI, 
 		"ret_length", len(result.Ret),
 	)
 
-	// 解析返回结果 - Solidity布尔值在EVM中是32字节的值
+	// Parse return result - Solidity Boolean value in EVM is a 32 byte value
 	var isAuthorized bool
 	if result != nil && len(result.Ret) > 0 {
-		// 检查是否有任何非零字节，表示true
+		// Check for any non-zero bytes, indicating true
 		for _, b := range result.Ret {
 			if b != 0 {
 				isAuthorized = true
@@ -101,34 +101,34 @@ func (k Keeper) checkIfAuthorizedMinter(ctx sdk.Context, alphaTokenABI abi.ABI, 
 	return isAuthorized, nil
 }
 
-// getSubnetManagerAddress 获取SubnetManager合约地址
-// 优先从环境变量获取，如果环境变量不存在则尝试从配置文件读取
+// GetSubnet Manager Address Get Subnet Manager contract address
+// Prioritize obtaining from environment variables. If the environment variable does not exist, attempt to read from the configuration file
 func getSubnetManagerAddress() string {
-	// 1. 优先从环境变量获取
+	// 1. Get the address from the environment variable first
 	envVarName := "SUBNET_MANAGER_CONTRACT_ADDRESS"
 	if addr := os.Getenv(envVarName); addr != "" {
 		return addr
 	}
 
-	// 2. 如果环境变量不存在，尝试从配置文件读取
+	// 2. If the environment variable does not exist, attempt to read from the configuration file
 	if viper.GetString("subnet_manager_contract_address") != "" {
 		return viper.GetString("subnet_manager_contract_address")
 	}
 
-	// 3. 尝试初始化配置并再次读取
-	// 设置配置文件名称
+	// 3. Try to initialize the configuration and read again
+	// Set the configuration file name
 	viper.SetConfigName("app")
-	// 添加配置文件路径
+	// Add the configuration file path
 	viper.AddConfigPath(".")
 
-	// 读取配置文件
+	// Read the configuration file
 	if err := viper.ReadInConfig(); err == nil {
 		if addr := viper.GetString("subnet_manager_contract_address"); addr != "" {
 			return addr
 		}
 	}
 
-	// 4. 尝试读取config.toml
+	// 4. Try to read config.toml
 	viper.SetConfigName("config")
 	if err := viper.ReadInConfig(); err == nil {
 		if addr := viper.GetString("subnet_manager_contract_address"); addr != "" {
@@ -136,7 +136,7 @@ func getSubnetManagerAddress() string {
 		}
 	}
 
-	// 5. 如果都找不到，返回空字符串
+	// 5. If none are found, return an empty string
 	return ""
 }
 
@@ -149,16 +149,16 @@ func (k Keeper) MintAlphaTokens(ctx sdk.Context, netuid uint16, recipient string
 		return fmt.Errorf("subnet not found: %d", netuid)
 	}
 
-	// 2. 获取子网详细信息以获取AlphaToken地址
+	// 2. Get the subnet detailed information to get the AlphaToken address
 	subnetInfo, found := k.eventKeeper.GetSubnetInfo(ctx, netuid)
 	if !found {
 		return fmt.Errorf("subnet info not found: %d", netuid)
 	}
 
-	// 3. 验证Alpha代币地址
+	// 3. Verify the AlphaToken address
 	alphaTokenAddress := subnetInfo.AlphaToken
 	if alphaTokenAddress == "" || !common.IsHexAddress(alphaTokenAddress) {
-		// 尝试从subnet.Params中获取（向后兼容）
+		// Try to get from subnet.Params (backward compatibility)
 		alphaTokenAddress, ok := subnet.Params["alpha_token"]
 		alphaTokenAddress = strings.TrimSpace(alphaTokenAddress)
 		if !ok || alphaTokenAddress == "" || !common.IsHexAddress(alphaTokenAddress) {
@@ -196,7 +196,7 @@ func (k Keeper) MintAlphaTokens(ctx sdk.Context, netuid uint16, recipient string
 		return fmt.Errorf("amount must be positive, got: %s", amount.String())
 	}
 
-	// 8. 检查 blockinflation 模块是否为授权铸造者
+	// 8. Check if the blockinflation module is an authorized foundry
 	moduleAddress := authtypes.NewModuleAddress(types.ModuleName)
 	isAuthorized, err := k.checkIfAuthorizedMinter(ctx, alphaTokenABI, alphaTokenAddr, common.BytesToAddress(moduleAddress.Bytes()))
 	if err != nil {
@@ -204,17 +204,17 @@ func (k Keeper) MintAlphaTokens(ctx sdk.Context, netuid uint16, recipient string
 			"netuid", netuid,
 			"error", err,
 		)
-		// 继续执行，尝试铸造，可能会失败
+		// Continue to execute, try to mint, which may fail
 	}
 
-	// 9. 如果不是授权铸造者，返回错误
+	// 9. If it is not an authorized foundry, return an error
 	if !isAuthorized {
 		k.Logger(ctx).Error("Module is not an authorized minter",
 			"netuid", netuid,
 			"module_address", moduleAddress.String(),
 		)
 
-		// 获取模块地址的十六进制形式，方便子网所有者添加
+		// Get the hexadecimal form of the module address, making it easier for the subnet owner to add
 		moduleHexAddress := common.BytesToAddress(moduleAddress.Bytes()).Hex()
 
 		return fmt.Errorf("blockinflation module is not an authorized minter for subnet %d. "+

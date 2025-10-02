@@ -163,10 +163,10 @@ func (k Keeper) RunEpoch(ctx sdk.Context, netuid uint16, raoEmission cosmosmath.
 		"normalized_incentive_sum", k.sumArray(normIncentive))
 
 	// 15. Distribute emission
-	// 使用math.Int直接传递，不再转换为uint64
+	// Use math.Int to pass directly without converting to uint64
 	emission := k.distributeEmission(normIncentive, normDividends, raoEmission)
 
-	// 使用math.Int计算总emission
+	// Calculate the total emission using math.Int
 	totalEmission := cosmosmath.ZeroInt()
 	for _, e := range emission {
 		totalEmission = totalEmission.Add(e)
@@ -190,11 +190,11 @@ func (k Keeper) RunEpoch(ctx sdk.Context, netuid uint16, raoEmission cosmosmath.
 	// Populate account addresses, dividends, and incentive
 	for i, validator := range validators {
 		result.Accounts[i] = validator.Address
-		// 计算奖励金额
+		// Calculate the reward amount
 		incentiveFloat := normIncentive[i]
 		dividendsFloat := normDividends[i]
 
-		// 将浮点数转换为Dec
+		// Convert floating-point numbers to Dec
 		incentiveDec := cosmosmath.LegacyMustNewDecFromStr(fmt.Sprintf("%f", incentiveFloat))
 		dividendsDec := cosmosmath.LegacyMustNewDecFromStr(fmt.Sprintf("%f", dividendsFloat))
 
@@ -568,14 +568,14 @@ func (k Keeper) distributeEmission(normIncentive, normDividends []float64, raoEm
 	emission := make([]cosmosmath.Int, n)
 
 	for i := 0; i < n; i++ {
-		// 使用高精度计算
+		// Using high-precision calculations
 		incentiveDec := cosmosmath.LegacyMustNewDecFromStr(fmt.Sprintf("%f", normIncentive[i]))
 		dividendsDec := cosmosmath.LegacyMustNewDecFromStr(fmt.Sprintf("%f", normDividends[i]))
 
-		// 计算总份额
+		// Calculate the total share
 		totalShare := incentiveDec.Add(dividendsDec)
 
-		// 计算奖励金额
+		// Calculate the reward amount
 		emission[i] = cosmosmath.NewIntFromBigInt(
 			totalShare.MulInt(raoEmission).TruncateInt().BigInt(),
 		)

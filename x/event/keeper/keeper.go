@@ -244,14 +244,14 @@ func (k Keeper) handleSubnetRegistered(ctx sdk.Context, log ethTypes.Log) {
 	k.SetSubnet(ctx, subnet)
 	k.Logger(ctx).Debug("Successfully stored subnet information", "netuid", event.Netuid, "owner", event.Owner.Hex())
 
-	// 初始化子网的AlphaIn和TaoIn，使用LockedAmount作为初始值
+	// Initialize the AlphaIn and TaoIn of the subnet using LockdAmount as the initial value
 	lockedAmount, ok := math.NewIntFromString(event.LockedAmount.String())
 	if !ok {
 		k.Logger(ctx).Error("Failed to parse LockedAmount", "netuid", event.Netuid, "amount", event.LockedAmount.String())
 		lockedAmount = math.ZeroInt()
 	}
 
-	// 设置初始的SubnetAlphaIn和SubnetTaoIn
+	// Set the initial SubnetAlphaIn and SubnetTaoIn
 	k.SetSubnetAlphaIn(ctx, event.Netuid, lockedAmount)
 	k.SetSubnetTaoIn(ctx, event.Netuid, lockedAmount)
 
@@ -259,9 +259,9 @@ func (k Keeper) handleSubnetRegistered(ctx sdk.Context, log ethTypes.Log) {
 		"netuid", event.Netuid,
 		"amount", lockedAmount.String())
 
-	// 通知blockinflation模块立即同步AMM池状态
-	// 注意：这需要blockinflation模块提供一个公开的接口来触发同步
-	// 这里我们通过事件来通知，blockinflation模块需要监听这个事件
+	// Notify the blockinflation module to immediately sync the AMM pool state
+	// Note: This requires the blockinflation module to provide a public interface to trigger the synchronization
+	// Here we notify via events, the blockinflation module needs to listen to this event
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			"subnet_registered_sync_amm",
@@ -387,19 +387,19 @@ func (k Keeper) handleWeightsSet(ctx sdk.Context, log ethTypes.Log) {
 func (k Keeper) handleNetworkRegistered(ctx sdk.Context, log ethTypes.Log) {
 	k.Logger(ctx).Debug("Starting to process NetworkRegistered event", "contract_address", log.Address.Hex(), "block_height", log.BlockNumber)
 
-	// 1. 首先检查Topics长度
+	// 1. Check the length of the Topics
 	if len(log.Topics) < 3 {
 		k.Logger(ctx).Error("NetworkRegistered event has insufficient topics", "topics_length", len(log.Topics))
 		return
 	}
 
-	// 2. 从Topics中提取indexed参数
+	// 2. Extract the indexed parameters from the Topics
 	netuidBI := new(big.Int).SetBytes(log.Topics[1].Bytes())
 	netuid := uint16(netuidBI.Uint64())
 
 	owner := common.BytesToAddress(log.Topics[2].Bytes())
 
-	// 3. 解析非indexed参数
+	// 3. Parse the non-indexed parameters
 	var nonIndexed struct {
 		AlphaToken   common.Address
 		AmmPool      common.Address
@@ -440,7 +440,7 @@ func (k Keeper) handleNetworkRegistered(ctx sdk.Context, log ethTypes.Log) {
 		return
 	}
 
-	// 4. 组装完整的event结构体
+	// 4. Assemble the complete event structure
 	event := struct {
 		Netuid       uint16
 		Owner        common.Address
@@ -607,14 +607,14 @@ func (k Keeper) handleNetworkRegistered(ctx sdk.Context, log ethTypes.Log) {
 
 	k.SetSubnetInfo(ctx, subnetInfo)
 
-	// 初始化子网的AlphaIn和TaoIn，使用LockedAmount作为初始值
+	// Initialize the AlphaIn and TaoIn of the subnet using LockdAmount as the initial value
 	lockedAmount, ok := math.NewIntFromString(event.LockedAmount.String())
 	if !ok {
 		k.Logger(ctx).Error("Failed to parse LockedAmount", "netuid", event.Netuid, "amount", event.LockedAmount.String())
 		lockedAmount = math.ZeroInt()
 	}
 
-	// 设置初始的SubnetAlphaIn和SubnetTaoIn
+	// Set the initial SubnetAlphaIn and SubnetTaoIn
 	k.SetSubnetAlphaIn(ctx, event.Netuid, lockedAmount)
 	k.SetSubnetTaoIn(ctx, event.Netuid, lockedAmount)
 
@@ -622,9 +622,9 @@ func (k Keeper) handleNetworkRegistered(ctx sdk.Context, log ethTypes.Log) {
 		"netuid", event.Netuid,
 		"amount", lockedAmount.String())
 
-	// 通知blockinflation模块立即同步AMM池状态
-	// 注意：这需要blockinflation模块提供一个公开的接口来触发同步
-	// 这里我们通过事件来通知，blockinflation模块需要监听这个事件
+	// Notify the blockinflation module to immediately sync the AMM pool state
+	// Note: This requires the blockinflation module to provide a public interface to trigger the synchronization
+	// Here we notify via events, the blockinflation module needs to listen to this event
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			"subnet_registered_sync_amm",
@@ -641,19 +641,19 @@ func (k Keeper) handleNetworkRegistered(ctx sdk.Context, log ethTypes.Log) {
 
 // SubnetActivated - Subnet activation event
 func (k Keeper) handleSubnetActivated(ctx sdk.Context, log ethTypes.Log) {
-	// 1. 首先检查Topics长度
+	// 1. Check the length of the Topics
 	if len(log.Topics) < 3 {
 		k.Logger(ctx).Error("SubnetActivated event has insufficient topics", "topics_length", len(log.Topics))
 		return
 	}
 
-	// 2. 从Topics中提取indexed参数
+	// 2. Extract the indexed parameters from the Topics
 	netuidBI := new(big.Int).SetBytes(log.Topics[1].Bytes())
 	netuid := uint16(netuidBI.Uint64())
 
 	owner := common.BytesToAddress(log.Topics[2].Bytes())
 
-	// 3. 解析非indexed参数
+	// 3. Parse the non-indexed parameters
 	var nonIndexed struct {
 		Timestamp   *big.Int
 		BlockNumber *big.Int
@@ -664,7 +664,7 @@ func (k Keeper) handleSubnetActivated(ctx sdk.Context, log ethTypes.Log) {
 		return
 	}
 
-	// 4. 组装完整的event结构体
+	// 4. Assemble the complete event structure
 	event := struct {
 		Netuid      uint16
 		Owner       common.Address
@@ -726,8 +726,8 @@ func (k Keeper) handleSubnetActivated(ctx sdk.Context, log ethTypes.Log) {
 		k.Logger(ctx).Error("SubnetInfo not found for activation", "netuid", event.Netuid)
 	}
 
-	// 通知blockinflation模块立即同步AMM池状态
-	// 子网激活后也需要同步AMM池状态
+	// Notify the blockinflation module to immediately synchronize the AMM pool status
+	// After the subnet is activated, the AMM pool status also needs to be synchronized
 	subnet, found = k.GetSubnet(ctx, event.Netuid)
 	if found && subnet.AmmPool != "" {
 		ctx.EventManager().EmitEvent(
@@ -745,18 +745,18 @@ func (k Keeper) handleSubnetActivated(ctx sdk.Context, log ethTypes.Log) {
 
 // NetworkConfigUpdated - Network configuration update event
 func (k Keeper) handleNetworkConfigUpdated(ctx sdk.Context, log ethTypes.Log) {
-	// 1. 首先检查Topics长度
+	// 1. Check the length of the Topics
 	if len(log.Topics) < 3 {
 		k.Logger(ctx).Error("NetworkConfigUpdated event has insufficient topics", "topics_length", len(log.Topics))
 		return
 	}
 
-	// 2. 从Topics中提取indexed参数
-	// 注意：indexed string只存储哈希，无法直接获取原始字符串
+	// 2. Extract the indexed parameters from the Topics
+	// Note: indexed string only stores the hash, cannot be directly obtained as the original string
 	paramNameHash := log.Topics[1]
 	updater := common.BytesToAddress(log.Topics[2].Bytes())
 
-	// 3. 解析非indexed参数
+	// 3. Parse the non-indexed parameters
 	var nonIndexed struct {
 		OldValue *big.Int
 		NewValue *big.Int
@@ -767,8 +767,8 @@ func (k Keeper) handleNetworkConfigUpdated(ctx sdk.Context, log ethTypes.Log) {
 		return
 	}
 
-	// 4. 对于indexed string参数，我们可能需要通过已知值映射来恢复
-	// 这里简单记录哈希值
+	// 4. For indexed string parameters, we may need to restore them through known value mapping
+	// Here we simply record the hash values
 	k.Logger(ctx).Info("Network config updated",
 		"param_hash", paramNameHash.Hex(),
 		"old_value", nonIndexed.OldValue.String(),
@@ -780,19 +780,19 @@ func (k Keeper) handleNetworkConfigUpdated(ctx sdk.Context, log ethTypes.Log) {
 func (k Keeper) handleNeuronRegistered(ctx sdk.Context, log ethTypes.Log) {
 	k.Logger(ctx).Debug("Starting to process NeuronRegistered event", "contract_address", log.Address.Hex(), "block_height", log.BlockNumber)
 
-	// 1. 首先检查Topics长度
+	// 1. Check the length of the Topics
 	if len(log.Topics) < 3 {
 		k.Logger(ctx).Error("NeuronRegistered event has insufficient topics", "topics_length", len(log.Topics))
 		return
 	}
 
-	// 2. 从Topics中提取indexed参数
+	// 2. Extract the indexed parameters from the Topics
 	netuidBI := new(big.Int).SetBytes(log.Topics[1].Bytes())
 	netuid := uint16(netuidBI.Uint64())
 
 	account := common.BytesToAddress(log.Topics[2].Bytes())
 
-	// 3. 解析非indexed参数
+	// 3. Parse the non-indexed parameters
 	var nonIndexed struct {
 		Stake                  *big.Int
 		IsValidator            bool
@@ -809,7 +809,7 @@ func (k Keeper) handleNeuronRegistered(ctx sdk.Context, log ethTypes.Log) {
 		return
 	}
 
-	// 4. 组装完整的event结构体
+	// 4. Assemble the complete event structure
 	event := struct {
 		Netuid                 uint16
 		Account                common.Address
@@ -868,19 +868,19 @@ func (k Keeper) handleNeuronRegistered(ctx sdk.Context, log ethTypes.Log) {
 
 // NeuronDeregistered - Neuron deregistration event
 func (k Keeper) handleNeuronDeregistered(ctx sdk.Context, log ethTypes.Log) {
-	// 1. 首先检查Topics长度
+	// 1. Check the length of the Topics
 	if len(log.Topics) < 3 {
 		k.Logger(ctx).Error("NeuronDeregistered event has insufficient topics", "topics_length", len(log.Topics))
 		return
 	}
 
-	// 2. 从Topics中提取indexed参数
+	// 2. Extract the indexed parameters from the Topics
 	netuidBI := new(big.Int).SetBytes(log.Topics[1].Bytes())
 	netuid := uint16(netuidBI.Uint64())
 
 	account := common.BytesToAddress(log.Topics[2].Bytes())
 
-	// 3. 解析非indexed参数
+	// 3. Parse the non-indexed parameters
 	var nonIndexed struct {
 		BlockNumber *big.Int
 	}
@@ -890,7 +890,7 @@ func (k Keeper) handleNeuronDeregistered(ctx sdk.Context, log ethTypes.Log) {
 		return
 	}
 
-	// 4. 组装完整的event结构体
+	// 4. Assemble the complete event structure
 	event := struct {
 		Netuid      uint16
 		Account     common.Address
@@ -917,19 +917,19 @@ func (k Keeper) handleNeuronDeregistered(ctx sdk.Context, log ethTypes.Log) {
 
 // StakeAllocationChanged (NeuronManager) - Neuron stake allocation change event
 func (k Keeper) handleNeuronStakeChanged(ctx sdk.Context, log ethTypes.Log) {
-	// 1. 首先检查Topics长度
+	// 1. Check the length of the Topics
 	if len(log.Topics) < 3 {
 		k.Logger(ctx).Error("StakeAllocationChanged event has insufficient topics", "topics_length", len(log.Topics))
 		return
 	}
 
-	// 2. 从Topics中提取indexed参数
+	// 2. Extract the indexed parameters from the Topics
 	netuidBI := new(big.Int).SetBytes(log.Topics[1].Bytes())
 	netuid := uint16(netuidBI.Uint64())
 
 	account := common.BytesToAddress(log.Topics[2].Bytes())
 
-	// 3. 解析非indexed参数
+	// 3. Parse the non-indexed parameters
 	var nonIndexed struct {
 		OldStake    *big.Int
 		NewStake    *big.Int
@@ -941,7 +941,7 @@ func (k Keeper) handleNeuronStakeChanged(ctx sdk.Context, log ethTypes.Log) {
 		return
 	}
 
-	// 4. 组装完整的event结构体
+	// 4. Assemble the complete event structure
 	event := struct {
 		Netuid      uint16
 		Account     common.Address
@@ -974,19 +974,19 @@ func (k Keeper) handleNeuronStakeChanged(ctx sdk.Context, log ethTypes.Log) {
 
 // ServiceUpdated - Service information update event
 func (k Keeper) handleServiceUpdated(ctx sdk.Context, log ethTypes.Log) {
-	// 1. 首先检查Topics长度
+	// 1. Check the length of the Topics
 	if len(log.Topics) < 3 {
 		k.Logger(ctx).Error("ServiceUpdated event has insufficient topics", "topics_length", len(log.Topics))
 		return
 	}
 
-	// 2. 从Topics中提取indexed参数
+	// 2. Extract the indexed parameters from the Topics
 	netuidBI := new(big.Int).SetBytes(log.Topics[1].Bytes())
 	netuid := uint16(netuidBI.Uint64())
 
 	account := common.BytesToAddress(log.Topics[2].Bytes())
 
-	// 3. 解析非indexed参数
+	// 3. Parse the non-indexed parameters
 	var nonIndexed struct {
 		AxonEndpoint       string
 		AxonPort           uint32
@@ -1000,7 +1000,7 @@ func (k Keeper) handleServiceUpdated(ctx sdk.Context, log ethTypes.Log) {
 		return
 	}
 
-	// 4. 组装完整的event结构体
+	// 4. Assemble the complete event structure
 	event := struct {
 		Netuid             uint16
 		Account            common.Address
@@ -1042,19 +1042,19 @@ func (k Keeper) handleServiceUpdated(ctx sdk.Context, log ethTypes.Log) {
 
 // SubnetAllocationChanged (GlobalStaking) - Subnet allocation change event
 func (k Keeper) handleSubnetAllocationChanged(ctx sdk.Context, log ethTypes.Log) {
-	// 1. 首先检查Topics长度
+	// 1. Check the length of the Topics
 	if len(log.Topics) < 3 {
 		k.Logger(ctx).Error("SubnetAllocationChanged event has insufficient topics", "topics_length", len(log.Topics))
 		return
 	}
 
-	// 2. 从Topics中提取indexed参数
+	// 2. Extract the indexed parameters from the Topics
 	user := common.BytesToAddress(log.Topics[1].Bytes())
 
 	netuidBI := new(big.Int).SetBytes(log.Topics[2].Bytes())
 	netuid := uint16(netuidBI.Uint64())
 
-	// 3. 解析非indexed参数
+	// 3. Parse the non-indexed parameters
 	var nonIndexed struct {
 		OldAmount *big.Int
 		NewAmount *big.Int
@@ -1065,7 +1065,7 @@ func (k Keeper) handleSubnetAllocationChanged(ctx sdk.Context, log ethTypes.Log)
 		return
 	}
 
-	// 4. 组装完整的event结构体
+	// 4. Assemble the complete event structure
 	event := struct {
 		User      common.Address
 		Netuid    uint16

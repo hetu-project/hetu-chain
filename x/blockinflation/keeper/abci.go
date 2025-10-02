@@ -21,13 +21,13 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) error {
 		return err
 	}
 
-	// 每 20 个区块同步一次所有子网的 AMM 池状态（原来是100个区块）
+	// Synchronize the AMM pool status of all subnets every 20 blocks (previously 100 blocks)
 	if ctx.BlockHeight()%20 == 0 {
 		k.Logger(ctx).Info("Periodic AMM pool sync", "height", ctx.BlockHeight())
 		k.SyncAllAMMPools(ctx)
 	}
 
-	// 处理子网注册事件
+	// Handling subnet registration events
 	k.ProcessBeginBlockEvents(ctx)
 
 	return nil

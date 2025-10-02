@@ -19,11 +19,11 @@ import (
 	eventabi "github.com/hetu-project/hetu/v1/x/event/abi"
 )
 
-// SyncAMMPoolState 同步链上状态和合约 AMM 池状态
+// SyncAMMPoolState Sync the chain state and the AMM pool state of the contract
 func (k Keeper) SyncAMMPoolState(ctx sdk.Context, netuid uint16) error {
 	k.Logger(ctx).Debug("Starting to sync AMM pool state", "netuid", netuid)
 
-	// 1. 获取子网信息，包括 AMM 池地址
+	// 1. Get the subnet information, including the AMM pool address
 	subnet, found := k.eventKeeper.GetSubnet(ctx, netuid)
 	if !found {
 		k.Logger(ctx).Error("Failed to find subnet", "netuid", netuid)
@@ -40,7 +40,7 @@ func (k Keeper) SyncAMMPoolState(ctx sdk.Context, netuid uint16) error {
 		"ema_price_halving_blocks", subnet.EMAPriceHalvingBlocks,
 		"first_emission_block", subnet.FirstEmissionBlock)
 
-	// 打印所有参数，帮助调试
+	// Print all parameters, help debugging
 	for key, value := range subnet.Params {
 		k.Logger(ctx).Debug("Subnet parameter",
 			"netuid", netuid,
@@ -48,7 +48,7 @@ func (k Keeper) SyncAMMPoolState(ctx sdk.Context, netuid uint16) error {
 			"value", value)
 	}
 
-	// 2. 验证 AMM 池地址
+	// 2. Verify the AMM pool address
 	ammPoolAddress := subnet.AmmPool
 
 	if ammPoolAddress == "" {
@@ -68,7 +68,7 @@ func (k Keeper) SyncAMMPoolState(ctx sdk.Context, netuid uint16) error {
 		"netuid", netuid,
 		"amm_pool_address", ammPoolAddr.Hex())
 
-	// 3. 获取 SubnetAMM 合约的 ABI
+	// 3. Get the ABI of the SubnetAMM contract
 	ammABI, err := getSubnetAMMABI()
 	if err != nil {
 		k.Logger(ctx).Error("Failed to load SubnetAMM ABI", "error", err)
@@ -76,7 +76,7 @@ func (k Keeper) SyncAMMPoolState(ctx sdk.Context, netuid uint16) error {
 	}
 	k.Logger(ctx).Debug("Loaded SubnetAMM ABI")
 
-	// 4. 从合约中获取当前池状态
+	// 4. Get the current pool state from the contract
 	moduleAddress := authtypes.NewModuleAddress(blockinflationtypes.ModuleName)
 	k.Logger(ctx).Debug("Calling EVM to get pool info",
 		"module_address", moduleAddress.String(),
@@ -87,7 +87,7 @@ func (k Keeper) SyncAMMPoolState(ctx sdk.Context, netuid uint16) error {
 		ammABI,
 		common.BytesToAddress(moduleAddress.Bytes()),
 		ammPoolAddr,
-		false, // 只读调用
+		false, // Read only call
 		"getPoolInfo",
 	)
 	if err != nil {
@@ -98,7 +98,7 @@ func (k Keeper) SyncAMMPoolState(ctx sdk.Context, netuid uint16) error {
 		return fmt.Errorf("failed to get AMM pool info: %w", err)
 	}
 
-	// 5. 解析返回结果
+	// 5. Parse the return result
 	if result == nil {
 		k.Logger(ctx).Error("Null result from getPoolInfo call", "netuid", netuid)
 		return fmt.Errorf("invalid result from getPoolInfo call")
@@ -116,17 +116,23 @@ func (k Keeper) SyncAMMPoolState(ctx sdk.Context, netuid uint16) error {
 		"netuid", netuid,
 		"result_length", len(result.Ret))
 
-	// 从返回的字节数组中提取数据
-	// 每个uint256值占32字节
-	// 注意：这里的解析方式取决于合约返回值的具体编码方式
-	// 这里假设返回值是按照顺序排列的8个uint256值
-	mechanismType := new(big.Int).SetBytes(result.Ret[0:32])    // 第1个uint256 - 机制类型
-	subnetHetu := new(big.Int).SetBytes(result.Ret[32:64])      // 第2个uint256 - TAO数量
-	subnetAlphaIn := new(big.Int).SetBytes(result.Ret[64:96])   // 第3个uint256 - AlphaIn数量
-	subnetAlphaOut := new(big.Int).SetBytes(result.Ret[96:128]) // 第4个uint256 - AlphaOut数量
-	currentPrice := new(big.Int).SetBytes(result.Ret[128:160])  // 第5个uint256 - 当前价格
-	movingPrice := new(big.Int).SetBytes(result.Ret[160:192])   // 第6个uint256 - 移动平均价格
-	totalVolume := new(big.Int).SetBytes(result.Ret[192:224])   // 第7个uint256 - 总交易量
+	// Extract data from the returned byte array
+	// Each uint256 value takes up 32 bytes
+	// Note: The parsing method here depends on the specific encoding of the return value
+	// Here, it is assumed that the return values are 8 uint256 values arranged in order
+	// Note: The parsing method here depends on the specific encoding of the return value
+	// Here it is assumed that the return value is an 8 uint256 values in order
+	// Note: The parsing method here depends on the specific encoding of the return value
+	// Here it is assumed that the return value is an 8 uint256 values in order
+	// Note: The parsing method here depends on the specific encoding of the return value
+	// Here it is assumed that the return value is an 8 uint256 values in order
+	mechanismType := new(big.Int).SetBytes(result.Ret[0:32])    // The first uint256- Mechanism type
+	subnetHetu := new(big.Int).SetBytes(result.Ret[32:64])      // The second uint256 - TAO number
+	subnetAlphaIn := new(big.Int).SetBytes(result.Ret[64:96])   // The third uint256 - AlphaIn number
+	subnetAlphaOut := new(big.Int).SetBytes(result.Ret[96:128]) // The fourth uint256 - AlphaOut number
+	currentPrice := new(big.Int).SetBytes(result.Ret[128:160])  // The fifth uint256 - Current price
+	movingPrice := new(big.Int).SetBytes(result.Ret[160:192])   // The sixth uint256 - Moving average price
+	totalVolume := new(big.Int).SetBytes(result.Ret[192:224])   // The seventh uint256 - Total volume
 
 	k.Logger(ctx).Debug("Parsed values from result",
 		"netuid", netuid,
@@ -138,7 +144,7 @@ func (k Keeper) SyncAMMPoolState(ctx sdk.Context, netuid uint16) error {
 		"moving_price", movingPrice.String(),
 		"total_volume", totalVolume.String())
 
-	// 6. 获取链上状态
+	// 6. Get the chain state
 	currentTaoIn := k.eventKeeper.GetSubnetTAO(ctx, netuid)
 	currentAlphaIn := k.eventKeeper.GetSubnetAlphaIn(ctx, netuid)
 	currentAlphaOut := k.eventKeeper.GetSubnetAlphaOut(ctx, netuid)
@@ -149,15 +155,15 @@ func (k Keeper) SyncAMMPoolState(ctx sdk.Context, netuid uint16) error {
 		"current_alpha_in", currentAlphaIn.String(),
 		"current_alpha_out", currentAlphaOut.String())
 
-	// 7. 检查链上状态与合约状态是否一致
+	// 7. Check if the chain state is consistent with the contract state
 	contractTaoIn := math.NewIntFromBigInt(subnetHetu)
 	contractAlphaIn := math.NewIntFromBigInt(subnetAlphaIn)
-	// 不再使用合约的AlphaOut值
+	// No longer use the AlphaOut value of the contract
 	// contractAlphaOut := math.NewIntFromBigInt(subnetAlphaOut)
 
-	// 8. 只更新TaoIn和AlphaIn，不更新AlphaOut
+	// 8. Only update TaoIn and AlphaIn, do not update AlphaOut
 
-	// 8.1 处理TaoIn
+	// 8.1 Handle TaoIn
 	if !currentTaoIn.Equal(contractTaoIn) {
 		k.Logger(ctx).Info("Updating chain TaoIn to match contract",
 			"netuid", netuid,
@@ -166,7 +172,7 @@ func (k Keeper) SyncAMMPoolState(ctx sdk.Context, netuid uint16) error {
 		k.eventKeeper.SetSubnetTaoIn(ctx, netuid, contractTaoIn)
 	}
 
-	// 8.2 处理AlphaIn
+	// 8.2 Handle AlphaIn
 	if !currentAlphaIn.Equal(contractAlphaIn) {
 		k.Logger(ctx).Info("Updating chain AlphaIn to match contract",
 			"netuid", netuid,
@@ -175,28 +181,28 @@ func (k Keeper) SyncAMMPoolState(ctx sdk.Context, netuid uint16) error {
 		k.eventKeeper.SetSubnetAlphaIn(ctx, netuid, contractAlphaIn)
 	}
 
-	// 8.3 不再处理AlphaOut，保留链上值
+	// 8.3 No longer handle AlphaOut, keep the chain value
 	k.Logger(ctx).Debug("Keeping chain AlphaOut value (not syncing from contract)",
 		"netuid", netuid,
 		"chain_alpha_out", currentAlphaOut.String(),
 		"contract_alpha_out", subnetAlphaOut.String())
 
-	// 9. 更新移动平均价格
-	// 获取当前移动平均价格
+	// 9. Update the moving average price
+	// Get the current moving average price
 	currentMovingPrice := k.eventKeeper.GetMovingAlphaPrice(ctx, netuid)
 	contractMovingPriceDec := math.LegacyNewDecFromBigInt(movingPrice)
 
-	// 如果移动平均价格不一致，更新链上状态
+	// If the moving average price is inconsistent, update the chain state
 	if !currentMovingPrice.Equal(contractMovingPriceDec) {
 		k.Logger(ctx).Info("Updating moving price",
 			"netuid", netuid,
 			"old_moving_price", currentMovingPrice.String(),
 			"new_moving_price", contractMovingPriceDec.String())
 
-		// 使用UpdateMovingPrice方法更新移动平均价格
-		// 获取子网的EMAPriceHalvingBlocks
+		// Use the UpdateMovingPrice method to update the moving average price
+		// Get the EMAPriceHalvingBlocks of the subnet
 		halvingBlocks := subnet.EMAPriceHalvingBlocks
-		// 使用合约的移动平均价格作为基础，调用UpdateMovingPrice进行更新
+		// Use the moving average price of the contract as the basis, call UpdateMovingPrice to update
 		params := k.GetParams(ctx)
 		k.eventKeeper.UpdateMovingPrice(ctx, netuid, params.SubnetMovingAlpha, halvingBlocks)
 	}
@@ -204,7 +210,7 @@ func (k Keeper) SyncAMMPoolState(ctx sdk.Context, netuid uint16) error {
 	return nil
 }
 
-// SyncAllAMMPools 同步所有活跃子网的 AMM 池状态
+// SyncAllAMMPools Sync the AMM pool state of all active subnets
 func (k Keeper) SyncAllAMMPools(ctx sdk.Context) {
 	k.Logger(ctx).Debug("Starting to sync all AMM pools")
 
@@ -229,14 +235,14 @@ func (k Keeper) SyncAllAMMPools(ctx sdk.Context) {
 	k.Logger(ctx).Debug("Finished syncing all AMM pools", "count", len(allSubnets))
 }
 
-// HandleSubnetRegisteredEvent 处理子网注册事件，立即同步AMM池状态
-// 这个函数应该在监听到子网注册事件时被调用
+// HandleSubnetRegisteredEvent Handle the subnet registered event, immediately sync the AMM pool state
+// This function should be called when listening to the subnet registered event
 func (k Keeper) HandleSubnetRegisteredEvent(ctx sdk.Context, netuid uint16, ammPoolAddress string) {
 	k.Logger(ctx).Info("Handling subnet registered event",
 		"netuid", netuid,
 		"amm_pool_address", ammPoolAddress)
 
-	// 立即同步AMM池状态
+	// Immediately sync the AMM pool state
 	if err := k.SyncAMMPoolState(ctx, netuid); err != nil {
 		k.Logger(ctx).Error("Failed to sync AMM pool state after subnet registration",
 			"netuid", netuid,
@@ -248,34 +254,34 @@ func (k Keeper) HandleSubnetRegisteredEvent(ctx sdk.Context, netuid uint16, ammP
 	}
 }
 
-// SyncChainStateToContract 将链上状态同步到合约
-// 在计算奖励后调用，将TaoIn和AlphaIn注入到AMM合约中
+// SyncChainStateToContract Sync the chain state to the contract
+// Called after calculating the rewards, inject TaoIn and AlphaIn into the AMM contract
 func (k Keeper) SyncChainStateToContract(ctx sdk.Context, netuid uint16, reward blockinflationtypes.SubnetRewards) error {
-	// 获取子网信息
+	// Get the subnet information
 	subnet, found := k.eventKeeper.GetSubnet(ctx, netuid)
 	if !found {
 		return fmt.Errorf("subnet not found: %d", netuid)
 	}
 
-	// 验证AMM池地址
+	// Verify the AMM pool address
 	ammPoolAddress := subnet.AmmPool
 	if ammPoolAddress == "" || !common.IsHexAddress(ammPoolAddress) {
 		return fmt.Errorf("invalid AMM pool address: %s", ammPoolAddress)
 	}
 
-	// 获取ABI
+	// Get the ABI
 	ammABI, err := getSubnetAMMABI()
 	if err != nil {
 		return fmt.Errorf("failed to load SubnetAMM ABI: %w", err)
 	}
 
-	// 准备调用参数
+	// Prepare the call parameters
 	moduleAddress := authtypes.NewModuleAddress(blockinflationtypes.ModuleName)
 	ammPoolAddr := common.HexToAddress(ammPoolAddress)
 
-	// 只有当TaoIn为正时才注入流动性
+	// Only inject liquidity when TaoIn is positive
 	if reward.TaoIn.IsPositive() {
-		// 计算需要注入的AlphaIn数量
+		// Calculate the amount of AlphaIn to inject
 		alphaInAmount := reward.AlphaIn
 
 		k.Logger(ctx).Debug("Preparing to inject liquidity to contract",
@@ -284,15 +290,15 @@ func (k Keeper) SyncChainStateToContract(ctx sdk.Context, netuid uint16, reward 
 			"alpha_in", alphaInAmount.String(),
 			"amm_pool_address", ammPoolAddr.Hex())
 
-		// 从子网信息中获取WHETU代币地址
-		// 这需要在配置中设置或者从环境变量中获取
+		// Get the WHETU token address from the subnet information
+		// This needs to be set in the configuration or obtained from the environment variable
 		whetuAddress := getWHETUAddress()
 		if whetuAddress == "" || !common.IsHexAddress(whetuAddress) {
 			return fmt.Errorf("invalid or missing WHETU token address")
 		}
 		whetuAddr := common.HexToAddress(whetuAddress)
 
-		// 1. 铸造Cosmos原生HETU代币
+		// 1. Mint the Cosmos native HETU token
 		params := k.GetParams(ctx)
 		err = k.bankKeeper.MintCoins(
 			ctx,
@@ -303,26 +309,26 @@ func (k Keeper) SyncChainStateToContract(ctx sdk.Context, netuid uint16, reward 
 			return fmt.Errorf("failed to mint HETU tokens: %w", err)
 		}
 
-		// 2. 将原生HETU转换为WHETU
-		// 使用WHETU合约的deposit函数，需要发送原生HETU
+		// 2. Convert the native HETU to WHETU
+		// Use the deposit function of the WHETU contract, need to send the native HETU
 		whetuABI, err := abi.JSON(bytes.NewReader(eventabi.WHETUABI))
 		if err != nil {
 			return fmt.Errorf("failed to parse WHETU ABI: %w", err)
 		}
 
-		// 创建deposit函数的调用数据
+		// Create the call data for the deposit function
 		depositData, err := whetuABI.Pack("deposit")
 		if err != nil {
 			return fmt.Errorf("failed to pack deposit function data: %w", err)
 		}
 
-		// 使用evmKeeper直接发送交易
+		// Use evmKeeper to send the transaction directly
 		evmModuleAddr := common.BytesToAddress(moduleAddress.Bytes())
 
-		// 获取模块账户的nonce
+		// Get the nonce of the module account
 		nonce := k.evmKeeper.GetNonce(ctx, evmModuleAddr)
 
-		// 创建消息而不是交易
+		// Create a message instead of a transaction
 		msg := ethtypes.NewMessage(
 			evmModuleAddr,
 			&whetuAddr,
@@ -337,7 +343,7 @@ func (k Keeper) SyncChainStateToContract(ctx sdk.Context, netuid uint16, reward 
 			false,                 // checkNonce
 		)
 
-		// 直接调用ApplyMessage而不是EthereumTx
+		// Directly call ApplyMessage instead of EthereumTx
 		res, err := k.evmKeeper.ApplyMessage(ctx, msg, nil, true)
 		if err != nil {
 			k.Logger(ctx).Error("Failed to deposit HETU to WHETU contract",
@@ -365,10 +371,10 @@ func (k Keeper) SyncChainStateToContract(ctx sdk.Context, netuid uint16, reward 
 			"tx_hash", res.Hash,
 		)
 
-		// 3. 铸造Alpha代币并转给模块账户
+		// 3. Mint the Alpha token and transfer it to the module account
 		if alphaInAmount.IsPositive() {
-			// 使用MintAlphaTokens函数，它会处理授权检查和铸造
-			// 铸造给模块账户，使用EVM格式的地址
+			// Use the MintAlphaTokens function, it will handle the authorization check and minting
+			// Mint the Alpha token to the module account, using the EVM format address
 			evmAddress := common.BytesToAddress(moduleAddress.Bytes()).Hex()
 			err = k.MintAlphaTokens(ctx, netuid, evmAddress, alphaInAmount.BigInt())
 			if err != nil {
@@ -380,13 +386,13 @@ func (k Keeper) SyncChainStateToContract(ctx sdk.Context, netuid uint16, reward 
 				"alpha_amount", alphaInAmount.String())
 		}
 
-		// 获取子网详细信息以获取AlphaToken地址
+		// Get the subnet detailed information to get the AlphaToken address
 		subnetInfo, found := k.eventKeeper.GetSubnetInfo(ctx, netuid)
 		if !found {
 			return fmt.Errorf("subnet info not found: %d", netuid)
 		}
 
-		// 验证Alpha代币地址
+		// Verify the AlphaToken address
 		alphaTokenAddress := subnetInfo.AlphaToken
 		if alphaTokenAddress == "" || !common.IsHexAddress(alphaTokenAddress) {
 			return fmt.Errorf("invalid or missing alpha token address: %d", netuid)
@@ -397,19 +403,19 @@ func (k Keeper) SyncChainStateToContract(ctx sdk.Context, netuid uint16, reward 
 			"whetu_token", whetuAddr.Hex(),
 			"alpha_token", alphaTokenAddress)
 
-		// 检查模块账户的WHETU代币余额
+		// Check the WHETU token balance of the module account
 		erc20ABI, err := abi.JSON(strings.NewReader(erc20AbiJSON))
 		if err != nil {
 			return fmt.Errorf("failed to parse ERC20 ABI: %w", err)
 		}
 
-		// 检查WHETU余额
+		// Check the WHETU balance
 		whetuBalanceResult, err := k.erc20Keeper.CallEVM(
 			ctx,
 			erc20ABI,
 			common.BytesToAddress(moduleAddress.Bytes()),
 			whetuAddr,
-			false, // 只读调用
+			false, // Read only call
 			"balanceOf",
 			common.BytesToAddress(moduleAddress.Bytes()),
 		)
@@ -424,13 +430,13 @@ func (k Keeper) SyncChainStateToContract(ctx sdk.Context, netuid uint16, reward 
 			whetuBalance = big.NewInt(0)
 		}
 
-		// 检查Alpha余额
+		// Check the Alpha balance
 		alphaBalanceResult, err := k.erc20Keeper.CallEVM(
 			ctx,
 			erc20ABI,
 			common.BytesToAddress(moduleAddress.Bytes()),
 			common.HexToAddress(alphaTokenAddress),
-			false, // 只读调用
+			false, // Read only call
 			"balanceOf",
 			common.BytesToAddress(moduleAddress.Bytes()),
 		)
@@ -452,7 +458,7 @@ func (k Keeper) SyncChainStateToContract(ctx sdk.Context, netuid uint16, reward 
 			"required_whetu", reward.TaoIn.BigInt().String(),
 			"required_alpha", alphaInAmount.BigInt().String())
 
-		// 检查余额是否足够
+		// Check if the balance is sufficient
 		if whetuBalance.Cmp(reward.TaoIn.BigInt()) < 0 {
 			return fmt.Errorf("insufficient WHETU balance: have %s, need %s", whetuBalance.String(), reward.TaoIn.BigInt().String())
 		}
@@ -461,13 +467,13 @@ func (k Keeper) SyncChainStateToContract(ctx sdk.Context, netuid uint16, reward 
 			return fmt.Errorf("insufficient Alpha balance: have %s, need %s", alphaBalance.String(), alphaInAmount.BigInt().String())
 		}
 
-		// 4. 批准AMM合约使用WHETU代币
+		// 4. Approve the AMM contract to use the WHETU token
 		_, err = k.erc20Keeper.CallEVM(
 			ctx,
 			erc20ABI,
 			common.BytesToAddress(moduleAddress.Bytes()),
 			whetuAddr,
-			true, // 提交交易
+			true, // Submit transaction
 			"approve",
 			ammPoolAddr,
 			reward.TaoIn.BigInt(),
@@ -476,13 +482,13 @@ func (k Keeper) SyncChainStateToContract(ctx sdk.Context, netuid uint16, reward 
 			return fmt.Errorf("failed to approve WHETU tokens: %w", err)
 		}
 
-		// 5. 批准AMM合约使用Alpha代币
+		// 5. Approve the AMM contract to use the Alpha token
 		_, err = k.erc20Keeper.CallEVM(
 			ctx,
 			erc20ABI,
 			common.BytesToAddress(moduleAddress.Bytes()),
 			common.HexToAddress(alphaTokenAddress),
-			true, // 提交交易
+			true, // Submit transaction
 			"approve",
 			ammPoolAddr,
 			alphaInAmount.BigInt(),
@@ -491,13 +497,13 @@ func (k Keeper) SyncChainStateToContract(ctx sdk.Context, netuid uint16, reward 
 			return fmt.Errorf("failed to approve Alpha tokens: %w", err)
 		}
 
-		// 检查批准后的授权额度
+		// Check the authorization amount after approval
 		whetuAllowanceResult, err := k.erc20Keeper.CallEVM(
 			ctx,
 			erc20ABI,
 			common.BytesToAddress(moduleAddress.Bytes()),
 			whetuAddr,
-			false, // 只读调用
+			false, // Read only call
 			"allowance",
 			common.BytesToAddress(moduleAddress.Bytes()),
 			ammPoolAddr,
@@ -518,7 +524,7 @@ func (k Keeper) SyncChainStateToContract(ctx sdk.Context, netuid uint16, reward 
 			erc20ABI,
 			common.BytesToAddress(moduleAddress.Bytes()),
 			common.HexToAddress(alphaTokenAddress),
-			false, // 只读调用
+			false, // Read only call
 			"allowance",
 			common.BytesToAddress(moduleAddress.Bytes()),
 			ammPoolAddr,
@@ -540,7 +546,7 @@ func (k Keeper) SyncChainStateToContract(ctx sdk.Context, netuid uint16, reward 
 			"required_whetu", reward.TaoIn.BigInt().String(),
 			"required_alpha", alphaInAmount.BigInt().String())
 
-		// 检查授权额度是否足够
+		// Check if the authorization amount is sufficient
 		if whetuAllowance.Cmp(reward.TaoIn.BigInt()) < 0 {
 			return fmt.Errorf("insufficient WHETU allowance: have %s, need %s", whetuAllowance.String(), reward.TaoIn.BigInt().String())
 		}
@@ -554,26 +560,26 @@ func (k Keeper) SyncChainStateToContract(ctx sdk.Context, netuid uint16, reward 
 			"tao_amount", reward.TaoIn.String(),
 			"alpha_amount", alphaInAmount.String())
 
-		// 6. 调用injectLiquidity方法，注入WHETU和Alpha代币
+		// 6. Call the injectLiquidity method, inject the WHETU and Alpha token
 		_, err = k.erc20Keeper.CallEVM(
 			ctx,
 			ammABI,
 			common.BytesToAddress(moduleAddress.Bytes()),
 			ammPoolAddr,
-			true, // 提交交易
+			true, // Submit transaction
 			"injectLiquidity",
 			reward.TaoIn.BigInt(),
 			alphaInAmount.BigInt(),
 		)
 
 		if err != nil {
-			// 尝试获取AMM合约状态，可能有助于诊断问题
+			// Try to get the AMM contract state, which may help diagnose the problem
 			poolInfoResult, poolInfoErr := k.erc20Keeper.CallEVM(
 				ctx,
 				ammABI,
 				common.BytesToAddress(moduleAddress.Bytes()),
 				ammPoolAddr,
-				false, // 只读调用
+				false, // Read only call
 				"getPoolInfo",
 			)
 
@@ -605,25 +611,25 @@ func (k Keeper) SyncChainStateToContract(ctx sdk.Context, netuid uint16, reward 
 	return nil
 }
 
-// getWHETUAddress 获取WHETU代币地址
-// 优先从环境变量获取，如果环境变量不存在则尝试从配置文件读取
+// getWHETUAddress Get the WHETU token address
+// Get the WHETU token address from the environment variable first, if the environment variable does not exist, try to read from the configuration file
 func getWHETUAddress() string {
-	// 1. 优先从环境变量获取
+	// 1. Get the WHETU token address from the environment variable first
 	envVarName := "WHETU_CONTRACT_ADDRESS"
 	if addr := os.Getenv(envVarName); addr != "" {
 		return addr
 	}
 
-	// 2. 如果环境变量不存在，尝试从配置文件读取
+	// 2. If the environment variable does not exist, try to read from the configuration file
 	if viper.GetString("whetu_contract_address") != "" {
 		return viper.GetString("whetu_contract_address")
 	}
 
-	// 3. 如果都找不到，返回硬编码的地址（仅用于测试，生产环境应该配置）
-	return "0x6AE1198a992b550aa56626f236E7CBd62a785C1F" // 替换为实际部署的WHETU合约地址
+	// 3. If none are found, return the hardcoded address (only for testing, the production environment should be configured)
+	return "0x6AE1198a992b550aa56626f236E7CBd62a785C1F" // Replace with the actual deployed WHETU contract address
 }
 
-// 标准ERC20 ABI
+// Standard ERC20 ABI
 const erc20AbiJSON = `[
 	{
 		"constant": false,
