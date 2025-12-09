@@ -62,14 +62,14 @@ jq ".app_state[\"blockinflation\"][\"pending_subnet_rewards\"]={\"denom\":\"ahet
 jq '.app_state.event = {"subnets": [], "validator_stakes": [], "delegations": [], "validator_weights": []}' "$GENESIS" > "$TMPGENESIS" && mv "$TMPGENESIS" "$GENESIS"
 
 # Set feemarket parameters to match startup gas prices
-jq '.app_state.feemarket.params = {"no_base_fee": false, "base_fee_change_denominator": 8, "elasticity_multiplier": 2, "enable_height": "0", "base_fee": "1000000000", "min_gas_price": "0.000100000000000000", "min_gas_multiplier": "0.500000000000000000"}' "$GENESIS" > "$TMPGENESIS" && mv "$TMPGENESIS" "$GENESIS"
+jq '.app_state.feemarket.params = {"no_base_fee": false, "base_fee_change_denominator": 64, "elasticity_multiplier": 2, "enable_height": "0", "base_fee": "1000000000", "min_gas_price": "100000.0", "min_gas_multiplier": "0.500000000000000000"}' "$GENESIS" > "$TMPGENESIS" && mv "$TMPGENESIS" "$GENESIS"
 jq '.app_state.feemarket.block_gas = "0"' "$GENESIS" > "$TMPGENESIS" && mv "$TMPGENESIS" "$GENESIS"
 
 # Increase block time
 jq ".consensus_params[\"block\"][\"time_iota_ms\"]=\"30000\"" "$GENESIS" > "$TMPGENESIS" && mv "$TMPGENESIS" "$GENESIS"
 
-# Set the maximum gas limit for blocks
-jq ".consensus_params[\"block\"][\"max_gas\"]=\"10000000\"" "$GENESIS" > "$TMPGENESIS" && mv "$TMPGENESIS" "$GENESIS"
+# Set the maximum gas limit for blocks (moved to after collect-gentxs)
+# jq ".consensus_params[\"block\"][\"max_gas\"]=\"10000000\"" "$GENESIS" > "$TMPGENESIS" && mv "$TMPGENESIS" "$GENESIS"
 
 # Modify the configuration file
 # Cross-platform in-place sed
@@ -83,10 +83,13 @@ fi
 hetud add-genesis-account "$KEY" 100000000000000000000000000ahetu --keyring-backend "$KEYRING" --home "$HETUD_HOME"
 
 # Sign genesis transaction
-hetud gentx "$KEY" 2000000000000000000000ahetu --keyring-backend "$KEYRING" --chain-id "$CHAINID" --home "$HETUD_HOME" --fees 1000000ahetu --gas 200000
+hetud gentx "$KEY" 2000000000000000000000ahetu --keyring-backend "$KEYRING" --chain-id "$CHAINID" --home "$HETUD_HOME" --fees 20000000000ahetu --gas 200000
 
 # Collect genesis transactions
 hetud collect-gentxs --home "$HETUD_HOME"
+
+# Set the maximum gas limit for blocks (after collect-gentxs to prevent override)
+jq ".consensus_params[\"block\"][\"max_gas\"]=\"10000000\"" "$GENESIS" > "$TMPGENESIS" && mv "$TMPGENESIS" "$GENESIS"
 
 # Validate genesis file
 hetud validate-genesis --home "$HETUD_HOME"
@@ -100,4 +103,4 @@ echo "Node ID: $NODE_ID"
 # sed -i '' "s/external_address = \"\"/external_address = \"YOUR_IP:26656\"/g" "$ETHCONFIG"
 
 # Start the node
-hetud start --pruning=nothing $TRACE --log_level "$LOGLEVEL" --minimum-gas-prices=0.0001ahetu --home "$HETUD_HOME" --chain-id "$CHAINID"
+# hetud start --pruning=nothing $TRACE --log_level "$LOGLEVEL" --minimum-gas-prices=0.0001ahetu --home "$HETUD_HOME" --chain-id "$CHAINID"

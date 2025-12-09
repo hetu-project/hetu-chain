@@ -286,5 +286,13 @@ func (b *Backend) SuggestGasTipCap(baseFee *big.Int) (*big.Int, error) {
 		// impossible if the parameter validation passed.
 		maxDelta = 0
 	}
+
+	// Set a minimum tip cap to ensure EIP-1559 mode is used even when baseFee is very low
+	// Minimum is 0.01 Gwei (10,000,000 wei) to prevent MetaMask from falling back to legacy mode
+	minTipCap := int64(10000000) // 0.01 Gwei
+	if maxDelta < minTipCap {
+		maxDelta = minTipCap
+	}
+
 	return big.NewInt(maxDelta), nil
 }
