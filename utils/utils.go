@@ -111,7 +111,6 @@ func TempDir(defaultHome string) string {
 	if err != nil {
 		dir = defaultHome
 	}
-	defer os.RemoveAll(dir)
 
 	return dir
 }
