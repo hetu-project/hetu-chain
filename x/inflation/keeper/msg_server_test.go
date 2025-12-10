@@ -28,7 +28,6 @@ func (suite *KeeperTestSuite) TestUpdateParams() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		suite.Run("MsgUpdateParams", func() {
 			_, err := suite.app.InflationKeeper.UpdateParams(suite.ctx, tc.request)
 			if tc.expectErr {
