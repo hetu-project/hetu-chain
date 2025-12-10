@@ -269,10 +269,26 @@ func (tx DynamicFeeTx) Validate() error {
 		)
 	}
 
-	if !(chainID.Cmp(big.NewInt(560001)) == 0 || chainID.Cmp(big.NewInt(560000)) == 0 || chainID.Cmp(big.NewInt(560002)) == 0) {
+	// Supported Chain IDs: original three + custom range
+	validChainIDs := []*big.Int{
+		big.NewInt(560000), // Mainnet
+		big.NewInt(560001), // Testnet
+		big.NewInt(560002), // Local Testnet
+		big.NewInt(565000), // Custom Network
+	}
+
+	isValid := false
+	for _, validID := range validChainIDs {
+		if chainID.Cmp(validID) == 0 {
+			isValid = true
+			break
+		}
+	}
+
+	if !isValid {
 		return errorsmod.Wrapf(
 			errortypes.ErrInvalidChainID,
-			"chain ID must be 560000 or 560001 or 560002 on Evmos, got %s", chainID,
+			"chain ID must be 560000, 560001, 560002, or 565000 on Hetu, got %s", chainID,
 		)
 	}
 

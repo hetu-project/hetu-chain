@@ -35,9 +35,9 @@ import (
 
 const (
 	// MainnetChainID defines the Hetud EIP155 chain ID for mainnet
-	MainnetChainID = "hetu_560001"
+	MainnetChainID = "hetu_560000"
 	// TestnetChainID defines the Hetud EIP155 chain ID for testnet
-	TestnetChainID = "hetu_560000"
+	TestnetChainID = "hetu_560001"
 	// TestingChainID defines the Evmos EIP155 chain ID for testing purposes
 	// like the local node.
 	TestingChainID = "hetu_560002"
@@ -111,7 +111,6 @@ func TempDir(defaultHome string) string {
 	if err != nil {
 		dir = defaultHome
 	}
-	defer os.RemoveAll(dir)
 
 	return dir
 }

@@ -141,8 +141,24 @@ func (k *Keeper) WithChainID(ctx sdk.Context) {
 		panic("chain id already set")
 	}
 
-	if !(chainID.Cmp(big.NewInt(560001)) == 0 || chainID.Cmp(big.NewInt(560000)) == 0 || chainID.Cmp(big.NewInt(560002)) == 0) {
-		panic("EVM only supports Evmos chain identifiers (560000 or 560001 or 560002)")
+	// Supported Chain IDs: original three+custom range
+	validChainIDs := []*big.Int{
+		big.NewInt(560000), // Mainnet
+		big.NewInt(560001), // Testnet
+		big.NewInt(560002), // Local Testnet
+		big.NewInt(565000), // Custom Network
+	}
+
+	isValid := false
+	for _, validID := range validChainIDs {
+		if chainID.Cmp(validID) == 0 {
+			isValid = true
+			break
+		}
+	}
+
+	if !isValid {
+		panic("EVM only supports Hetu chain identifiers (560000, 560001, 560002, 565000)")
 	}
 
 	k.eip155ChainID = chainID
