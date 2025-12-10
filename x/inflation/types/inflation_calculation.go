@@ -22,7 +22,7 @@ import (
 	evmostypes "github.com/hetu-project/hetu/v1/types"
 )
 
-// CalculateEpochProvisions returns mint provision per epoch
+// CalculateEpochMintProvision returns mint provision per epoch
 func CalculateEpochMintProvision(
 	params Params,
 	period uint64,
