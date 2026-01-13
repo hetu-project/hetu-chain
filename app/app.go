@@ -1319,15 +1319,125 @@ func initParamsKeeper(
 	return paramsKeeper
 }
 
+// UpgradeNameV1 defines the upgrade name for v1.0.0
+// This upgrade enables full functionality for blockinflation, event, and stakework modules
+const UpgradeNameV1 = "v1.0.0"
+
 func (app *Evmos) setupUpgradeHandlers() {
-	// v0 upgrade handler
-	// app.UpgradeKeeper.SetUpgradeHandler(
-	// 	v0.UpgradeName,
-	// 	v0.CreateUpgradeHandler(
-	// 		app.mm, app.configurator,
-	// 		app.DistrKeeper,
-	// 	),
-	// )
+	// v1.0.0 upgrade handler - hetu-subnet branch upgrade
+	// This upgrade:
+	// 1. Enables full blockinflation module functionality (params query, etc.)
+	// 2. Enables event module for subnet event handling
+	// 3. Enables stakework module for stake-based work tracking
+	//
+	// Note: The store keys for these modules already exist in mainnet state,
+	// so we don't need to add them in storeUpgrades.
+	app.UpgradeKeeper.SetUpgradeHandler(
+		UpgradeNameV1,
+		func(ctx context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+			sdkCtx := sdk.UnwrapSDKContext(ctx)
+			logger := app.Logger()
+
+			logger.Info("=== Starting v1.0.0 Upgrade Handler ===")
+			logger.Info("Upgrade details", "name", plan.Name, "height", sdkCtx.BlockHeight())
+
+			// Log current module versions before migration
+			logger.Info("Module versions before migration", "versions", fromVM)
+
+			// ============================================================
+			// Step 1: Initialize blockinflation module params explicitly
+			// ============================================================
+			// The mainnet has blockinflation store but params may not be properly initialized
+			// because the old binary didn't implement the Params gRPC query method.
+			// We explicitly set default params here to ensure the module works correctly.
+			if app.BlockInflationKeeper != nil {
+				logger.Info("Initializing blockinflation module params...")
+
+				// Try to get existing params - if this panics, the recover in GetParams will set defaults
+				// But we want to be explicit here for safety
+				func() {
+					defer func() {
+						if r := recover(); r != nil {
+							logger.Warn("blockinflation params not found, initializing with defaults", "panic", r)
+							// Set default params explicitly
+							defaultParams := blockinflationtypes.DefaultParams()
+							app.BlockInflationKeeper.SetParams(sdkCtx, defaultParams)
+							logger.Info("blockinflation default params set successfully",
+								"enable_block_inflation", defaultParams.EnableBlockInflation,
+								"mint_denom", defaultParams.MintDenom,
+								"total_supply", defaultParams.TotalSupply.String(),
+								"default_block_emission", defaultParams.DefaultBlockEmission.String(),
+							)
+						}
+					}()
+
+					// Try to read existing params
+					existingParams := app.BlockInflationKeeper.GetParams(sdkCtx)
+					logger.Info("blockinflation existing params found",
+						"enable_block_inflation", existingParams.EnableBlockInflation,
+						"mint_denom", existingParams.MintDenom,
+					)
+
+					// Validate existing params - if invalid, reset to defaults
+					if existingParams.MintDenom == "" {
+						logger.Warn("blockinflation params invalid (empty mint_denom), resetting to defaults")
+						defaultParams := blockinflationtypes.DefaultParams()
+						app.BlockInflationKeeper.SetParams(sdkCtx, defaultParams)
+						logger.Info("blockinflation params reset to defaults")
+					}
+				}()
+
+				// Initialize other state if not present
+				totalIssuance := app.BlockInflationKeeper.GetTotalIssuance(sdkCtx)
+				if totalIssuance.IsZero() {
+					logger.Info("blockinflation total_issuance is zero (expected for fresh state)")
+				}
+
+				totalBurned := app.BlockInflationKeeper.GetTotalBurned(sdkCtx)
+				logger.Info("blockinflation state",
+					"total_issuance", totalIssuance.String(),
+					"total_burned", totalBurned.String(),
+				)
+			}
+
+			// ============================================================
+			// Step 2: Initialize event module state if needed
+			// ============================================================
+			if app.EventKeeper != nil {
+				logger.Info("Checking event module state...")
+				// Event module uses empty default genesis, no special initialization needed
+				// The module will work with empty state
+				logger.Info("event module ready")
+			}
+
+			// ============================================================
+			// Step 3: Initialize stakework module state if needed
+			// ============================================================
+			if app.StakeworkKeeper != nil {
+				logger.Info("Checking stakework module state...")
+				// Stakework module uses empty default genesis, no special initialization needed
+				logger.Info("stakework module ready")
+			}
+
+			// ============================================================
+			// Step 4: Run module migrations
+			// ============================================================
+			logger.Info("Running module migrations...")
+
+			// Run all module migrations
+			// This will update module versions and run any registered migrations
+			newVM, err := app.mm.RunMigrations(ctx, app.configurator, fromVM)
+			if err != nil {
+				logger.Error("Failed to run migrations", "error", err)
+				return nil, err
+			}
+
+			logger.Info("Module versions after migration", "versions", newVM)
+			logger.Info("=== v1.0.0 Upgrade Handler Completed Successfully ===")
+
+			return newVM, nil
+		},
+	)
 
 	// When a planned update height is reached, the old binary will panic
 	// writing on disk the height and name of the update that triggered it
@@ -1344,13 +1454,24 @@ func (app *Evmos) setupUpgradeHandlers() {
 	var storeUpgrades *storetypes.StoreUpgrades
 
 	switch upgradeInfo.Name {
-	// case v0.UpgradeName:
-	// no store upgrades
+	case UpgradeNameV1:
+		// Based on mainnet state analysis:
+		// - blockinflation store: EXISTS (module version 1)
+		// - stakework store: EXISTS (module version 1)
+		// - event store: EXISTS (registered in keys)
+		//
+		// Since all stores already exist, we don't need to add any new stores.
+		// If we incorrectly add an existing store, it will cause a panic.
+		storeUpgrades = &storetypes.StoreUpgrades{
+			Added: []string{
+				// No new stores needed - all stores already exist in mainnet
+			},
+		}
 	default:
 		// no store upgrades
 	}
 
-	if storeUpgrades != nil {
+	if storeUpgrades != nil && len(storeUpgrades.Added) > 0 {
 		// configure store loader that checks if version == upgradeHeight and applies store upgrades
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, storeUpgrades))
 	}
